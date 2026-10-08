@@ -4,5 +4,7 @@ export * from './planner';
 export * from './evidenceGraph';
 export * from './ruleRegistry';
 export * from './rules';
+export * from './testRegistry';
+export * from './testPriority';
 export * from './engine';
 export * from './hap';

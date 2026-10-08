@@ -5,20 +5,25 @@
 - M02 — Adaptive Question Planner v1: IMPLEMENTED
 - M03 — Versioned Rule Registry: IMPLEMENTED
 - M04 — Evidence Graph + Finding Model: IMPLEMENTED
+- M05 — Screening & Test Priority Engine: IMPLEMENTED
 
-## M04 closure
-- Findings reference stable evidence-node IDs instead of anonymous evidence strings.
-- Evidence graph distinguishes observed, derived and missing evidence.
-- Support, contradiction and missing-for relationships are explicit.
-- Provenance carries source questions plus rule ID/version; derived facts carry formula lineage.
-- Finding confidence is separate from score and disease probability.
-- Current prototype rules were migrated without expanding clinical scope.
+## M05 closure
+- Missing-evidence nodes are converted to structured investigation recommendations.
+- Recommendations expose exact evidence gaps and related findings.
+- Priority means priority for reducing uncertainty, not medical necessity.
+- Alternative investigations are grouped to avoid redundant minimal-set recommendations.
+- A smallest-useful-set selector ranks by assessment priority, configured utility and evidence coverage.
+- Unmapped evidence gaps remain visible.
+- Routine test planning is suppressed while an urgent red flag is active.
+- Current investigation mappings are prototype-only pending clinical sourcing/review.
 
-## Next
-M05 — Screening & Test Priority Engine
-Focus: convert missing-evidence nodes into ranked investigations (essential / recommended / optional), explain why each test is useful, suppress redundant tests, and identify the smallest useful evidence set.
+## Current
+Strategic Review 1 — IN PROGRESS
+Scope: M01–M05 architecture, product usefulness, safety posture, overbuilding risk, mobile/web split, evidence/test model, and roadmap corrections before M06.
 
-After M05: Strategic Review 1.
+## Next planned
+M06 — Safety Gate
+M07 — Health Map UX v2
 
 ## Execution agreement
 - Repository: `Amonaval/jaanch`

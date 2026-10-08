@@ -86,6 +86,42 @@ export type Finding = {
   ruleVersion?: string;
 };
 
+export type InvestigationPriority = 'essential' | 'recommended' | 'optional';
+export type InvestigationKind = 'lab' | 'measurement' | 'screening';
+export type InvestigationMaturity = 'prototype' | 'reviewed' | 'approved';
+
+export type InvestigationDefinition = {
+  id: string;
+  title: string;
+  kind: InvestigationKind;
+  description: string;
+  resolvesEvidenceIds: string[];
+  alternativeGroup?: string;
+  utility: number;
+  maturity: InvestigationMaturity;
+  sources: string[];
+};
+
+export type TestRecommendation = {
+  id: string;
+  title: string;
+  kind: InvestigationKind;
+  priority: InvestigationPriority;
+  rationale: string;
+  relatedFindingIds: string[];
+  resolvesEvidenceIds: string[];
+  alternativeGroup?: string;
+  selectedForMinimalSet: boolean;
+  maturity: InvestigationMaturity;
+};
+
+export type TestPlan = {
+  recommendations: TestRecommendation[];
+  minimalSetIds: string[];
+  uncoveredEvidenceIds: string[];
+  blockedReason?: string;
+};
+
 export type RuleTraceSummary = {
   id: string;
   version: string;
@@ -100,6 +136,7 @@ export type RuleTraceSummary = {
 export type AssessmentResult = {
   findings: Finding[];
   evidenceGraph: EvidenceGraph;
+  testPlan: TestPlan;
   evidenceCompleteness: number;
   answered: number;
   available: number;
