@@ -34,16 +34,15 @@ Status: COMPLETE
 Status: COMPLETE
 
 ### M05.1 — Core Verification Harness
-Status: NEXT
-Purpose: close the executable scenario-testing gap identified by SR1 before adding safety-critical rule depth.
-Deliverables: golden scenario fixtures, deterministic repeatability tests, planner/rule/evidence/test-plan assertions, contradiction/skip/red-flag cases, invariant failure tests.
-Effort: Medium.
+Status: COMPLETE
+Golden scenario verification now covers core assessment, evidence/test behavior, red-flag interruption and M06 safety/source-governance regressions.
 
 ### M06 — Safety Gate + Clinical Source Baseline
-Add special-population context, medications/supplements/allergies, contraindication/suppression rules, stronger red flags, and a source/reference governance contract for clinical rules and investigation mappings.
-Effort: High.
+Status: COMPLETE
+Special-population context, medications/supplements/allergies, deterministic recommendation-class suppression, urgent override behavior and source/reference governance are implemented. Current clinical rules remain prototype until explicit clinical review/approval.
 
 ### M07 — Health Map UX v2 + Shared Presentation Model
+Status: NEXT
 Domain map, priority list, evidence completeness, rule/provenance viewer, patient-friendly explanations and shared platform-neutral presentation selectors so mobile/web semantics do not drift.
 Effort: Medium.
 
@@ -52,7 +51,7 @@ Manual lab entry, normalized marker IDs, units, collection time, provenance, fre
 Effort: High after SR1 scope expansion.
 
 ### M09 — Recommendation Engine v1
-Lifestyle, diet, exercise, monitoring, clinician-review and appropriately gated supplement-consideration classes.
+Lifestyle, diet, exercise, monitoring, clinician-review and appropriately gated supplement-consideration classes. Every recommendation must consume M06 Safety Gate output.
 Effort: High.
 
 ### M10 — AI Harness Runtime
@@ -79,8 +78,8 @@ Clinical content review workflow hardening, privacy model, audit trail, accessib
 Effort: High.
 
 ## Mission batches after SR1
-- **Quality gate:** M05.1 alone.
-- **Batch C:** M06 + M07 — safety/source baseline + Health Map integration.
+- **Quality gate:** M05.1 — complete.
+- **Batch C:** M06 complete; M07 next.
 - **Batch D:** M08 + M09 — lab reassessment + action/recommendation engine.
 - **Batch E:** M10 + M11 — harness runtime + deterministic engine-vs-AI verdict.
 - **Longitudinal:** M13.
