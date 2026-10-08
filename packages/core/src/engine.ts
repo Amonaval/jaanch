@@ -9,6 +9,7 @@ export function assess(answers: Answers): AssessmentResult {
   const execution = executeRules(assessmentRules, answers);
   return {
     findings: execution.findings,
+    evidenceGraph: execution.evidenceGraph,
     evidenceCompleteness: Math.round((answered / Math.max(visible.length, 1)) * 100),
     answered,
     available: visible.length,

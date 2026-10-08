@@ -1,22 +1,24 @@
 # Mission Status
 
-## Current
-M01 — Foundation + Constitution: IMPLEMENTED (prototype scope) / READY TO PUSH
+## Completed
+- M01 — Foundation + Constitution: IMPLEMENTED (prototype scope)
+- M02 — Adaptive Question Planner v1: IMPLEMENTED
+- M03 — Versioned Rule Registry: IMPLEMENTED
+- M04 — Evidence Graph + Finding Model: IMPLEMENTED
 
-### Verified
-- Core TypeScript model compiles independently.
-- Adaptive question visibility engine type-checks.
-- Deterministic assessment functions type-check.
-- HAP-1.0 packet generator type-checks.
-- Product constitution, AI harness, roadmap and mission framework are present.
-
-### Environment limitation
-The container could not complete `npm install` within the available execution window, so the React/Vite bundle itself was not executed here. The source project is complete and should build after dependency installation in a normal Node environment.
+## M04 closure
+- Findings reference stable evidence-node IDs instead of anonymous evidence strings.
+- Evidence graph distinguishes observed, derived and missing evidence.
+- Support, contradiction and missing-for relationships are explicit.
+- Provenance carries source questions plus rule ID/version; derived facts carry formula lineage.
+- Finding confidence is separate from score and disease probability.
+- Current prototype rules were migrated without expanding clinical scope.
 
 ## Next
-M02 — Adaptive Question Planner v1
-Focus: explicit domain activation, question rationale, skip/unknown answers, branch stop conditions, and deterministic question prioritization.
+M05 — Screening & Test Priority Engine
+Focus: convert missing-evidence nodes into ranked investigations (essential / recommended / optional), explain why each test is useful, suppress redundant tests, and identify the smallest useful evidence set.
 
+After M05: Strategic Review 1.
 
 ## Execution agreement
 - Repository: `Amonaval/jaanch`

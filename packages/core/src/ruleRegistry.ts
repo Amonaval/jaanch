@@ -1,4 +1,5 @@
-import type { Answers, Domain, Finding } from './types';
+import type { Answers, Domain, EvidenceEdge, EvidenceNode, Finding } from './types';
+import { emptyEvidenceGraph, enrichEvidenceProvenance, mergeEvidenceGraph } from './evidenceGraph';
 
 export type RuleKind = 'finding' | 'red_flag';
 export type RuleMaturity = 'prototype' | 'reviewed' | 'approved';
@@ -13,6 +14,8 @@ export type RuleOutput = {
   finding?: Finding;
   redFlag?: string;
   evidenceQuestionIds?: string[];
+  evidenceNodes?: EvidenceNode[];
+  evidenceEdges?: EvidenceEdge[];
 };
 
 export type AssessmentRule = {
@@ -35,6 +38,7 @@ export type RuleTrace = {
   maturity: RuleMaturity;
   matched: boolean;
   evidenceQuestionIds: string[];
+  evidenceNodeIds: string[];
 };
 
 export function validateRuleRegistry(rules: AssessmentRule[]): string[] {
@@ -58,8 +62,14 @@ export function executeRules(rules: AssessmentRule[], answers: Answers) {
   const findings: Finding[] = [];
   const redFlags: string[] = [];
   const trace: RuleTrace[] = [];
+  let evidenceGraph = emptyEvidenceGraph();
+
   for (const rule of rules.filter((item) => item.enabled)) {
     const output = rule.evaluate(answers);
+    const nodes = enrichEvidenceProvenance(output.evidenceNodes ?? [], rule.id, rule.version);
+    const edges = output.evidenceEdges ?? [];
+    evidenceGraph = mergeEvidenceGraph(evidenceGraph, nodes, edges);
+
     trace.push({
       id: rule.id,
       version: rule.version,
@@ -68,9 +78,10 @@ export function executeRules(rules: AssessmentRule[], answers: Answers) {
       maturity: rule.maturity,
       matched: output.matched,
       evidenceQuestionIds: output.evidenceQuestionIds ?? [],
+      evidenceNodeIds: nodes.map((node) => node.id),
     });
     if (output.finding) findings.push({ ...output.finding, ruleId: rule.id, ruleVersion: rule.version });
     if (output.redFlag) redFlags.push(output.redFlag);
   }
-  return { findings, redFlags, trace };
+  return { findings, redFlags, trace, evidenceGraph };
 }

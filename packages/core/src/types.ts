@@ -27,10 +27,42 @@ export type Question = {
 export type AnswerValue = string | number | boolean | string[];
 export type Answers = Record<string, AnswerValue>;
 
-export type Evidence = {
+export type EvidenceNodeKind = 'observed' | 'derived' | 'missing';
+export type EvidenceSourceType = 'questionnaire' | 'measurement' | 'lab' | 'derived' | 'missing';
+export type EvidenceStrength = 'weak' | 'moderate' | 'strong' | 'decisive';
+export type EvidenceRelation = 'supports' | 'contradicts' | 'missing_for';
+export type FindingConfidence = 'low' | 'moderate' | 'high';
+export type EvidenceLevel = 'questionnaire_only' | 'measurement_informed' | 'lab_informed' | 'mixed' | 'insufficient';
+
+export type EvidenceProvenance = {
+  questionIds: string[];
+  ruleId?: string;
+  ruleVersion?: string;
+  derivation?: string;
+};
+
+export type EvidenceNode = {
+  id: string;
+  domain: Domain;
+  kind: EvidenceNodeKind;
+  sourceType: EvidenceSourceType;
   label: string;
   detail: string;
-  sourceQuestionIds: string[];
+  strength: EvidenceStrength;
+  provenance: EvidenceProvenance;
+  derivedFromIds?: string[];
+};
+
+export type EvidenceEdge = {
+  evidenceId: string;
+  findingId: string;
+  relation: EvidenceRelation;
+  weight?: number;
+};
+
+export type EvidenceGraph = {
+  nodes: EvidenceNode[];
+  edges: EvidenceEdge[];
 };
 
 export type FindingStatus = 'good' | 'monitor' | 'investigate' | 'high_attention' | 'insufficient_data';
@@ -43,9 +75,12 @@ export type Finding = {
   status: FindingStatus;
   urgency: Urgency;
   score?: number;
+  confidence: FindingConfidence;
+  evidenceLevel: EvidenceLevel;
   summary: string;
-  evidence: Evidence[];
-  missingEvidence?: string[];
+  supportingEvidenceIds: string[];
+  contradictingEvidenceIds: string[];
+  missingEvidenceIds: string[];
   actions: string[];
   ruleId?: string;
   ruleVersion?: string;
@@ -59,10 +94,12 @@ export type RuleTraceSummary = {
   maturity: 'prototype' | 'reviewed' | 'approved';
   matched: boolean;
   evidenceQuestionIds: string[];
+  evidenceNodeIds: string[];
 };
 
 export type AssessmentResult = {
   findings: Finding[];
+  evidenceGraph: EvidenceGraph;
   evidenceCompleteness: number;
   answered: number;
   available: number;
