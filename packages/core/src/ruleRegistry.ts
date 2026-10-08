@@ -1,5 +1,5 @@
 import type { Answers, Domain, EvidenceEdge, EvidenceNode, Finding } from './types';
-import { emptyEvidenceGraph, enrichEvidenceProvenance, mergeEvidenceGraph } from './evidenceGraph';
+import { assertEvidenceGraph, emptyEvidenceGraph, enrichEvidenceProvenance, mergeEvidenceGraph } from './evidenceGraph';
 
 export type RuleKind = 'finding' | 'red_flag';
 export type RuleMaturity = 'prototype' | 'reviewed' | 'approved';
@@ -83,5 +83,7 @@ export function executeRules(rules: AssessmentRule[], answers: Answers) {
     if (output.finding) findings.push({ ...output.finding, ruleId: rule.id, ruleVersion: rule.version });
     if (output.redFlag) redFlags.push(output.redFlag);
   }
+
+  assertEvidenceGraph(evidenceGraph, findings);
   return { findings, redFlags, trace, evidenceGraph };
 }
