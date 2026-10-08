@@ -6,29 +6,33 @@
 - M03 — Versioned Rule Registry: IMPLEMENTED
 - M04 — Evidence Graph + Finding Model: IMPLEMENTED
 - M05 — Screening & Test Priority Engine: IMPLEMENTED
+- Strategic Review 1: COMPLETE — CONTINUE WITH CHANGES
 
-## M05 closure
-- Missing-evidence nodes are converted to structured investigation recommendations.
-- Recommendations expose exact evidence gaps and related findings.
-- Priority means priority for reducing uncertainty, not medical necessity.
-- Alternative investigations are grouped to avoid redundant minimal-set recommendations.
-- A smallest-useful-set selector ranks by assessment priority, configured utility and evidence coverage.
-- Unmapped evidence gaps remain visible.
-- Routine test planning is suppressed while an urgent red flag is active.
-- Current investigation mappings are prototype-only pending clinical sourcing/review.
+## SR1 decisions now active
+- Insert M05.1 Core Verification Harness before M06.
+- Move clinical source/reference governance into M06 rather than waiting for release hardening.
+- Freeze broad health-domain expansion through M09 + SR2.
+- M07 must include shared platform-neutral presentation semantics/view-model selectors.
+- M08 must include lab unit/date/provenance/freshness semantics.
+- Defer M12 Rule Studio until after initial distribution/release hardening unless it becomes necessary.
+- Do not add a generic overall health score in the near term.
+- Canonical product name is Jaanch; Health Map is the result experience.
+- User-facing investigation tier `essential` is presented as “High assessment priority” so it is not mistaken for medical necessity.
 
 ## Current
-Strategic Review 1 — IN PROGRESS
-Scope: M01–M05 architecture, product usefulness, safety posture, overbuilding risk, mobile/web split, evidence/test model, and roadmap corrections before M06.
+M05.1 — Core Verification Harness: NEXT
+Effort: Medium
 
-## Next planned
-M06 — Safety Gate
-M07 — Health Map UX v2
+## Then
+M06 — Safety Gate + Clinical Source Baseline: High
+M07 — Health Map UX v2 + Shared Presentation Model: Medium
+M08 — Lab Reassessment + Normalization/Freshness: High
+M09 — Recommendation Engine v1: High
+Strategic Review 2
 
 ## Execution agreement
 - Repository: `Amonaval/jaanch`
 - Commit budget: 1–2 commits per mission
 - Default effort: Medium
-- High-effort missions: M03, M04, M06, M09, M11, M14, M15
-- Strategic reviews: SR1 after M05; SR2 after M09; SR3 after M13
+- Strategic reviews may continue, change, drop or defer roadmap work.
 - Mission batching is allowed only for adjacent, tightly-coupled missions; each mission still closes independently.
