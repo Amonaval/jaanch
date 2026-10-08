@@ -1,18 +1,6 @@
-import type { Answers, AssessmentResult, Condition, Evidence, Finding, Question } from './types';
-import { questions } from './questions';
+import type { Answers, AssessmentResult, Evidence, Finding } from './types';
+import { visibleQuestions } from './planner';
 
-export function conditionMatches(c: Condition, a: Answers): boolean {
-  const actual = a[c.questionId];
-  if (actual === undefined) return false;
-  if (c.operator === 'eq') return actual === c.value;
-  if (c.operator === 'neq') return actual !== c.value;
-  if (c.operator === 'includes') return Array.isArray(actual) ? actual.includes(String(c.value)) : String(actual).includes(String(c.value));
-  if (c.operator === 'gte') return Number(actual) >= Number(c.value);
-  return Number(actual) <= Number(c.value);
-}
-
-export const isQuestionVisible = (q: Question, a: Answers) => !q.showWhen?.length || q.showWhen.every((c) => conditionMatches(c, a));
-export const visibleQuestions = (a: Answers) => questions.filter((q) => isQuestionVisible(q, a)).sort((x, y) => x.priority - y.priority);
 const ev = (label: string, detail: string, ids: string[]): Evidence => ({ label, detail, sourceQuestionIds: ids });
 
 function metabolic(a: Answers): Finding {
