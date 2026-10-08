@@ -6,5 +6,6 @@ export * from './ruleRegistry';
 export * from './rules';
 export * from './testRegistry';
 export * from './testPriority';
+export * from './verification';
 export * from './engine';
 export * from './hap';

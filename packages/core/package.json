@@ -1,1 +1,1 @@
-{"name":"@jaanch/core","version":"0.1.0","private":true,"type":"module","exports":"./src/index.ts"}
+{"name":"@jaanch/core","version":"0.1.0","private":true,"type":"module","exports":"./src/index.ts","scripts":{"verify":"tsx src/verifyCli.ts"},"devDependencies":{"tsx":"latest"}}
