@@ -1,0 +1,11 @@
+import { useMemo, useState } from 'react';
+import { SafeAreaView, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { assess, visibleQuestions, type AnswerValue, type Answers } from '@jaanch/core';
+
+export default function App(){
+ const [answers,setAnswers]=useState<Answers>({}); const [i,setI]=useState(0); const [done,setDone]=useState(false);
+ const qs=useMemo(()=>visibleQuestions(answers),[answers]); const q=qs[Math.min(i,Math.max(0,qs.length-1))]; const result=useMemo(()=>assess(answers),[answers]);
+ if(done) return <SafeAreaView style={{flex:1}}><ScrollView contentContainerStyle={{padding:24,gap:16}}><Text style={{fontSize:34,fontWeight:'700'}}>Your Health Map</Text><Text>Evidence completeness {result.evidenceCompleteness}%</Text>{result.redFlags.map(x=><View key={x} style={{padding:16,backgroundColor:'#fee2e2'}}><Text>{x}</Text></View>)}{result.findings.map(f=><View key={f.id} style={{padding:18,borderWidth:1,borderColor:'#ddd',borderRadius:16}}><Text style={{fontWeight:'700',fontSize:20}}>{f.title}</Text><Text>{f.status}</Text><Text>{f.summary}</Text><Text>{f.actions[0]}</Text></View>)}</ScrollView></SafeAreaView>;
+ if(!q) return null; const value=answers[q.id]; const set=(v:AnswerValue)=>setAnswers(a=>({...a,[q.id]:v}));
+ return <SafeAreaView style={{flex:1}}><ScrollView contentContainerStyle={{padding:24,gap:18}}><Text style={{fontSize:30,fontWeight:'800'}}>Jaanch</Text><Text>Question {i+1} of {qs.length}</Text><Text style={{fontSize:26,fontWeight:'700'}}>{q.title}</Text><Text>{q.master?'Baseline question':'Adaptive follow-up selected from earlier answers'}</Text>{q.options?.map(o=><TouchableOpacity key={o.value} style={{padding:16,borderWidth:1,borderColor:'#bbb',borderRadius:14}} onPress={()=>set(q.type==='boolean'?o.value==='yes':o.value)}><Text>{o.label}</Text></TouchableOpacity>)}<View style={{flexDirection:'row',justifyContent:'space-between'}}><TouchableOpacity disabled={!i} onPress={()=>setI(Math.max(0,i-1))}><Text>Back</Text></TouchableOpacity><TouchableOpacity disabled={value===undefined} onPress={()=>i>=qs.length-1?setDone(true):setI(i+1)}><Text style={{fontWeight:'700'}}>Continue</Text></TouchableOpacity></View></ScrollView></SafeAreaView>;
+}
