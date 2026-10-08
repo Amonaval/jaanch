@@ -74,7 +74,7 @@ function metabolicRule(a: Answers): RuleOutput {
     status: score >= 60 ? 'high_attention' : score >= 30 ? 'investigate' : 'monitor',
     urgency: score >= 60 ? 'priority' : 'routine', score: Math.min(score,100),
     confidence: confidenceFor(score, evidenceLevel), evidenceLevel,
-    summary:'Screening signals based on age, body composition, activity and family history.',
+    summary:'Prototype screening signals based on age, body composition, activity and family history; this score is not a diabetes probability.',
     supportingEvidenceIds: support, contradictingEvidenceIds: [], missingEvidenceIds: missing,
     actions: hasLab ? ['Interpret measured glucose markers with context.'] : ['Consider diabetes screening to reduce uncertainty.'],
   };
@@ -118,7 +118,7 @@ function nutritionRule(a: Answers): RuleOutput {
     status: b12 > 0 && b12 < 200 ? 'high_attention' : score >= 50 ? 'investigate' : 'monitor',
     urgency: b12 > 0 && b12 < 200 ? 'clinician_review' : 'routine', score,
     confidence: confidenceFor(score, evidenceLevel), evidenceLevel,
-    summary:'Questionnaire patterns may justify testing; measured values carry more weight.',
+    summary:'Questionnaire patterns may justify testing; measured values carry more weight and cutoff definitions can vary.',
     supportingEvidenceIds:support, contradictingEvidenceIds:contradict, missingEvidenceIds:missing,
     actions: b12 ? ['Review the measured result in context.'] : ['Consider B12 testing if risk factors or symptoms persist.'],
   };
@@ -149,20 +149,20 @@ function sleepRule(a: Answers): RuleOutput {
     id:findingId, domain:'sleep', title:'Sleep health',
     status: score >= 60 ? 'investigate' : score >= 25 ? 'monitor' : 'good', urgency: score >= 60 ? 'clinician_review' : 'routine', score,
     confidence: confidenceFor(score, evidenceLevel), evidenceLevel,
-    summary:'Sleep duration and symptoms are screened separately from diagnosis.',
+    summary:'Sleep duration and symptoms are screening signals only; Jaanch does not diagnose sleep apnea.',
     supportingEvidenceIds:support, contradictingEvidenceIds:[], missingEvidenceIds:[],
-    actions: score >= 60 ? ['Consider clinician review for sleep-disorder screening.'] : ['Protect a consistent sleep window and monitor daytime functioning.'],
+    actions: score >= 60 ? ['Consider clinician review for sleep-disorder evaluation.'] : ['Protect a consistent sleep window and monitor daytime functioning.'],
   };
   return { matched:true, finding, evidenceNodes:nodes, evidenceEdges:edges, evidenceQuestionIds:['sleepHours','currentConcerns','snoring'] };
 }
 
 export const assessmentRules: AssessmentRule[] = [
-  { id:'MET-SCREEN-001', version:'1.1.0', domain:'metabolic', kind:'finding', title:'Metabolic screening risk', enabled:true, maturity:'prototype', sources:[{label:'Prototype screening heuristic — clinical sourcing required before production.'}], evaluate:metabolicRule },
-  { id:'NUT-B12-001', version:'1.1.0', domain:'nutrition', kind:'finding', title:'B12 / nutrition screening', enabled:true, maturity:'prototype', sources:[{label:'Prototype nutrition heuristic — clinical sourcing required before production.'}], evaluate:nutritionRule },
-  { id:'SLP-SCREEN-001', version:'1.1.0', domain:'sleep', kind:'finding', title:'Sleep screening', enabled:true, maturity:'prototype', sources:[{label:'Prototype sleep heuristic — clinical sourcing required before production.'}], evaluate:sleepRule },
+  { id:'MET-SCREEN-001', version:'1.2.0', domain:'metabolic', kind:'finding', title:'Metabolic screening risk', enabled:true, maturity:'prototype', sourceIds:['ADA-2026-DIAGNOSIS'], evaluate:metabolicRule },
+  { id:'NUT-B12-001', version:'1.2.0', domain:'nutrition', kind:'finding', title:'B12 / nutrition screening', enabled:true, maturity:'prototype', sourceIds:['NIH-ODS-B12-HP'], evaluate:nutritionRule },
+  { id:'SLP-SCREEN-001', version:'1.2.0', domain:'sleep', kind:'finding', title:'Sleep screening', enabled:true, maturity:'prototype', sourceIds:['AASM-OSA-DIAGNOSTIC-2017'], evaluate:sleepRule },
   {
-    id:'SAFE-CHEST-001', version:'1.1.0', domain:'safety', kind:'red_flag', title:'Concerning chest pain escalation', enabled:true, maturity:'prototype',
-    sources:[{label:'Safety prototype — emergency wording and clinical source review required before production.'}],
+    id:'SAFE-CHEST-001', version:'1.2.0', domain:'safety', kind:'red_flag', title:'Concerning chest pain escalation', enabled:true, maturity:'prototype',
+    sourceIds:['CDC-HEART-ATTACK-2024'],
     evaluate:(answers) => {
       if (answers.redFlagChestPain !== true) return { matched:false, evidenceQuestionIds:['currentConcerns','redFlagChestPain'] };
       const evidenceNode = node('safe.obs.concerning_chest_pain', 'safety', 'observed', 'questionnaire', 'Concerning chest-pain pattern', 'Severe/new chest pain with associated concerning symptoms reported.', 'decisive', ['currentConcerns','redFlagChestPain']);

@@ -1,13 +1,9 @@
 import type { Answers, Domain, EvidenceEdge, EvidenceNode, Finding } from './types';
 import { assertEvidenceGraph, emptyEvidenceGraph, enrichEvidenceProvenance, mergeEvidenceGraph } from './evidenceGraph';
+import { validateClinicalSourceIds } from './clinicalSources';
 
 export type RuleKind = 'finding' | 'red_flag';
 export type RuleMaturity = 'prototype' | 'reviewed' | 'approved';
-
-export type RuleSource = {
-  label: string;
-  reference?: string;
-};
 
 export type RuleOutput = {
   matched: boolean;
@@ -26,7 +22,7 @@ export type AssessmentRule = {
   title: string;
   enabled: boolean;
   maturity: RuleMaturity;
-  sources: RuleSource[];
+  sourceIds: string[];
   evaluate: (answers: Answers) => RuleOutput;
 };
 
@@ -39,6 +35,7 @@ export type RuleTrace = {
   matched: boolean;
   evidenceQuestionIds: string[];
   evidenceNodeIds: string[];
+  sourceIds: string[];
 };
 
 export function validateRuleRegistry(rules: AssessmentRule[]): string[] {
@@ -50,7 +47,7 @@ export function validateRuleRegistry(rules: AssessmentRule[]): string[] {
     const key = `${rule.id}@${rule.version}`;
     if (keys.has(key)) errors.push(`${key}: duplicate rule version.`);
     keys.add(key);
-    if (!rule.sources.length) errors.push(`${key}: at least one source/provenance entry is required.`);
+    for (const sourceError of validateClinicalSourceIds(rule.sourceIds)) errors.push(`${key}: ${sourceError}`);
   }
   return errors;
 }
@@ -79,6 +76,7 @@ export function executeRules(rules: AssessmentRule[], answers: Answers) {
       matched: output.matched,
       evidenceQuestionIds: output.evidenceQuestionIds ?? [],
       evidenceNodeIds: nodes.map((node) => node.id),
+      sourceIds: rule.sourceIds,
     });
     if (output.finding) findings.push({ ...output.finding, ruleId: rule.id, ruleVersion: rule.version });
     if (output.redFlag) redFlags.push(output.redFlag);

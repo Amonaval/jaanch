@@ -99,7 +99,7 @@ export type InvestigationDefinition = {
   alternativeGroup?: string;
   utility: number;
   maturity: InvestigationMaturity;
-  sources: string[];
+  sourceIds: string[];
 };
 
 export type TestRecommendation = {
@@ -113,6 +113,7 @@ export type TestRecommendation = {
   alternativeGroup?: string;
   selectedForMinimalSet: boolean;
   maturity: InvestigationMaturity;
+  sourceIds: string[];
 };
 
 export type TestPlan = {
@@ -120,6 +121,71 @@ export type TestPlan = {
   minimalSetIds: string[];
   uncoveredEvidenceIds: string[];
   blockedReason?: string;
+};
+
+export type ClinicalEvidenceType = 'clinical_guideline' | 'government_fact_sheet' | 'public_health_guidance' | 'position_statement';
+export type ClinicalSourceStatus = 'current' | 'superseded' | 'unknown';
+export type ClinicalSourceReviewStatus = 'captured' | 'reviewed' | 'approved';
+
+export type ClinicalSource = {
+  id: string;
+  title: string;
+  issuingBody: string;
+  url: string;
+  publicationDate?: string;
+  versionLabel?: string;
+  evidenceType: ClinicalEvidenceType;
+  population: string;
+  applicabilityNotes: string[];
+  sourceStatus: ClinicalSourceStatus;
+  reviewStatus: ClinicalSourceReviewStatus;
+  lastVerifiedOn: string;
+};
+
+export type ClinicalGovernanceReport = {
+  registryErrors: string[];
+  referencedSourceIds: string[];
+  unresolvedSourceIds: string[];
+  prototypeRuleIds: string[];
+  reviewedRuleIds: string[];
+  approvedRuleIds: string[];
+  prototypeInvestigationIds: string[];
+  reviewedInvestigationIds: string[];
+  approvedInvestigationIds: string[];
+};
+
+export type SafetyActionClass =
+  | 'general_lifestyle'
+  | 'diet_guidance'
+  | 'exercise'
+  | 'monitoring'
+  | 'routine_supplement'
+  | 'therapeutic_supplement'
+  | 'medication_change';
+
+export type SafetyDisposition = 'allowed' | 'caution' | 'clinician_review' | 'blocked';
+export type SafetyFlagSeverity = 'context' | 'caution' | 'high_caution' | 'urgent';
+
+export type SafetyFlag = {
+  id: string;
+  label: string;
+  severity: SafetyFlagSeverity;
+  reason: string;
+  sourceQuestionIds: string[];
+};
+
+export type SafetyDecision = {
+  actionClass: SafetyActionClass;
+  disposition: SafetyDisposition;
+  reasons: string[];
+};
+
+export type SafetyGate = {
+  version: 'SAFETY-1.0.0';
+  urgent: boolean;
+  flags: SafetyFlag[];
+  decisions: SafetyDecision[];
+  summary: string[];
 };
 
 export type RuleTraceSummary = {
@@ -131,12 +197,15 @@ export type RuleTraceSummary = {
   matched: boolean;
   evidenceQuestionIds: string[];
   evidenceNodeIds: string[];
+  sourceIds: string[];
 };
 
 export type AssessmentResult = {
   findings: Finding[];
   evidenceGraph: EvidenceGraph;
   testPlan: TestPlan;
+  safetyGate: SafetyGate;
+  clinicalGovernance: ClinicalGovernanceReport;
   evidenceCompleteness: number;
   answered: number;
   available: number;

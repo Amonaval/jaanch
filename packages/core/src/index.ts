@@ -2,6 +2,8 @@ export * from './types';
 export * from './questions';
 export * from './planner';
 export * from './evidenceGraph';
+export * from './clinicalSources';
+export * from './safety';
 export * from './ruleRegistry';
 export * from './rules';
 export * from './testRegistry';

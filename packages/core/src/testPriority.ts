@@ -40,6 +40,7 @@ function buildRecommendation(definition: InvestigationDefinition, findings: Find
     alternativeGroup: definition.alternativeGroup,
     selectedForMinimalSet: false,
     maturity: definition.maturity,
+    sourceIds: definition.sourceIds,
   };
 }
 

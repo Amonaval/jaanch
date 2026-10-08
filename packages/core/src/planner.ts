@@ -91,7 +91,7 @@ export function domainActivations(answers: Answers): DomainActivation[] {
 }
 
 function questionWhy(question: Question, activations: DomainActivation[]): string[] {
-  if (question.master) return ['Core question used to decide which health domains and follow-ups are relevant.'];
+  if (question.master) return ['Core question used to decide which health domains, safety gates and follow-ups are relevant.'];
   const activation = activations.find((item) => item.domain === question.domain);
   const reasons = activation?.reasons ?? [];
   const dependencyReasons = question.showWhen?.map((condition) => `Depends on ${condition.questionId} (${condition.operator} ${String(condition.value)})`) ?? [];
@@ -99,10 +99,11 @@ function questionWhy(question: Question, activations: DomainActivation[]): strin
 }
 
 export function isQuestionEligible(question: Question, answers: Answers, activations = domainActivations(answers)): boolean {
-  if (question.master) return true;
+  const dependenciesMatch = !question.showWhen?.length || question.showWhen.every((condition) => conditionMatches(condition, answers));
+  if (question.master) return dependenciesMatch;
   const domain = activations.find((item) => item.domain === question.domain);
   if (!domain?.active) return false;
-  return !question.showWhen?.length || question.showWhen.every((condition) => conditionMatches(condition, answers));
+  return dependenciesMatch;
 }
 
 export function getAssessmentPlan(answers: Answers): AssessmentPlan {
