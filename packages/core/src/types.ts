@@ -47,6 +47,18 @@ export type Finding = {
   evidence: Evidence[];
   missingEvidence?: string[];
   actions: string[];
+  ruleId?: string;
+  ruleVersion?: string;
+};
+
+export type RuleTraceSummary = {
+  id: string;
+  version: string;
+  domain: Domain;
+  kind: 'finding' | 'red_flag';
+  maturity: 'prototype' | 'reviewed' | 'approved';
+  matched: boolean;
+  evidenceQuestionIds: string[];
 };
 
 export type AssessmentResult = {
@@ -55,4 +67,5 @@ export type AssessmentResult = {
   answered: number;
   available: number;
   redFlags: string[];
+  ruleTrace: RuleTraceSummary[];
 };
