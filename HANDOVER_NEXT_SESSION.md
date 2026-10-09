@@ -20,16 +20,16 @@ Default branch:
 main
 ```
 
-The immediate pre-handover product head was:
+The immediate pre-documentation-sync product head was:
 
 ```text
-d6727ba7d5c1aaffd67f40c02bd2cb494fefa569
-M13.2: ship consumer Health Map v3 on web and mobile
+d9107cec98d440a04f3f072f4dffe991c0267d82
+M13.3: harden report unit and date provenance
 ```
 
-A documentation/handover commit may be newer. **Always fetch the current `main` head before writing anything. Never overwrite a newer head.**
+A documentation/handover commit will normally be newer. **Always fetch the current `main` head before writing anything. Never overwrite a newer head.**
 
-First read these canonical files:
+First read these canonical files completely:
 
 ```text
 README.md
@@ -38,6 +38,7 @@ docs/product/ROADMAP.md
 docs/product/ASSESSMENT_QUALITY_STANDARD.md
 docs/missions/M13.1_ASSESSMENT_QUALITY_RECOVERY.md
 docs/missions/M13.2_RESULT_QUALITY_HEALTH_MAP_UX.md
+docs/missions/M13.3_CLINICAL_EVIDENCE_CAPTURE_V2_REPORT_UX.md
 ```
 
 Then inspect the current implementation files relevant to the requested mission rather than relying only on this prompt.
@@ -46,7 +47,7 @@ Then inspect the current implementation files relevant to the requested mission 
 
 Jaanch is not an AI diagnosis chatbot.
 
-Core product loop:
+Core loop:
 
 ```text
 Capture health context
@@ -59,7 +60,7 @@ Missing / contradicting / supporting evidence
       ↓
 Smallest useful next evidence
       ↓
-Lab / measurement capture
+Manual result entry OR reviewed report-evidence capture
       ↓
 Reassessment
       ↓
@@ -78,23 +79,25 @@ Product principle:
 
 ## 3. Non-negotiable clinical/product boundaries
 
-These rules are architectural, not copywriting preferences:
+These are architectural rules, not copywriting preferences:
 
 1. Questionnaire signals are **not diagnoses**.
 2. Confidence means confidence in the assessment statement, **not disease probability**.
 3. No generic overall health score.
 4. Evidence completeness is **not overall health**.
 5. Capturing a health fact does **not** authorize deterministic interpretation of that fact.
-6. Unsupported/manual facts must remain visible as `recorded/unassessed` context rather than disappearing or being over-interpreted.
-7. Prescription medication changes are never autonomously recommended.
-8. Therapeutic/high-dose supplement guidance requires clinician-review/safety gating; Jaanch does not invent treatment regimens.
-9. Urgent red flags override routine wellness flow.
-10. Population applicability must be checked **before** adult-oriented rules/tests/recommendations run.
-11. Normalized lab evidence must respect marker, unit, collection date, verification, freshness and provenance.
-12. AI must never silently override deterministic urgent/safety/applicability/evidence-eligibility decisions.
-13. AI must be privacy-minimized, schema-constrained and optional.
-14. Clinical rule/test/recommendation maturity remains explicit: `prototype` / `reviewed` / `approved`.
-15. A captured authoritative source does not magically make a rule clinically approved.
+6. Unsupported/manual/report facts must remain visible as `recorded_unassessed` context rather than disappear or be over-interpreted.
+7. Report extraction creates **candidate evidence only**. Extraction is never equivalent to clinical eligibility.
+8. Missing report unit/date/source facts must not be guessed or silently defaulted.
+9. Prescription medication changes are never autonomously recommended.
+10. Therapeutic/high-dose supplement guidance requires clinician-review/safety gating; Jaanch does not invent treatment regimens.
+11. Urgent red flags override routine wellness flow.
+12. Population applicability must be checked **before** adult-oriented rules/tests/recommendations run.
+13. Normalized lab evidence must respect marker, unit, collection date, verification, freshness and provenance.
+14. AI must never silently override deterministic urgent/safety/applicability/evidence-eligibility decisions.
+15. AI must be privacy-minimized, schema-constrained and optional.
+16. Clinical rule/test/recommendation maturity remains explicit: `prototype` / `reviewed` / `approved`.
+17. A captured authoritative source does not magically make a rule clinically approved.
 
 ## 4. Architecture
 
@@ -131,6 +134,8 @@ evidenceGraph.ts
 testRegistry.ts
 testPriority.ts
 labs.ts
+reportEvidence.ts
+reportWorkflow.ts
 recommendations.ts
 healthMapView.ts
 resultView.ts
@@ -164,28 +169,16 @@ M10   AI Harness Runtime + Privacy/Evaluation — engineering done; live utility
 M13   Longitudinal Health + Local Persistence
 M13.1 Assessment Quality Recovery + Block UX v2 — engineering done; owner trust retest required
 M13.2 Result Quality + Health Map Consumer UX v3 — engineering done; owner result-UX retest required
+M13.3 Clinical Evidence Capture v2 / Report UX — engineering done; owner evidence-ingestion retest required
 ```
 
-Do not redo these missions unless a real regression/owner test finding requires it.
+Do not reconstruct or redo completed missions unless current code or owner hands-on testing exposes a real defect.
 
-## 6. Why M13.1 happened
+## 6. M13.1 — assessment quality state
 
-The first hands-on owner test exposed that the earlier questionnaire was too shallow and too question-by-question:
+M13.1 corrected shallow intake and fragile question-by-question navigation.
 
-- limited conditions/concerns;
-- no adequate manual Other paths;
-- walking was poorly represented;
-- too few labs;
-- Vitamin D and other known results could not be captured properly;
-- height/waist units were awkward;
-- navigation could lose adaptive content;
-- one tiny question per Next click created excessive navigation;
-- medicines lacked useful name/reason context;
-- broader captured context needed to be available even before deterministic interpretation existed.
-
-M13.1 corrected the intake model and made assessment quality release-blocking.
-
-Current intake now has:
+Current intake includes:
 
 - five primary blocks: About, History, Current health, Lifestyle, Tests;
 - adaptive/safety follow-up blocks;
@@ -199,33 +192,23 @@ Current intake now has:
 - broader known-result capture including Vitamin D, glucose, lipids, hemoglobin, ferritin, TSH, BP and Other;
 - unsupported values preserved as recorded/unassessed.
 
-Post-M13.1 hardening fixed:
+Post-M13.1 hardening fixed selected-state rendering and numeric-clearing regressions. Do not reintroduce them.
 
-- incorrect selected-state rendering on web;
-- clearing numeric inputs leaving stale/zero values;
-- mobile numeric clearing semantics.
+Owner gate still open:
 
-Do not reintroduce those bugs.
+> **Jaanch captured the material facts I expected it to know.**
 
-## 7. Why M13.2 happened
+## 7. M13.2 — result quality state
 
-Even with a better engine, the result screen still read too much like engineering output.
-
-M13.2 added a shared consumer result narrative:
+M13.2 introduced shared consumer result semantics:
 
 ```text
 Your Health Map
-
 1. What matters now
 2. What you can do
 3. What the evidence supports
 4. What is still uncertain
 5. What changed since last time
-
-Then:
-- recorded but not yet interpreted facts
-- safety/evidence detail
-- technical governance/HAP
 ```
 
 Core API:
@@ -245,64 +228,119 @@ quiet
 
 A quiet state must **not** claim “you are healthy.” It only says no high-priority issue was found in evidence Jaanch can currently interpret.
 
-M13.2 also fixed longitudinal comparison so if the latest saved snapshot is materially equivalent to the live preview, comparison uses the previous distinct check-in instead of hiding the useful change narrative.
+Longitudinal comparison uses the previous **distinct** saved check-in when the latest saved snapshot is materially equivalent to the live preview.
 
-## 8. Current owner validation gate
-
-Engineering is ahead of owner validation.
-
-Before treating the product as a credible alpha, the owner should confirm:
-
-> **Jaanch captured the material facts I expected it to know.**
-
-and:
+Owner gate still open:
 
 > **Without opening technical details, I can tell what matters, what to do, what is unknown, and what changed.**
 
-Recommended retest scenarios are in `docs/missions/STATUS.md` and `README.md`.
+## 8. M13.3 — evidence capture state
 
-If the owner gives new hands-on defects, **fix them before blindly continuing the roadmap**. This is a sensitive health product; poor result quality can invalidate the product.
+M13.3 is engineering-implemented. Do not restart it.
 
-## 9. Current next mission
+Shared core:
 
-If no new owner defect is supplied and the user asks to continue, next planned mission is:
+- provider-neutral `ReportEvidenceCandidate` / `ReportProvenance` contract;
+- deterministic pasted-text/OCR extraction for common markers;
+- marker normalization for HbA1c, B12, Vitamin D, glucose, lipids, hemoglobin, ferritin, TSH and BP;
+- extraction confidence and clarification/issues surfaced;
+- candidates remain inert until explicit user review/confirmation;
+- supported HbA1c/B12 still pass through existing unit/date/verification/freshness/plausibility gates;
+- unsupported markers become `recorded_unassessed` after confirmation;
+- report provenance retained through normalization;
+- exact duplicate replacement plus existing latest-result semantics;
+- reviewed candidates can be applied as one batch to the latest saved check-in, creating one reassessed immutable snapshot.
 
-# M13.3 — Clinical Evidence Capture v2 / Report UX
+Web/mobile:
+
+- dedicated **Import lab report** surface without rewriting the existing assessment App;
+- web native file picker;
+- mobile `expo-document-picker`;
+- PDF/image/text attachment preserves source provenance;
+- pasted report text/OCR output is parsed into candidates;
+- value, unit, collection date and reference range are editable before review;
+- confidence/issues and review/ignore states are visible;
+- returning to assessment reloads persisted history after apply.
+
+Important safety hardening already done:
+
+- **do not infer a unit when the report did not provide one**;
+- **do not prefill report collection date as today**;
+- missing unit/date remains visibly unresolved and blocks supported-lab confirmation.
+
+Intentional alpha limitation:
+
+> Raw PDF/image bytes are not automatically OCR-parsed. File attachment retains provenance; the user pastes report text/OCR output. A future extraction provider may implement the provider-neutral contract but must not bypass review or clinical eligibility gates.
+
+Report import intentionally requires an existing saved baseline. This prevents the report flow from inventing the rest of the user’s health context.
+
+Owner gate still open:
+
+> **Report import makes evidence capture easier without silently accepting extracted values or over-interpreting unsupported markers.**
+
+## 9. Current combined owner validation gate
+
+Engineering is ahead of hands-on owner validation.
+
+Before treating Jaanch as a usable consumer alpha, confirm all three:
+
+1. assessment captured the material facts expected;
+2. consumer result meaning/action/uncertainty/change is understandable without technical details;
+3. report evidence capture is trustworthy and easier than manual entry without false provenance or unsupported interpretation.
+
+Recommended M13.3 owner tests:
+
+1. save a normal Jaanch check-in first;
+2. attach PDF/image and verify source provenance;
+3. paste report text with HbA1c/B12 plus Vitamin D or lipids;
+4. edit an intentionally wrong value/unit/date before review;
+5. verify extraction alone changes nothing;
+6. verify HbA1c/B12 only enter the supported path after explicit review and normal eligibility checks;
+7. verify unsupported markers stay recorded/unassessed;
+8. omit unit/date and verify Jaanch does not guess them;
+9. re-import an exact duplicate;
+10. import a newer distinct result;
+11. compare web/mobile semantics.
+
+If the owner gives new hands-on defects, **fix them before continuing the roadmap**. In this health product, trust/result/evidence-integrity defects are release-blocking.
+
+## 10. Next planned engineering mission
+
+If no owner defect is supplied and the user asks to continue beyond M13.3, the next planned mission is:
+
+# M13.4 — Narrow Clinical Interpretation Expansion
 
 Effort: **High**
 
-Goal: make evidence/report capture much easier while preserving evidence integrity.
+However, M13.4 should only proceed when the owner trust/result/report gates are credible enough. If the user has not tested yet, clearly state that those gates remain open; do not pretend product validation happened merely because engineering is complete.
 
-Expected scope:
+Potential domains, only a few at a time:
 
-- faster structured manual result entry;
-- image/PDF report ingestion UX;
-- extraction produces candidate values only;
-- explicit user confirmation before evidence eligibility;
-- marker normalization;
-- value/unit/date/source/reference-range provenance;
-- extraction confidence/errors visible;
-- duplicate/latest-result semantics;
-- report-level provenance retained;
-- unsupported markers remain recorded/unassessed;
-- mobile-friendly flow;
-- verification scenarios around extraction/confirmation boundaries.
+- blood pressure / cardiovascular screening;
+- lipid context;
+- iron/anemia context;
+- thyroid context where justified;
+- Vitamin D only if evidence/product value and safety boundaries justify it.
 
-Non-goals:
+Every interpreted domain must include:
 
-- no automatic diagnosis from report prose;
-- no silent acceptance of extracted values;
-- no clinical rule expansion just because a report contains a marker;
-- no autonomous treatment recommendations based on report extraction.
+- authoritative/current clinical sources;
+- explicit applicability;
+- evidence model;
+- contradiction/missing-evidence behavior;
+- investigation mapping;
+- recommendation boundary;
+- safety interactions;
+- golden scenarios;
+- explicit prototype/reviewed/approved maturity.
 
-Before coding M13.3, inspect existing `labs.ts`, `intake.ts`, report-related code if any, app upload capabilities, and current dependencies. Prefer a provider-neutral candidate-extraction contract rather than binding core clinical logic to one OCR/vendor implementation.
+No broad “100 diseases” expansion.
 
-## 10. Missions after M13.3
+## 11. Missions after M13.4
 
 Current roadmap:
 
 ```text
-M13.3 Clinical Evidence Capture v2 / Report UX
 M13.4 Narrow Clinical Interpretation Expansion
 M13.5 Profile + Secure Persistence Architecture v1
 Resume M10 live AI Utility Gate
@@ -313,19 +351,9 @@ M14 MCP / ChatGPT App later
 M15B Store / Production Hardening last
 ```
 
-Potential M13.4 interpretation domains, only a few at a time:
+M13.5 remains behind intake/result/evidence stabilization. Supabase or another backend may be evaluated there, but storage choice must not dictate clinical semantics.
 
-- blood pressure / cardiovascular screening;
-- lipid context;
-- iron/anemia context;
-- thyroid context where justified;
-- Vitamin D only if evidence/product value and safety boundaries justify it.
-
-Every new interpreted domain must include sources, applicability, evidence semantics, investigation mapping, safety/recommendation boundaries and golden tests.
-
-No broad “100 diseases” expansion.
-
-## 11. AI status
+## 12. AI status
 
 M10 engineering exists:
 
@@ -339,13 +367,11 @@ M10 engineering exists:
 - `store:false`;
 - utility evaluation contract.
 
-But **live AI Utility Gate is intentionally paused**.
+But **M10 live AI Utility Gate remains paused** until intake/result/evidence quality is representative enough to judge AI fairly.
 
-Do not implement M11 merely because the plumbing exists.
+Do not implement M11 merely because plumbing exists. AI must demonstrate incremental contradiction/missing-consideration/explanation value beyond deterministic output.
 
-M11 proceeds only if a real configured model demonstrates useful incremental review value beyond deterministic output.
-
-## 12. Persistence status
+## 13. Persistence status
 
 Current history is local-first prototype persistence:
 
@@ -354,7 +380,7 @@ web    → localStorage
 mobile → AsyncStorage
 ```
 
-Snapshots are immutable/versioned for comparison.
+Snapshots are immutable/versioned for comparison. Report import writes one new reassessed snapshot rather than mutating the prior check-in.
 
 Known limitations:
 
@@ -364,9 +390,9 @@ Known limitations:
 - no backup/restore;
 - no cross-device continuity.
 
-Those belong to M13.5 / release hardening, not M13.3.
+Those belong to M13.5 / release hardening.
 
-## 13. Build/run baseline
+## 14. Build/run baseline
 
 Repo root:
 
@@ -398,9 +424,10 @@ React Native 0.86
 React 19.2.3
 Node >=22.13
 npm workspace monorepo
+expo-document-picker added by M13.3
 ```
 
-Important npm fix already made:
+Important npm rule:
 
 ```text
 Do NOT restore @jaanch/core: "workspace:*"
@@ -412,43 +439,55 @@ Consumers use:
 @jaanch/core: "0.1.0"
 ```
 
-because npm auto-links the matching local workspace package.
+because npm workspaces auto-link the matching local package.
 
-Normal mobile command intentionally uses Expo Go mode (`expo start --go`) because `expo-dev-client` is installed separately.
+## 15. Verification / CI state
 
-## 14. Verification / CI state
-
-The repo has a committed verification harness and root:
+The repo has a committed verification harness and root command:
 
 ```bash
 npm run verify
 ```
 
-No GitHub CI status checks were attached to the latest head at handover time.
+M13.3 deterministic scenarios cover:
 
-Do not claim CI passed unless you actually see/run CI.
+- extraction creates candidates only;
+- marker normalization;
+- explicit confirmation boundary;
+- report provenance retention;
+- supported-lab normal eligibility gates;
+- unsupported markers stay unassessed;
+- missing unit is not inferred;
+- missing collection date blocks supported-lab promotion;
+- exact duplicate handling;
+- newer distinct/latest-result semantics;
+- mixed reviewed batch → one reassessed snapshot;
+- low-confidence unknown-marker visibility.
 
-When changing core semantics, add deterministic regression scenarios. Tests must execute the real shared core; do not duplicate rule logic inside tests.
+At M13.3 handover, **no GitHub CI status checks are attached to `main`**. Do not claim CI passed unless that changes and you actually inspect/run it.
 
-## 15. Working style / engineering rules
+When changing core semantics, add deterministic regression scenarios that execute the real shared core; do not duplicate clinical rule logic inside tests.
+
+## 16. Working style / engineering rules
 
 - Prefer 20–30% effort for 70–80% product value.
 - Do not overbuild frameworks/DSLs before a real need exists.
-- Normal mission budget: 1–2 commits; allow more only when a mission genuinely spans multiple coherent layers.
+- Normal mission commit budget: 1–2 commits; allow more only for genuinely separate layers or a real defect discovered during verification.
 - Each mission should be independently understandable from history.
-- Keep web/mobile semantics shared in core; platform views can differ.
+- Keep web/mobile semantics shared in core; platform views may differ.
 - Do not add GitHub Actions unless requested.
 - Do not broaden clinical domains opportunistically while implementing UI/infrastructure.
 - Use authoritative/current sources when adding clinical rules or source metadata.
 - Keep prototype/reviewed/approved maturity explicit.
 - Preserve auditability: rule ID/version, evidence IDs, source IDs, provenance.
-- Prefer explicit “recorded/unassessed” over fake certainty.
-- Fix owner-discovered trust issues before roadmap vanity work.
+- Prefer explicit `recorded_unassessed` over fake certainty.
+- Fix owner-discovered trust issues before roadmap work.
+- Never fabricate report provenance by guessing unit/date/source facts.
 
-## 16. Important product lessons from this session
+## 17. Important product lessons
 
-1. **A strong engine with shallow intake still produces a weak health product.**
-2. Capture breadth and interpretation breadth must be separate.
+1. A strong engine with shallow intake still produces a weak health product.
+2. Capture breadth and interpretation breadth must remain separate.
 3. Health UX needs block-level flow, not one Next click per trivial question.
 4. Navigation history must be stable even when adaptive eligibility changes.
 5. Walking must count as real activity context.
@@ -456,18 +495,22 @@ When changing core semantics, add deterministic regression scenarios. Tests must
 7. Consumer results should start with meaning/action, not rule metadata.
 8. Missing evidence must not look like a disease finding.
 9. Evidence completeness must never look like a health score.
-10. Longitudinal value depends on comparing meaningful distinct states, not merely latest snapshot IDs.
-11. AI should not be used to compensate for weak deterministic intake/result design.
-12. In this product, **result quality and trust are existential**; a plausible-looking wrong/partial result can cause total user rejection.
+10. Longitudinal value depends on meaningful distinct states.
+11. Report extraction is a data-entry assistant, not a clinical authority.
+12. Missing provenance should stay missing rather than be silently guessed.
+13. AI should not compensate for weak deterministic intake/result/evidence design.
+14. Result quality and trust are existential; plausible-looking wrong/partial output can cause total user rejection.
 
-## 17. What to do when this prompt is pasted
+## 18. What to do when this prompt is pasted
 
 1. Acknowledge the handover briefly.
-2. Fetch current `main` and verify it is not behind the documented state.
-3. Read the canonical files listed in section 1.
-4. If the user provides hands-on test feedback, prioritize those defects and update the mission plan accordingly.
-5. If the user simply says “continue” / “implement next,” proceed with **M13.3 — Clinical Evidence Capture v2 / Report UX** at High effort.
-6. Keep the user updated during substantial repo work.
-7. At mission closure, update code, verification, mission docs, `STATUS.md`, `ROADMAP.md` if needed, and state the exact next effort.
+2. Fetch current `main`; never assume the SHA above is still current.
+3. Read the canonical files from section 1 completely.
+4. Inspect actual source files relevant to the requested work.
+5. If the user provides hands-on test feedback, prioritize those defects over the roadmap.
+6. Do **not** redo M13.1/M13.2/M13.3 unless a real regression/testing defect requires it.
+7. If the user simply asks to continue, state that the three owner gates remain open and that the next planned engineering mission is **M13.4 — Narrow Clinical Interpretation Expansion — High effort**. Proceed only in accordance with the user’s current instruction and the roadmap gate.
+8. Keep the user updated during substantial repository work.
+9. At mission closure, update code, deterministic verification, mission docs, `STATUS.md`, `ROADMAP.md`, `README.md` and this handover when the canonical state changes.
 
-Do not ask the user to repeat project history that is already in this prompt/repo.
+Do not ask the user to repeat project history already present in the repository.

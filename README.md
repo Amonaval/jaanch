@@ -2,7 +2,7 @@
 
 **Jaanch** is a deterministic, evidence-aware personal health assessment and prevention product.
 
-It captures health context, asks adaptive follow-ups, separates known facts from inference and uncertainty, recommends the smallest useful next evidence, reassesses when eligible lab data arrives, applies deterministic safety/applicability gates, produces a consumer Health Map, and stores local longitudinal check-ins so meaningful changes can be compared over time.
+It captures health context, asks adaptive follow-ups, separates known facts from inference and uncertainty, recommends the smallest useful next evidence, reassesses when eligible lab data arrives, applies deterministic safety/applicability gates, produces a consumer Health Map, supports reviewed report-evidence ingestion, and stores local longitudinal check-ins so meaningful changes can be compared over time.
 
 The deterministic engine remains authoritative. AI is optional, opt-in, privacy-minimized, schema-constrained, and must never silently override urgent, safety, applicability, or evidence-eligibility rules.
 
@@ -14,20 +14,19 @@ The deterministic engine remains authoritative. AI is optional, opt-in, privacy-
 
 ## Current product state
 
-The repository is currently through **M13.2 — Result Quality + Health Map Consumer UX v3**.
-
-Engineering implementation is complete for the current alpha loop, but **owner hands-on validation is still required** for M13.1 intake quality and M13.2 result comprehension.
+The repository is engineering-implemented through **M13.3 — Clinical Evidence Capture v2 / Report UX**.
 
 Current milestone:
 
-> **Consumer-result alpha candidate — awaiting owner retest.**
+> **Evidence-ingestion alpha candidate — awaiting owner trust/result/report retest.**
 
-The two owner gates are:
+Three hands-on owner gates remain open:
 
-1. **Jaanch captured the material facts I expected it to know.**
-2. **Without opening technical details, I can tell what matters, what to do, what is unknown, and what changed.**
+1. **Assessment trust:** Jaanch captured the material facts I expected it to know.
+2. **Result comprehension:** without opening technical details, I can tell what matters, what to do, what is unknown, and what changed.
+3. **Evidence-ingestion trust:** report import makes evidence capture easier without silently accepting extracted values or over-interpreting unsupported markers.
 
-If either gate fails, fix that before adding more clinical breadth, AI behavior, or persistence complexity.
+Any trust, comprehension, or evidence-integrity defect found during hands-on testing takes priority over roadmap expansion.
 
 ---
 
@@ -51,7 +50,13 @@ Consumer Health Map
       ↓
 Smallest useful next evidence
       ↓
+Manual result entry OR reviewed report import
+      ├─ extraction creates candidates only
+      ├─ user reviews value / unit / date / reference range
+      └─ explicit confirmation before promotion
+      ↓
 Eligible HbA1c / B12 lab reassessment
+Unsupported markers → recorded/unassessed context
       ↓
 Safety-gated action plan
       ↓
@@ -60,18 +65,44 @@ Save immutable local check-in
 Repeat and compare
 ```
 
-### Current intake capabilities
+### Intake and result capabilities
 
 - five primary blocks: About you, History, Current health, Lifestyle, Tests;
 - adaptive/safety follow-up blocks;
 - stable Back/Forward navigation separated from dynamic eligibility;
 - metric/imperial height, weight and waist entry;
 - broader diagnoses, concerns and family history plus manual/Other capture;
-- named medicines with category/purpose;
-- named supplements;
+- named medicines with category/purpose and named supplements;
 - walking, steps, pace, exercise type, frequency, duration and intensity;
 - broad known-result capture including Vitamin D, glucose, lipids, hemoglobin, ferritin, TSH, blood pressure and manual Other;
-- unsupported markers are preserved as **recorded, not yet assessed** rather than silently interpreted.
+- unsupported markers preserved as **recorded, not yet assessed** rather than silently interpreted;
+- shared consumer result semantics across web/mobile: What matters → What to do → What evidence supports → What remains uncertain → What changed;
+- evidence completeness is explicitly **not an overall health score**.
+
+### M13.3 report-evidence capture
+
+Web and mobile now include a dedicated **Import lab report** surface.
+
+Implemented boundaries:
+
+- attach PDF/image/text to retain report-level source provenance;
+- paste report text or OCR output for deterministic candidate extraction;
+- extraction produces **candidates only** and changes no clinical result by itself;
+- candidate marker/value/unit/date/reference range/confidence/issues are visible and editable;
+- user explicitly reviews and confirms each candidate;
+- missing unit or report date is **not inferred/defaulted**;
+- supported HbA1c/B12 still pass through existing unit/date/verification/freshness/plausibility gates;
+- Vitamin D, lipids, glucose, BP, thyroid, ferritin and other unsupported markers remain `recorded_unassessed`;
+- exact duplicates are replaced rather than double-counted;
+- newer distinct values remain in history and existing latest-result semantics choose the newest eligible evidence;
+- reviewed candidates are applied together to the latest **saved** check-in, creating one reassessed immutable snapshot;
+- report provenance is retained through normalized evidence.
+
+### Important M13.3 alpha limitation
+
+Jaanch does **not** yet claim trustworthy OCR/PDF parsing directly from raw document bytes. Selecting a file preserves source provenance; the user currently pastes report text/OCR output.
+
+The shared core exposes a provider-neutral extraction contract so a future document/OCR provider can create candidates without being allowed to bypass user review or deterministic clinical eligibility gates.
 
 ### Current interpreted clinical depth
 
@@ -86,21 +117,7 @@ Intentionally narrow:
 - deterministic investigation prioritization;
 - deterministic recommendation engine.
 
-Capture breadth does **not** authorize interpretation breadth.
-
-### Current result UX
-
-The shared consumer result model gives web and mobile the same semantics:
-
-1. What matters now
-2. What you can do next
-3. What the evidence supports
-4. What is still uncertain
-5. What changed since the previous distinct saved check-in
-
-Evidence completeness is explicitly **not an overall health score**.
-
-Technical rule/source/HAP detail remains available but is secondary to consumer comprehension.
+**Capture breadth does not authorize interpretation breadth.**
 
 ---
 
@@ -113,7 +130,7 @@ apps/
 
 packages/
   core/                deterministic health engine + shared presentation models
-  ai-runtime/          server-only optional OpenAI review adapter
+  ai-runtime/          optional server-only OpenAI review adapter
 
 docs/
   product/             product contracts and roadmap
@@ -122,7 +139,17 @@ docs/
   ai-harness/          constrained AI review policy
 
 HANDOVER_NEXT_SESSION.md
-                        canonical prompt/state for starting a fresh work session
+                        canonical prompt/state for a fresh work session
+```
+
+Key M13.3 modules:
+
+```text
+packages/core/src/reportEvidence.ts
+packages/core/src/reportWorkflow.ts
+packages/core/src/verificationEvidenceCapture.ts
+apps/web/src/ReportImportScreen.tsx
+apps/mobile/ReportImportScreen.tsx
 ```
 
 ---
@@ -130,8 +157,6 @@ HANDOVER_NEXT_SESSION.md
 # Run locally
 
 ## Prerequisites
-
-Current mobile baseline:
 
 - Expo SDK 57
 - React Native 0.86
@@ -157,11 +182,7 @@ npm run verify
 npm run web
 ```
 
-Vite normally prints a URL similar to:
-
-```text
-http://localhost:5173
-```
+Vite normally prints a URL similar to `http://localhost:5173`.
 
 ## Existing checkout
 
@@ -171,6 +192,8 @@ npm install
 npm run verify
 npm run web
 ```
+
+`npm install` is important after M13.3 because mobile now uses `expo-document-picker`.
 
 ---
 
@@ -186,14 +209,18 @@ This runs non-live checks for:
 
 - adaptive/block planner behavior;
 - intake/navigation regressions;
-- rule execution;
-- evidence graph invariants;
+- rule execution and evidence graph invariants;
 - investigation prioritization;
 - safety and applicability gates;
 - canonical lab handling;
-- recommendations;
-- consumer Health Map semantics;
+- recommendations and consumer Health Map semantics;
 - longitudinal snapshot/comparison logic;
+- M13.3 report candidate extraction/normalization;
+- explicit report-confirmation boundaries;
+- missing-unit/date behavior;
+- report provenance retention;
+- duplicate/latest-result semantics;
+- mixed supported/unassessed batch reassessment;
 - AI packet/schema/safety contracts;
 - server AI request construction without making a live model call.
 
@@ -204,54 +231,17 @@ npm run verify:core
 npm run verify:ai-runtime
 ```
 
-There is currently **no repository CI status check attached to `main`**, so local verification is important.
+There is currently **no repository CI status check attached to `main`**, so local verification is important. Do not treat absence of CI as a pass.
 
 ---
 
 # Owner retest: what to test now
 
-Do this before M13.3 if possible.
+### M13.1 assessment trust
 
-### 1. Realistic full profile
+Use a realistic complete profile and verify diagnoses/concerns, named medicines, supplements, walking/activity, family history, manual Other paths and known tests are represented correctly. Stress Back/Forward and edits that change adaptive eligibility. Trigger the urgent chest-pain path once.
 
-Confirm Jaanch can represent the important facts you expect it to know, including manual diagnoses/concerns, named medicines, walking/activity, supplements and known tests.
-
-### 2. Vegetarian + low/known B12 + recorded Vitamin D
-
-Expected:
-
-- B12 can participate in the interpreted evidence path when entered in the supported format;
-- Vitamin D can be recorded with value/unit/date;
-- Vitamin D remains clearly **recorded/unassessed** until a sourced interpretation module exists;
-- Jaanch does not invent treatment.
-
-### 3. Medicines and unlisted context
-
-Try a cholesterol medicine, blood-pressure medicine, an unlisted diagnosis and an unlisted concern.
-
-Expected: facts are retained even when not deterministically interpreted.
-
-### 4. Walking without formal exercise
-
-Enter regular walking and little/no formal gym exercise.
-
-Expected: walking is not silently treated as inactivity.
-
-### 5. Navigation stress
-
-- reach an adaptive follow-up;
-- go Back and Forward;
-- edit an earlier answer so the adaptive plan changes.
-
-Expected: eligible content stays reachable, retained answers are not silently deleted, and plan changes are understandable.
-
-### 6. Urgent path
-
-Trigger the concerning chest-pain path.
-
-Expected: urgency dominates and routine wellness planning is suppressed.
-
-### 7. Result comprehension
+### M13.2 result comprehension
 
 Without opening technical details, answer:
 
@@ -260,18 +250,25 @@ Without opening technical details, answer:
 - What is known?
 - What is uncertain?
 - What evidence should I gather next?
+- What changed from the previous distinct check-in?
 
-### 8. Longitudinal change
+### M13.3 evidence-ingestion trust
 
-Save one check-in, meaningfully change activity/measurement/lab evidence, reassess and compare.
-
-Expected: Jaanch compares against the previous **distinct** saved state and summarizes meaningful changes rather than only showing a raw completeness delta.
+1. Complete an assessment and **save a check-in**.
+2. Open **Import lab report** and attach a PDF/image.
+3. Paste report text containing HbA1c or B12 plus an unsupported marker such as Vitamin D or triglycerides.
+4. Intentionally edit one extracted value, unit or date before review.
+5. Confirm that extraction alone changes nothing.
+6. Confirm reviewed HbA1c/B12 only enter the supported pathway after explicit review and normal eligibility checks.
+7. Confirm Vitamin D/lipids remain clearly recorded/unassessed.
+8. Try a supported marker with its unit or date missing; Jaanch should not invent either.
+9. Re-import an exact duplicate and verify it is not double-counted.
+10. Import a newer distinct value and verify longitudinal/latest-result behavior.
+11. Compare web/mobile meaning and ordering.
 
 ---
 
 # Android phone testing
-
-Android is currently the easiest physical-device path.
 
 ```bash
 npm install
@@ -280,7 +277,7 @@ npm run doctor:mobile
 npm run mobile
 ```
 
-`npm run mobile` explicitly starts Expo in **Expo Go** mode.
+`npm run mobile` starts Expo in Expo Go mode.
 
 If LAN discovery fails:
 
@@ -296,23 +293,18 @@ cd apps/mobile
 npx expo start --go --clear
 ```
 
-Use an Expo Go build compatible with **SDK 57**.
+Use an Expo Go build compatible with SDK 57.
 
-## Development client
+Development client:
 
 ```bash
 cd apps/mobile
 npx eas-cli@latest login
 npx eas-cli@latest build --platform android --profile development
-```
-
-Then:
-
-```bash
 npm run mobile:dev
 ```
 
-## Standalone Android APK
+Standalone Android preview/APK:
 
 ```bash
 cd apps/mobile
@@ -320,11 +312,7 @@ npx eas-cli@latest login
 npx eas-cli@latest build --platform android --profile preview
 ```
 
-Current Android package:
-
-```text
-com.amonaval.jaanch
-```
+Current Android package: `com.amonaval.jaanch`.
 
 ---
 
@@ -343,13 +331,7 @@ or:
 npx eas-cli@latest build --platform ios --profile preview
 ```
 
-Current bundle identifier:
-
-```text
-com.amonaval.jaanch
-```
-
-Apple signing/provisioning requirements apply.
+Current bundle identifier: `com.amonaval.jaanch`.
 
 ---
 
@@ -360,7 +342,7 @@ Current prototype persistence:
 - web: browser `localStorage`;
 - mobile: `@react-native-async-storage/async-storage`.
 
-Saved check-ins are immutable versioned snapshots used for longitudinal comparison.
+Saved check-ins are immutable versioned snapshots used for longitudinal comparison. Report import intentionally requires a saved baseline and creates a new reassessed snapshot rather than mutating the previous one.
 
 Current limitations:
 
@@ -376,19 +358,11 @@ Secure identity, retention/delete/export controls, encrypted persistence and cro
 
 # Optional AI review
 
-AI is **not required** to use Jaanch.
-
-The optional server-only runtime lives in:
-
-```text
-packages/ai-runtime/
-```
+AI is **not required** to use Jaanch. The optional server-only runtime lives in `packages/ai-runtime/`.
 
 Never put API keys in `apps/web` or `apps/mobile`.
 
-M10 engineering is implemented, but the **live AI Utility Gate is paused** until intake/result quality is representative enough to judge AI fairly.
-
-M11 remains conditional. AI must prove incremental contradiction/missing-consideration/explanation value; paraphrasing the deterministic engine is not enough.
+M10 engineering is implemented, but the **live AI Utility Gate is paused** until intake/result/evidence quality is representative enough to judge AI fairly. M11 remains conditional; AI must prove incremental contradiction/missing-consideration/explanation value rather than paraphrase deterministic output.
 
 ---
 
@@ -396,14 +370,7 @@ M11 remains conditional. AI must prove incremental contradiction/missing-conside
 
 ## `EUNSUPPORTEDPROTOCOL` / `workspace:*`
 
-Old error:
-
-```text
-npm ERR! code EUNSUPPORTEDPROTOCOL
-npm ERR! Unsupported URL Type "workspace:": workspace:*
-```
-
-The repo no longer uses `workspace:*` for `@jaanch/core`; consumers reference local package version `0.1.0`, which npm workspaces auto-link.
+The repo must not restore `@jaanch/core: "workspace:*"`. Consumers use `@jaanch/core: "0.1.0"`, which npm workspaces auto-link.
 
 After pulling latest:
 
@@ -411,7 +378,7 @@ After pulling latest:
 npm install
 ```
 
-If stale failed-install state remains, clean it once.
+If stale failed-install state remains, clean once and reinstall.
 
 Windows PowerShell:
 
@@ -440,57 +407,32 @@ npm run doctor:mobile
 
 ## Expo opens development-client mode instead of Expo Go
 
-Use:
-
-```bash
-npm run mobile
-```
-
-For an installed development client:
-
-```bash
-npm run mobile:dev
-```
+Use `npm run mobile`. For an installed development client use `npm run mobile:dev`.
 
 ---
 
 # Next missions
 
-The canonical sequence is in `docs/product/ROADMAP.md`.
+Canonical sequence: `docs/product/ROADMAP.md`.
 
 Immediate order:
 
-1. **Owner retest M13.1 + M13.2.** Fix trust/result defects first if found.
-2. **M13.3 — Clinical Evidence Capture v2 / Report UX — High.**
-3. **M13.4 — Narrow Clinical Interpretation Expansion — High.**
-4. **M13.5 — Profile + Secure Persistence Architecture v1 — High.**
-5. Resume **M10 live AI Utility Gate** only when representative intake/results exist.
-6. **M11** only if AI proves useful.
-7. **Strategic Review 3.**
-8. **M15A — Pilot Safety / Privacy / Release Gate.**
-9. **M14 — MCP / ChatGPT App** later.
-10. **M15B — Store / Production Hardening** last.
+1. **Owner retest M13.1 + M13.2 + M13.3.** Fix any trust/result/evidence defect first.
+2. **M13.4 — Narrow Clinical Interpretation Expansion — High**, only after the owner gates are credible.
+3. **M13.5 — Profile + Secure Persistence Architecture v1 — High.**
+4. Resume **M10 live AI Utility Gate** only when representative intake/results/evidence exist.
+5. **M11** only if AI proves incremental value.
+6. Strategic Review 3.
+7. M15A Pilot Safety / Privacy / Release Gate.
+8. M14 MCP / ChatGPT App later.
+9. M15B Store / Production Hardening last.
 
-### Next engineering mission: M13.3
-
-M13.3 should make health evidence easier to capture accurately:
-
-- report image/PDF ingestion;
-- candidate extraction rather than silent acceptance;
-- user confirmation before evidence eligibility;
-- marker/date/unit/source/reference-range provenance;
-- extraction confidence/errors;
-- faster manual entry;
-- unsupported markers remain recorded/unassessed.
-
-Do **not** use report extraction as permission to expand clinical interpretation automatically.
+Do **not** redo M13.3 unless hands-on testing exposes a real defect. Do **not** broaden clinical interpretation merely because a report marker can now be captured.
 
 ---
 
 ## Product principle
 
 > **Jaanch organizes what is known, what is uncertain, what evidence matters next, what changed over time, and what safe action follows — with every conclusion traceable.**
-
-AI, account sync, report extraction and ChatGPT integration are supporting layers around that core.
 
 For a fresh development session, start with `HANDOVER_NEXT_SESSION.md`.
