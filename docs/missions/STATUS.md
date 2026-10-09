@@ -1,106 +1,124 @@
 # Mission Status
 
-## Engineering-implemented
-- M01–M09.1 — deterministic foundation, evidence graph, safety, applicability, tests/recommendations: IMPLEMENTED
-- M10 — AI harness/privacy/runtime: IMPLEMENTED
-- M10.1 — Live AI Review + Web UX: IMPLEMENTED; real-model utility gate open
-- M11 — AI Review v2 / deeper contextual utility: **ENGINEERING IMPLEMENTED — REAL-MODEL UTILITY / OWNER REVIEW REQUIRED**
-- M13 — local longitudinal health: IMPLEMENTED
-- M13.1 — Assessment Quality Recovery: owner trust retest open
-- M13.2 — Consumer Health Map: owner result retest open
-- M13.3 — Clinical Evidence Capture v2 / Report UX: owner evidence-ingestion retest open
-- M13.4 — Narrow Clinical Interpretation Expansion: owner clinical/profile retest open
-- M13.5 — Profile + Secure Persistence Architecture v1: owner persistence/privacy review open
+## Strategic Review 3 — COMPLETE
 
-## M11 summary
+Decision: **CONTINUE WITH MAJOR CHANGES — PAUSE FEATURE EXPANSION, RESET THE CONSUMER EXPERIENCE**.
 
-Versioned contracts:
+Full review: `docs/reviews/SR3_CONSUMER_VALUE_WOW_FACTOR.md`  
+Scorecard: `docs/reviews/SR3_SCORECARD.json`
 
-```text
-JAANCH-AI-REVIEW-2.0
-AI-ASSESSMENT-2.0
-Harness 2.0
-```
+### Product truth after SR3
 
-Implemented:
-- current M10 minimized packet retained as the authoritative-current subpacket;
-- bounded structured context capsule: age band, condition/concern codes, medication/supplement categories, family-history codes, reproductive context, activity;
-- free text, medicine/supplement names/doses and raw answers remain omitted;
-- at most the latest previous saved check-in contributes deterministic deltas;
-- raw previous snapshot and older history are not sent;
-- longitudinal deltas cover finding/lab/M13.4 measurement/recommendation/evidence-completeness changes;
-- explicit `materialAddition` utility gate;
-- prioritized evidence gaps grounded in supplied IDs;
-- evidence/trend/engine contradictions grounded in supplied IDs;
-- clinician-conversation brief;
-- v1 base-review safety validation remains nested inside v2 validation;
-- v2 endpoint rejects unexpected envelope keys and violated minimization flags;
-- web AI Review now uses v2 while the v1 endpoint remains for traceability;
-- `npm run ai:gate:v2` runs all five mocks against a configured real model.
+Jaanch has a strong trust/evidence architecture but the visible product is not yet “very good” and does not consistently create a wow moment.
 
-Mission detail: `docs/missions/M11_AI_REVIEW_V2_CONTEXTUAL_UTILITY.md`.
+Key SR3 scores:
+- safety/evidence integrity: 8.5/10;
+- deterministic architecture: 8/10;
+- immediate user value: 4.5/10;
+- ease/friction: 3.5/10;
+- longitudinal pull: 2.5/10;
+- wow factor: 2.5/10.
 
-## Important product truth
+The problem is not primarily correctness. It is **value density**: too much input, too many cards/technical surfaces, too little cross-signal synthesis and too much repeat-use friction.
 
-M11 was implemented because the owner explicitly asked to proceed before M10.1 real-model utility testing was complete.
+## Engineering implemented
 
-Therefore:
-- engineering implementation does **not** mean live AI utility is proven;
-- no real configured model is declared to have passed M10.1 or M11;
-- low-risk output should often remain quiet;
-- deeper context is useful only if it improves understanding without inventing problems;
-- longitudinal quality must be tested on real multi-check-in history, not fabricated trends.
+- M01–M09.1 — deterministic foundation/evidence/safety/applicability/investigations/recommendations
+- M10 — AI harness/privacy/runtime
+- M10.1 — live web AI review engineering; real-model utility unproven
+- M11 — contextual/longitudinal AI review v2 engineering; utility unproven
+- M13 — local longitudinal history
+- M13.1 — assessment-quality recovery
+- M13.2 — consumer Health Map
+- M13.3 — reviewed report evidence capture
+- M13.4 — bounded BP/lipids/anaemia-iron/thyroid interpretation
+- M13.5 — profile + secure-persistence architecture
 
-## Combined owner validation gate
+Owner/product-value gates remain open.
 
-Still open:
-1. assessment captures material facts;
-2. result hierarchy is understandable;
-3. report import is trustworthy;
-4. narrow clinical interpretation does not overstate certainty or prescribe autonomously;
-5. profile import/export is reliable;
-6. persistence/privacy behavior is understandable and truthful;
-7. AI v1/v2 preserves safety/privacy boundaries;
-8. AI v2 adds real value beyond paraphrase;
-9. AI v2 longitudinal synthesis distinguishes evidence change from health change.
+## SR3 blockers
 
-Any trust/comprehension/evidence/privacy/AI-safety defect found in owner testing takes priority over roadmap expansion.
+### 1. Result synthesis
+The current Health Map is logically structured but still behaves like a card wall. The product must compress evidence into 1–3 memorable priorities/themes.
 
-## Current product milestone
+### 2. Repeat-use UX
+Current `Start new check-in` resets answers/context/labs. This undermines longitudinal value. Returning users should start from the latest saved profile and answer only what changed.
 
-**Context-aware AI-review web alpha candidate — deterministic product remains authoritative; owner trust/privacy/real-model utility gates remain open.**
+### 3. Report-first friction
+Current report flow requires a saved baseline plus pasted report/OCR text and candidate review. Provenance is good; acquisition/value friction is not.
 
-All clinical rules and mappings remain `prototype` unless explicitly promoted by qualified review.
+### 4. Generic actionability
+Recommendations are safe but often obvious: exercise, improve eating pattern, repeat BP, discuss abnormal labs with a clinician. Jaanch needs personalized decision synthesis rather than more generic recommendation inventory.
 
-## Next work
+### 5. AI over-investment
+M11 engineering is sophisticated but was built before live incremental utility was proven. Further AI expansion is frozen.
 
-1. Owner runs `npm run verify` locally.
-2. Owner runs web AI Review v2 with a configured model.
-3. Run `npm run ai:gate:v2` across all five mocks.
-4. Test at least one genuine two-check-in history for longitudinal synthesis.
-5. Fix any trust/safety/privacy defect first.
-6. Then run **Strategic Review 3 — High**.
-7. M15A Pilot Safety / Privacy / Release Gate follows strategic review.
-8. Concrete auth/backend selection remains a pilot-infrastructure decision and must satisfy M13.5.
-9. M14 ChatGPT/MCP remains later; M15B production/store hardening last.
+## Current milestone
 
-## Active constraints
+> **Consumer-value reset required — trustworthy alpha foundation, not yet a compelling product and not pilot-ready.**
+
+## NEXT — M13.6
+
+**M13.6 — Consumer Value Reset: Health Intelligence Brief + Smart Recheck**  
+Effort: **High**
+
+Mission: `docs/missions/M13.6_CONSUMER_VALUE_RESET_PLAN.md`
+
+Required outcomes:
+1. one-screen Health Intelligence Brief;
+2. maximum 1–3 priorities/themes;
+3. cross-rule synthesis where evidence belongs to one health priority;
+4. each priority answers what/why/action/what-can-wait/what-evidence-changes-the-view;
+5. evidence-completeness percentage demoted;
+6. developer/mock/protocol surfaces removed from primary consumer navigation;
+7. Smart Recheck prefilled from latest saved profile;
+8. pre-save “what changed” review;
+9. evidence/provenance remains available behind details;
+10. AI stays optional and cannot define the core brief.
+
+### M13.6 exit gate
+
+Across all five mocks, the first result screen must let the user identify within 10 seconds:
+- top concern;
+- why;
+- next action;
+- next evidence.
+
+A returning user must not have to rebuild unchanged profile/history data.
+
+## After M13.6
+
+### M13.7 — Report-First Intelligence + Friction Reduction
+Target: report → structured extraction → verify uncertain/high-risk fields → minimum missing context → Health Intelligence Brief.
+
+Only after M13.6/M13.7 owner testing says “I would actually use this again” should M15A pilot hardening resume.
+
+## Frozen until value gates pass
+
+- further AI missions;
+- mobile parity work;
+- cloud/auth/backend;
+- M14 ChatGPT/MCP;
+- M12 Rule Studio;
+- broad clinical-domain expansion;
+- M15A/M15B production/pilot/store hardening.
+
+## Non-negotiable safety constraints
+
 - deterministic urgent/safety/applicability/evidence decisions remain authoritative;
-- AI cannot diagnose or autonomously change prescription treatment;
-- therapeutic iron/thyroid/lipid/high-dose supplement regimens are not AI-generated;
 - one measurement is not automatically a diagnosis;
 - missing unit/date/source is never guessed;
-- free-text/raw prior history is not part of M11's external packet;
-- current browser/mobile storage is not described as Jaanch-encrypted medical-record storage;
-- current Vite AI middleware is development/preview infrastructure, not a production authenticated health API;
-- provider secrets never enter browser/mobile code;
-- generic overall health score remains dropped.
+- no autonomous prescription changes or therapeutic iron/thyroid/lipid/high-dose supplement regimens;
+- clinical artifacts remain prototype unless qualified review promotes them;
+- current local storage is not described as Jaanch-encrypted medical-record storage;
+- AI remains explicit-consent/minimized and optional.
+
+## New north-star test
+
+> **Does this materially improve what a user understands or can decide within 60 seconds?**
+
+If not, defer it.
 
 ## Session handover
-Canonical state: `HANDOVER_NEXT_SESSION.md`.
 
-## Execution agreement
-- Repository: `Amonaval/jaanch`
-- Prefer 1–2 coherent commits per mission.
-- High effort for assessment/result/evidence/safety/clinical/persistence/AI/release work.
-- Do not add GitHub Actions unless requested.
+Canonical state: `HANDOVER_NEXT_SESSION.md`.
