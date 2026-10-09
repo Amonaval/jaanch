@@ -7,7 +7,14 @@ You are taking over active development of **Jaanch**, a deterministic, evidence-
 Repository: `Amonaval/jaanch`  
 Default branch: `main`
 
-Always fetch current `main` before writing.
+M13.6 code commit:
+
+```text
+58c8fbeb926d83061c8169721adcf6dc24a4b989
+M13.6: add Health Intelligence Brief and Smart Recheck
+```
+
+A newer closure commit should exist. **Always fetch current `main` before writing.**
 
 Read completely:
 
@@ -19,27 +26,27 @@ docs/missions/M13.6_CONSUMER_VALUE_RESET_PLAN.md
 README.md
 ```
 
-Then inspect current source relevant to the task.
+Then inspect actual current source relevant to the task.
 
-## 2. Strategic Review 3 is the controlling decision
+## 2. Strategic Review 3 controls product direction
 
-SR3 decision:
+Decision:
 
 > **CONTINUE WITH MAJOR CHANGES — PAUSE FEATURE EXPANSION, RESET THE CONSUMER EXPERIENCE.**
 
-Do not interpret engineering completion through M11/M13.5 as product success.
+Do not interpret engineering completion as product success.
 
-SR3 explicitly judged:
+SR3 judged:
 - safety/evidence integrity: strong;
 - architecture: strong;
-- immediate user value: weak/moderate;
+- immediate consumer value: weak/moderate;
 - friction: high;
 - longitudinal pull: weak;
 - wow factor: weak.
 
-The current product is **not pilot-ready** and should not receive more AI/backend/mobile/platform expansion before visible user value improves.
+The product is not pilot-ready until consumer value gates pass.
 
-## 3. Core product boundaries remain non-negotiable
+## 3. Core safety/evidence boundaries
 
 Jaanch is not an AI diagnosis chatbot.
 
@@ -56,189 +63,226 @@ Jaanch is not an AI diagnosis chatbot.
 11. urgent red flags override routine flow;
 12. applicability runs before rules/recommendations;
 13. AI cannot override deterministic urgent/safety/applicability/evidence gates;
-14. clinical maturity remains explicit (`prototype` / `reviewed` / `approved`);
-15. current browser/mobile storage is not Jaanch-encrypted medical-record storage;
+14. clinical maturity remains explicit;
+15. current browser/mobile/local exported files are not described as Jaanch-encrypted medical-record storage;
 16. provider secrets never enter browser/mobile code;
 17. AI remains explicit-consent/minimum-necessary and optional.
 
-Do not weaken these boundaries to make the product feel simpler.
+## 4. Implemented foundation
 
-## 4. What is already implemented and should be reused
+### M01–M09.1
+Adaptive deterministic assessment, evidence graph, safety, applicability, investigations, normalized lab reassessment, recommendations, governance and verification.
 
-### Deterministic foundation
-M01–M09.1:
-- adaptive assessment;
-- evidence graph;
-- rule/source registry;
-- safety;
-- applicability;
-- minimum-useful investigations;
-- normalized lab reassessment;
-- recommendations;
-- verification.
+### M13–M13.5
+Local longitudinal snapshots, assessment-quality recovery, consumer Health Map, reviewed report evidence capture, bounded BP/lipids/anaemia-iron/thyroid interpretation, profile import/export + five mocks, versioned persistence/security architecture.
 
-### Product/evidence foundation
-M13–M13.5:
-- local longitudinal snapshots;
-- assessment-quality recovery;
-- consumer Health Map;
-- reviewed report evidence capture;
-- bounded BP/lipids/anaemia-iron/thyroid interpretation;
-- profile import/export + five mocks;
-- versioned local persistence/security architecture.
+### M10/M10.1/M11
+Optional privacy-minimized AI review infrastructure. Utility remains unproven; no further AI mission until consumer value is proven.
 
-### AI infrastructure
-M10/M10.1/M11:
-- privacy-minimized v1/v2 packets;
-- strict output schemas;
-- safety invariant validation;
-- server-only OpenAI provider;
-- contextual capsule;
-- latest-two-check-in deltas;
-- material-addition gate;
-- contradiction/evidence-gap/clinician-prep output;
-- v1/v2 live gate commands.
+## 5. M13.6 implementation
 
-AI utility remains unproven. Keep it optional/experimental.
+Status:
 
-## 5. Main SR3 product failures
+> **ENGINEERING IMPLEMENTED — OWNER VALUE / UX RETEST REQUIRED**
 
-### A. Card-wall result
-The result exposes many sections/counters/details but does not compress enough into a memorable health story.
-
-### B. Generic actions
-Recommendations are safe but often obvious. The missing value is cross-signal decision synthesis.
-
-### C. Repeat-use failure
-`apps/web/src/App.tsx` currently resets answers/context/labs on `Start new check-in`.
-
-This must be replaced by Smart Recheck from the latest saved profile.
-
-### D. Report-first friction
-Current report flow requires saved baseline + pasted OCR/text + candidate review before value appears.
-
-### E. Developer surfaces in consumer navigation
-Profiles & mocks, protocol versions and runtime traces should not define primary UX.
-
-### F. AI over-investment
-No further AI mission until the core Health Brief itself is compelling and live-model utility is proven.
-
-## 6. NEXT MISSION — M13.6
-
-**M13.6 — Consumer Value Reset: Health Intelligence Brief + Smart Recheck**  
-Effort: **High**
-
-Mission doc:
+Core:
 
 ```text
-docs/missions/M13.6_CONSUMER_VALUE_RESET_PLAN.md
+packages/core/src/healthBrief.ts
+packages/core/src/recheck.ts
+packages/core/src/verificationConsumerValue.ts
 ```
 
-Required implementation outcomes:
+Web:
 
-1. Replace current result card wall with a one-screen **Health Intelligence Brief**.
-2. Maximum 1–3 health priorities/themes.
-3. Add deterministic cross-rule synthesis where several findings clearly belong to one health priority.
-4. Every priority answers:
-   - what Jaanch sees;
-   - why it matters to this person;
-   - evidence chain;
-   - next best action;
-   - what can wait;
-   - what evidence would change the conclusion.
-5. Demote evidence-completeness percentage.
-6. Move developer/mock/protocol/runtime surfaces out of primary navigation.
-7. Smart Recheck starts from latest saved profile instead of blank state.
-8. Retain stable profile/history/medicine context.
-9. Prioritize time-sensitive or missing fields on recheck.
-10. Show a pre-save “what changed” confirmation.
-11. Keep evidence/provenance in expandable detail.
-12. AI v2 may be shown only as optional compact second-opinion infrastructure; it cannot define the core brief.
+```text
+apps/web/src/HealthBriefPanel.tsx
+apps/web/src/LatestBriefScreen.tsx
+apps/web/src/PortableHealthFileScreen.tsx
+apps/web/src/App.tsx
+apps/web/src/Root.tsx
+apps/web/src/styles.css
+```
 
-## 7. M13.6 mock gates
+### Health Intelligence Brief
 
-### Low-risk adult
-Must be concise and appropriately quiet. Do not create generic wellness filler just to have content.
+Bounded deterministic theme synthesis:
 
-### Cardiometabolic + lipids
-Must synthesize waist/body composition, HbA1c, BP, LDL/TG and family history into a coherent priority instead of isolated cards.
+```text
+cardiometabolic
+  MET-001 + CV-BP-001 + CV-LIPID-001
 
-### Vegetarian + B12 + iron
-Must explain concurrent B12 + anaemia/iron evidence, distinguish known facts from cause uncertainty, and prioritize cause-oriented next steps.
+blood-nutrition
+  NUT-001 + NUT-IRON-001
 
-### Thyroid signal
-Must clearly explain the marked TSH signal and treatment context without diagnosis or autonomous dose advice.
+thyroid
+  MET-THYROID-001
 
-### Severe triglycerides
-TG >=1000 must dominate less-important lipid details and preserve clinician-review boundaries.
+sleep
+  SLP-001
+```
 
-## 8. M13.6 exit gate
+Rules:
+- max three visible priorities;
+- urgent safety separate/dominant;
+- low-risk output may have zero priority cards;
+- no generic filler;
+- severe TG can dominate as prompt clinician review without false emergency semantics;
+- every priority shows what/why/evidence/action/what-can-wait/decision-changing evidence;
+- detailed evidence/provenance/governance available behind details.
 
-For each mock, within 10 seconds of the first result screen, user should know:
+### Smart Recheck
 
-1. top concern;
-2. why;
-3. next action;
-4. next evidence.
+`createSmartRecheckDraft(snapshot)`:
+- sanitizes persisted answers;
+- preserves stable captured context;
+- converts normalized HbA1c/B12 back to raw LabRecords;
+- reruns current eligibility/freshness logic;
+- strips private/forged `__m134_*` evidence fields.
 
-Returning-user gate:
-- stable data prefilled;
-- unchanged routine recheck substantially faster than first intake;
-- user does not rebuild profile/history from zero;
-- changes previewed before saving.
+Web Quick Recheck:
+- starts from latest saved check-in;
+- stable history/medicines/supplements/family/evidence already loaded;
+- initially emphasizes likely-to-change facts;
+- focused routes for changed history/medicines/tests/lifestyle;
+- deterministic change preview before save.
 
-## 9. After M13.6
+## 6. User-owned portable history is now a core product direction
 
-Planned next:
+The owner explicitly chose a **no-account / no Jaanch-backend-history** model for now.
+
+Primary consumer navigation includes:
+
+```text
+My Jaanch file
+```
+
+Reuse existing `JAANCH-PROFILE-1.0` instead of creating a second format.
+
+Flow:
+
+```text
+save check-in
+→ export jaanch-health-YYYY-MM-DD.json
+→ user keeps it in their own folder/storage
+→ optional self-email if user accepts their email provider storing health info
+→ next visit upload prior Jaanch file
+→ included history restored locally
+→ Quick Recheck reuses established facts
+→ show what changed
+→ export refreshed file
+```
+
+No name is required by Jaanch and the current continuity model does not require user management, remote DB or cloud sync.
+
+Do **not** say “no privacy issues.” Correct product wording:
+- Jaanch does not need backend custody of this file;
+- the file itself can still contain sensitive health data/free text;
+- user-selected storage/email providers are outside Jaanch custody/control.
+
+Established facts should be reused rather than repeatedly asked.
+
+Age caveat: integer age + previous timestamp does not reveal exact birthday. Carry prior age as a default and request correction/confirmation when materially stale; do not silently invent an exact current age.
+
+## 7. Consumer navigation after M13.6
+
+Primary:
+- Latest Health Brief (when history exists);
+- My Jaanch file;
+- Import lab report.
+
+Advanced / experimental:
+- AI second opinion;
+- Profiles & test mocks.
+
+## 8. M13.6 verification
+
+Root `npm run verify` includes deterministic checks for:
+- <=3 priorities;
+- quiet low-risk behavior;
+- cardiometabolic cluster;
+- B12 + iron/anaemia cluster;
+- thyroid dominance + medication boundary;
+- severe-TG dominance without emergency inflation;
+- Smart Recheck stable-context preservation;
+- normalized lab -> raw evidence rerun;
+- internal evidence stripping;
+- deterministic brief repeatability.
+
+Existing profile verification covers versioned profile import/export and history-preserving export.
+
+Important: full local `npm run verify` was **not executed in the implementation environment**. Do not claim it passed until run locally.
+
+## 9. Immediate owner validation
+
+Run:
+
+```bash
+git pull
+npm install
+npm run verify
+npm run web
+```
+
+Then:
+1. test all five mocks;
+2. judge only first-screen brief initially;
+3. save a check-in;
+4. download My Jaanch file;
+5. import it in a clean/test session;
+6. verify history returns;
+7. run Quick Recheck;
+8. confirm stable facts are reused;
+9. confirm what-changed preview is useful;
+10. export refreshed file.
+
+If still merely “okay”, fix M13.6 before expanding.
+
+## 10. Conditional next
+
+Only after M13.6 is convincingly useful:
 
 **M13.7 — Report-First Intelligence + Friction Reduction — High**
 
 Target:
 
 ```text
-upload report
+upload current report
++ optionally prior Jaanch file
 → structured extraction
-→ review uncertain/high-risk fields
+→ verify uncertain/high-risk candidates
+→ reuse established history
 → ask minimum missing context
 → Health Intelligence Brief
+→ what changed since last time
+→ export updated Jaanch file
 ```
 
-Do not weaken provenance/confirmation/unit/date/freshness rules.
+No backend/user account is required unless a real future product need justifies it.
 
-## 10. Frozen until value gates pass
+## 11. Frozen
 
-Do not start without explicit owner override:
+Do not start without owner override:
 - further AI expansion;
 - mobile parity;
 - cloud/auth/backend;
 - M14 ChatGPT/MCP;
 - M12 Rule Studio;
 - broad clinical-domain expansion;
-- M15A pilot hardening;
-- M15B store/production hardening.
-
-## 11. New north-star tests
-
-Before adding work ask:
-
-> **Does this materially improve what the user understands or can decide within 60 seconds?**
-
-and:
-
-> **Can the user repeat the key insight to another person after closing the app?**
-
-and:
-
-> **Does the output justify the amount of information the user had to provide?**
-
-If not, defer the work.
+- M15A/M15B hardening.
 
 ## 12. Working rules
 
 - Fix value/friction issues before architecture expansion.
-- Prefer deletion/simplification to adding another surface.
+- Prefer deletion/simplification over new surfaces.
 - Preserve deterministic safety/evidence boundaries.
 - Normal mission budget 1–2 coherent commits when practical.
 - Do not add GitHub Actions unless requested.
 - Do not restore `@jaanch/core: "workspace:*"`.
 - Update mission docs, STATUS, ROADMAP and handover at closure.
+
+North stars:
+
+> **Does this materially improve what the user understands or can decide within 60 seconds?**
+
+> **Can continuity work without Jaanch owning the user's health history?**
