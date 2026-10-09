@@ -17,75 +17,131 @@
 - M10 — AI Harness Runtime + Privacy/Evaluation: ENGINEERING IMPLEMENTED
 - M13 — Longitudinal Health + Local Persistence: IMPLEMENTED
 
-## M13 closure
-- Added immutable versioned assessment snapshots and versioned longitudinal history.
-- Snapshot captures answers, normalized lab evidence, deterministic assessment, recommendation plan, timestamp and stable ID.
-- Added latest-vs-previous comparison for evidence completeness, findings, investigations, recommendations and lab values.
-- Added safe history serialization/decoding and bounded newest-first retention.
-- Web persists explicit saved check-ins in browser `localStorage`.
-- Mobile persists explicit saved check-ins in AsyncStorage.
-- Both platforms expose save, new check-in, comparison, saved-history and clear-history flows.
-- Added longitudinal golden scenarios to `npm run verify:core`.
-- Added detailed root `README.md` for web, Expo Go, physical-phone testing, EAS Android APK installation, troubleshooting and test scenarios.
-- Added Expo SDK 57 mobile baseline, app identity and EAS development/preview/production profiles.
-- Current local history storage is prototype/unencrypted; use demo data while evaluating.
+## First hands-on owner review — IMPORTANT RESULT
 
-## Product milestone
-**Working end-to-end prototype: NOW.**
+The current build is a **working engineering prototype but not yet a credible assessment alpha**.
 
-The owner should test Jaanch on web and phone before adding broad new medical scope.
+Observed issues are not cosmetic only; they affect evidence completeness and therefore result quality:
 
-## Current recommended work
-### Hands-on product validation
-Run the README test scenarios and capture:
-- installation/startup blockers;
-- questionnaire friction;
-- confusing wording;
-- Health Map information overload/underload;
-- missing next-step clarity;
-- longitudinal/history usefulness;
-- mobile-specific usability problems.
+- UI is too plain / engineering-oriented;
+- assessment is too question-by-question;
+- Back/Next can lose or skip a dynamically planned question;
+- height/waist units are not user-friendly;
+- condition list too narrow;
+- no robust Other/manual diagnosis path;
+- medication capture too shallow, including common cholesterol-medication context;
+- concern/symptom list too narrow;
+- no robust Other/manual concern path;
+- walking is not represented adequately;
+- exercise type/duration/intensity model is too weak;
+- known Vitamin D and other lab values may be ignored because only B12/HbA1c are currently structured/interpreted;
+- detail/AI context is therefore incomplete;
+- the original adaptive 10–20 master → 20–50+ follow-up concept has been compressed too far.
 
-### Then: M13.1 — First-Run UX & Product Usability Hardening
-Effort: **High**
+Assessment quality is now a **release-blocking trust criterion**.
 
-Use actual hands-on feedback to harden onboarding, navigation, progress, results hierarchy, next actions, error/empty/loading states, history controls and the simple-vs-auditable information balance.
+See:
+- `docs/product/ASSESSMENT_QUALITY_STANDARD.md`
+- `docs/missions/M13.1_ASSESSMENT_QUALITY_RECOVERY.md`
 
-## Parallel decision point
-### M10 AI Utility Gate — PENDING REAL-MODEL EVALUATION
-M10 engineering exists, but a real configured model has not yet proven incremental value.
+## Current
+### M13.1 — Assessment Quality Recovery + Block UX v2
+Effort: **HIGH**
+Status: **NEXT / BLOCKING**
 
-- Pass → M11 AI Review Comparison & Safe Escalation may proceed.
-- Fail / mainly paraphrase / remains unavailable → keep M11 deferred and focus on standalone Jaanch value.
+M13.1 now includes:
+- 4–6 block assessment flow rather than one Next per small question;
+- stable Back/Forward visited-flow navigation;
+- regression fix for lost adaptive question after Back;
+- broader ~50–100 potential evidence/question bank with adaptive display;
+- human-friendly height/waist/weight units;
+- broader diagnoses + Other/manual condition;
+- named/manual medicines and purposes;
+- named/manual supplements;
+- broader current concerns + Other/manual detail;
+- walking + exercise type/duration/intensity/steps capture;
+- broader family-history capture where useful;
+- broader known lab/measurement capture including Vitamin D, lipids, BP, thyroid/iron headline values and Other/manual evidence;
+- explicit `recorded/unassessed` facts for captured evidence Jaanch cannot yet deterministically interpret;
+- preservation of richer context in saved history/detail and future privacy-minimized AI packet;
+- materially stronger mobile-first UI hierarchy;
+- hands-on owner trust gate before mission closure.
 
-## Recommended next missions
-1. **M13.1 — First-Run UX & Product Usability Hardening** — High
-2. **M13.2 — Profile + Secure Persistence Architecture v1** — High
-3. **M13.3 — Lab/Report Capture UX** — Medium/High
-4. **M10 Utility Gate** — High, parallel/optional decision gate
-5. **M11 — AI Review Comparison & Safe Escalation** — High, CONDITIONAL
-6. **M13.4 — Narrow Clinical Expansion** — High
-7. **Strategic Review 3** — High
-8. **M15A — Pilot Safety / Privacy / Release Gate** — High
-9. **M14 — MCP / ChatGPT App** — High, after standalone value is validated
-10. **M15B — Store / Production Hardening** — High
+M13.1 may use **3–4 commits** because it is a corrective mission across shared schema, navigation, both UIs and verification. Quality takes priority over artificial commit compression.
+
+## Owner trust scenarios required before M13.1 closes
+1. generally healthy adult;
+2. vegetarian with known low B12 + low Vitamin D;
+3. cholesterol + blood-pressure medicines;
+4. daily walking but little formal exercise;
+5. unlisted diagnosis + unlisted health concern;
+6. metabolic-risk profile with HbA1c/lipids;
+7. Back/Edit after adaptive follow-ups exist;
+8. urgent chest-pain path;
+9. repeat check-in retaining custom/manual facts.
+
+## Revised upcoming sequence
+1. **M13.1 — Assessment Quality Recovery + Block UX v2** — High — NEXT/BLOCKING
+2. **M13.2 — Result Quality + Health Map Consumer UX v3** — High
+3. **M13.3 — Clinical Evidence Capture v2 / Report UX** — High
+4. **M13.4 — Narrow Clinical Interpretation Expansion** — High, only after quality gates
+5. **M13.5 — Profile + Secure Persistence Architecture v1** — High
+6. **M10 live AI Utility Gate** — resume after richer intake/results are stable
+7. **M11 — AI Review Comparison & Safe Escalation** — High, CONDITIONAL
+8. **Strategic Review 3** — High
+9. **M15A — Pilot Safety / Privacy / Release Gate** — High
+10. **M14 — MCP / ChatGPT App** — later
+11. **M15B — Store / Production Hardening** — High
+
+## M13.2 intent
+Results should lead with:
+- What matters;
+- What is missing;
+- What to do next;
+- What changed;
+- Recorded but not yet assessed context.
+
+Clinical/source/provenance detail remains accessible but should not dominate the consumer surface.
+
+## M13.3 intent
+Improve structured/manual/report evidence ingestion. Image/PDF/OCR/AI extraction must require explicit user confirmation before evidence becomes eligible.
+
+## M13.4 intent
+Interpret a deliberately narrow set of additional domains only after capture/result quality is credible. Potential modules include BP/cardiovascular, lipids, iron/anemia, thyroid, and Vitamin D where justified. Capture breadth does not imply interpretation authority.
+
+## M13.5 intent
+Secure profile/account persistence only after the intake schema stabilizes; do not freeze an incomplete model into backend architecture.
+
+## AI decision point
+### M10 AI Utility Gate — PAUSED
+M10 engineering exists, but AI evaluation is not the current priority.
+
+A model evaluated against incomplete intake could appear weak or hallucination-prone simply because Jaanch failed to capture the user's context.
+
+Resume only after M13.1/M13.2 provide a representative packet.
+
+M11 proceeds only if the real-model gate demonstrates incremental value while preserving deterministic safety/applicability/evidence boundaries.
 
 ## Active constraints
-- Do not add broad health-domain breadth before hands-on validation of the current loop.
+- Assessment quality is release-blocking.
+- AI must not compensate for poor intake.
+- No known material fact should be dropped merely because Jaanch lacks a rule for it.
+- Captured-but-unsupported facts are preserved as recorded/unassessed context.
+- Free text does not silently become deterministic medical truth.
 - No adult-oriented rule/test mapping may silently run in unsupported populations.
-- One canonical normalized lab-ingestion path drives lab-informed findings.
+- One canonical normalized lab-ingestion path drives interpreted lab findings.
 - Investigation planning respects applicability.
 - Contradictory inputs are normalized before rule execution.
 - AI must not treat stale/unverified/ineligible lab records as active evidence.
 - AI must not upgrade prototype logic to clinical authority.
 - Live AI sharing must be opt-in/minimized.
 - Deterministic urgent/safety/applicability restrictions remain authoritative.
-- M11 proceeds only if M10 proves incremental value with a real configured model.
 - Do not introduce a generic overall health score.
 
 ## Execution agreement
 - Repository: `Amonaval/jaanch`
-- Commit budget: 1–2 commits per mission
-- Default effort: Medium
-- Safety/applicability/AI/reconciliation/persistence/release missions use High effort where warranted.
+- Default commit budget: 1–2 commits per mission.
+- Exception: M13.1 may use 3–4 commits because it is a cross-layer corrective quality mission.
+- Default effort: Medium.
+- Assessment-quality/safety/applicability/AI/reconciliation/persistence/release missions use High effort.
 - Strategic reviews may continue, change, drop or defer roadmap work.
