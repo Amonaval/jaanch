@@ -11,29 +11,33 @@
 - M06 — Safety Gate + Clinical Source Baseline: IMPLEMENTED
 - M07 — Health Map UX v2 + Shared Presentation Model: IMPLEMENTED
 - M08 — Lab Reassessment + Normalization/Freshness: IMPLEMENTED
+- M09 — Recommendation Engine v1: IMPLEMENTED
 
-## M08 closure
-- Labs now carry normalized marker ID, value, canonical unit, collection date/time, source, verification state and optional reference range.
-- Freshness is explicit: recent / aging / stale / future-invalid.
-- Jaanch freshness windows are product reassessment semantics, not universal clinical validity periods.
-- Only eligible user-confirmed records affect deterministic reassessment; stale/unverified/future records remain visible but do not silently drive findings.
-- Newest eligible value per marker is used while older records remain historical evidence.
-- Lab evidence retains lab-record provenance.
-- Reassessment produces deterministic before/after changes for findings, evidence gaps and investigations.
-- Shared lab presentation semantics are consumed by mobile and web.
-- HAP-1.0 can include normalized lab evidence.
-- Core verification covers recency, verification, provenance, stale/future handling, newest-record selection and reassessment change detection.
+## M09 closure
+- Added `RECOMMENDATIONS-1.0.0`, a deterministic safety-gated action planner.
+- Recommendations are narrow and tied to existing metabolic, B12/nutrition and sleep findings; broad domain expansion remains frozen.
+- Every recommendation carries stable ID, action class, priority, rationale, steps, related finding IDs, source IDs and maturity.
+- Final disposition is the stricter of recommendation boundary + M06 safety gate: allowed / caution / clinician review / blocked.
+- Urgent red flags suppress routine recommendation planning.
+- Prescription medicine changes are never emitted as autonomous recommendations.
+- Therapeutic/high-dose supplement paths never become autonomous self-care; measured low B12 produces clinician-review guidance without a dose/regimen.
+- Added ADA 2026 behavior/nutrition/activity, WHO physical-activity and AASM adult sleep-duration sources to the clinical source registry.
+- Shared recommendation presentation semantics are consumed by mobile and web.
+- HAP-1.0 can carry a deterministic recommendation plan.
+- Dedicated recommendation verification covers metabolic actions, safety propagation, B12 treatment boundaries, urgent suppression, sleep review and deterministic repeatability.
+- Current recommendation mappings remain `prototype`; source capture does not equal clinician approval.
 
 ## Current
-M09 — Recommendation Engine v1: NEXT
+Strategic Review 2: NEXT
 Effort: High
 
 ## Then
-Strategic Review 2
+M10 — AI Harness Runtime: Medium (subject to SR2)
+M11 — Engine vs AI Verdict: High (subject to SR2)
 
 ## Active SR1 constraints
-- Freeze broad health-domain expansion through M09 + SR2.
-- M09 recommendations must consume the M06 safety gate; no recommendation may bypass it.
+- Broad health-domain expansion stayed frozen through M09 + SR2.
+- M09 recommendations consume M06 safety decisions; no recommendation bypasses the safety gate.
 - Rule Studio remains deferred unless rule-authoring volume becomes a real bottleneck.
 - Do not introduce a generic overall health score.
 

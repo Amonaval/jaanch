@@ -29,17 +29,9 @@ export type RecommendationPlan = {
   disclaimer: string;
 };
 
-type Candidate = Omit<Recommendation, 'disposition' | 'safetyReasons'> & {
-  baseDisposition?: SafetyDisposition;
-};
+type Candidate = Omit<Recommendation, 'disposition' | 'safetyReasons'> & { baseDisposition?: SafetyDisposition };
 
-const dispositionRank: Record<SafetyDisposition, number> = {
-  allowed: 0,
-  caution: 1,
-  clinician_review: 2,
-  blocked: 3,
-};
-
+const dispositionRank: Record<SafetyDisposition, number> = { allowed: 0, caution: 1, clinician_review: 2, blocked: 3 };
 const priorityRank: Record<RecommendationPriority, number> = { high: 0, medium: 1, low: 2 };
 const list = (value: unknown): string[] => Array.isArray(value) ? value.map(String) : [];
 
@@ -63,131 +55,75 @@ function candidatesFor(answers: Answers, result: AssessmentResult): Candidate[] 
   const concerns = list(answers.currentConcerns);
   const diet = String(answers.diet || '');
   const age = Number(answers.age || 0);
+  const metabolicActionable = Boolean(metabolic && ['investigate', 'high_attention'].includes(metabolic.status));
+  const nutritionActionable = Boolean(nutrition && (['investigate', 'high_attention'].includes(nutrition.status) || concerns.includes('tingling')));
 
-  if (metabolic && ['investigate', 'high_attention'].includes(metabolic.status)) {
+  if (metabolicActionable && metabolic) {
     candidates.push({
-      id: 'REC-MET-ACTIVITY-001',
-      domain: 'metabolic',
-      title: 'Increase regular physical activity progressively',
-      actionClass: 'exercise',
-      priority: metabolic.status === 'high_attention' ? 'high' : 'medium',
+      id: 'REC-MET-ACTIVITY-001', domain: 'metabolic', title: 'Increase regular physical activity progressively', actionClass: 'exercise', priority: metabolic.status === 'high_attention' ? 'high' : 'medium',
       rationale: 'Regular physical activity is a core modifiable factor for metabolic health; the plan should build from the current baseline rather than jump to an unsafe intensity.',
-      steps: [
-        'Increase movement gradually from your current baseline.',
-        'Include both aerobic movement and strength work when appropriate for your health context.',
-        'Reduce long uninterrupted sedentary periods where practical.',
-      ],
-      relatedFindingIds: [metabolic.id],
-      sourceIds: ['ADA-2026-BEHAVIOR', 'WHO-PA-2020'],
-      maturity: 'prototype',
+      steps: ['Increase movement gradually from your current baseline.', 'Include both aerobic movement and strength work when appropriate for your health context.', 'Reduce long uninterrupted sedentary periods where practical.'],
+      relatedFindingIds: [metabolic.id], sourceIds: ['ADA-2026-BEHAVIOR', 'WHO-PA-2020'], maturity: 'prototype',
     });
     candidates.push({
-      id: 'REC-MET-NUTRITION-001',
-      domain: 'metabolic',
-      title: 'Improve overall eating-pattern quality',
-      actionClass: 'diet_guidance',
-      priority: metabolic.status === 'high_attention' ? 'high' : 'medium',
+      id: 'REC-MET-NUTRITION-001', domain: 'metabolic', title: 'Improve overall eating-pattern quality', actionClass: 'diet_guidance', priority: metabolic.status === 'high_attention' ? 'high' : 'medium',
       rationale: 'Metabolic-risk guidance should emphasize an individualized, sustainable eating pattern rather than a one-size-fits-all diet.',
-      steps: [
-        'Prioritize minimally processed foods, vegetables, legumes, whole grains and appropriate protein sources.',
-        'Reduce sugar-sweetened drinks, refined grains and heavily processed foods where they are frequent.',
-        'Adapt the pattern to preferences, culture and any kidney, liver, pregnancy or other clinical constraints.',
-      ],
-      relatedFindingIds: [metabolic.id],
-      sourceIds: ['ADA-2026-BEHAVIOR'],
-      maturity: 'prototype',
+      steps: ['Prioritize minimally processed foods, vegetables, legumes, whole grains and appropriate protein sources.', 'Reduce sugar-sweetened drinks, refined grains and heavily processed foods where they are frequent.', 'Adapt the pattern to preferences, culture and any kidney, liver, pregnancy or other clinical constraints.'],
+      relatedFindingIds: [metabolic.id], sourceIds: ['ADA-2026-BEHAVIOR'], maturity: 'prototype',
     });
   }
 
-  if (metabolic && hasInvestigation(result, 'LAB-HBA1C', 'LAB-FASTING-GLUCOSE')) {
+  if (metabolicActionable && metabolic && hasInvestigation(result, 'LAB-HBA1C', 'LAB-FASTING-GLUCOSE')) {
     candidates.push({
-      id: 'REC-MET-SCREEN-001',
-      domain: 'metabolic',
-      title: 'Complete the prioritized glycemic check',
-      actionClass: 'monitoring',
-      priority: metabolic.status === 'high_attention' ? 'high' : 'medium',
+      id: 'REC-MET-SCREEN-001', domain: 'metabolic', title: 'Complete the prioritized glycemic check', actionClass: 'monitoring', priority: metabolic.status === 'high_attention' ? 'high' : 'medium',
       rationale: 'A measured glycemic marker can replace uncertainty from questionnaire and body-measurement risk signals.',
       steps: ['Use the investigation plan to choose the smallest useful screening set.', 'Enter the result with its unit and collection date so Jaanch can reassess.'],
-      relatedFindingIds: [metabolic.id],
-      sourceIds: ['ADA-2026-DIAGNOSIS'],
-      maturity: 'prototype',
+      relatedFindingIds: [metabolic.id], sourceIds: ['ADA-2026-DIAGNOSIS'], maturity: 'prototype',
     });
   }
 
-  if (nutrition && hasInvestigation(result, 'LAB-B12')) {
+  if (nutritionActionable && nutrition && hasInvestigation(result, 'LAB-B12')) {
     candidates.push({
-      id: 'REC-B12-CHECK-001',
-      domain: 'nutrition',
-      title: 'Resolve B12 uncertainty with a measured result',
-      actionClass: 'monitoring',
-      priority: nutrition.status === 'investigate' || concerns.includes('tingling') ? 'high' : 'medium',
+      id: 'REC-B12-CHECK-001', domain: 'nutrition', title: 'Resolve B12 uncertainty with a measured result', actionClass: 'monitoring', priority: nutrition.status === 'investigate' || concerns.includes('tingling') ? 'high' : 'medium',
       rationale: 'Diet pattern and symptoms can raise suspicion, but treatment decisions should not be based on questionnaire evidence alone.',
       steps: ['Complete the B12 investigation if clinically appropriate.', 'Enter the measured result with its collection date and unit for reassessment.'],
-      relatedFindingIds: [nutrition.id],
-      sourceIds: ['NIH-ODS-B12-HP'],
-      maturity: 'prototype',
+      relatedFindingIds: [nutrition.id], sourceIds: ['NIH-ODS-B12-HP'], maturity: 'prototype',
     });
   }
 
   if ((diet === 'vegetarian' || diet === 'vegan') && nutrition) {
     candidates.push({
-      id: 'REC-B12-DIET-001',
-      domain: 'nutrition',
-      title: 'Make reliable vitamin B12 sources intentional',
-      actionClass: 'diet_guidance',
-      priority: nutrition.status === 'high_attention' ? 'medium' : 'low',
+      id: 'REC-B12-DIET-001', domain: 'nutrition', title: 'Make reliable vitamin B12 sources intentional', actionClass: 'diet_guidance', priority: nutrition.status === 'high_attention' ? 'medium' : 'low',
       rationale: 'People following vegetarian or vegan diets can have higher risk of inadequate vitamin B12 intake.',
       steps: ['Review whether your usual diet includes reliable B12-containing or fortified foods.', 'Do not use food advice as a substitute for evaluation when a measured low value or neurologic symptoms are present.'],
-      relatedFindingIds: [nutrition.id],
-      sourceIds: ['NIH-ODS-B12-HP'],
-      maturity: 'prototype',
+      relatedFindingIds: [nutrition.id], sourceIds: ['NIH-ODS-B12-HP'], maturity: 'prototype',
     });
   }
 
   if (nutrition?.status === 'high_attention' && nutrition.evidenceLevel === 'lab_informed') {
     candidates.push({
-      id: 'REC-B12-CLINICIAN-001',
-      domain: 'nutrition',
-      title: 'Review the low B12 result and replacement plan with a clinician',
-      actionClass: 'therapeutic_supplement',
-      priority: 'high',
-      baseDisposition: 'clinician_review',
+      id: 'REC-B12-CLINICIAN-001', domain: 'nutrition', title: 'Review the low B12 result and replacement plan with a clinician', actionClass: 'therapeutic_supplement', priority: 'high', baseDisposition: 'clinician_review',
       rationale: 'A measured low B12 result can justify clinical treatment consideration, but Jaanch does not choose a therapeutic dose or regimen autonomously.',
       steps: ['Share the measured value, symptoms, diet pattern and current medicines/supplements with a clinician.', 'Use an individualized replacement and follow-up plan rather than an automatically generated high-dose regimen.'],
-      relatedFindingIds: [nutrition.id],
-      sourceIds: ['NIH-ODS-B12-HP'],
-      maturity: 'prototype',
+      relatedFindingIds: [nutrition.id], sourceIds: ['NIH-ODS-B12-HP'], maturity: 'prototype',
     });
   }
 
   if (sleep && age >= 18 && ['monitor', 'investigate', 'high_attention'].includes(sleep.status) && (Number(answers.sleepHours || 0) < 7 || concerns.includes('sleep'))) {
     candidates.push({
-      id: 'REC-SLEEP-ROUTINE-001',
-      domain: 'sleep',
-      title: 'Protect a regular, adequate sleep window',
-      actionClass: 'general_lifestyle',
-      priority: sleep.status === 'investigate' ? 'medium' : 'low',
+      id: 'REC-SLEEP-ROUTINE-001', domain: 'sleep', title: 'Protect a regular, adequate sleep window', actionClass: 'general_lifestyle', priority: sleep.status === 'investigate' ? 'medium' : 'low',
       rationale: 'Adults generally need at least seven hours of regular sleep, while individual needs and clinical context can vary.',
       steps: ['Keep sleep and wake times as consistent as practical.', 'Allow enough time for at least seven hours of sleep if you are an adult.', 'Track daytime functioning as well as hours slept.'],
-      relatedFindingIds: [sleep.id],
-      sourceIds: ['AASM-SLEEP-DURATION-2015'],
-      maturity: 'prototype',
+      relatedFindingIds: [sleep.id], sourceIds: ['AASM-SLEEP-DURATION-2015'], maturity: 'prototype',
     });
   }
 
   if (sleep?.status === 'investigate' || answers.snoring === true) {
     candidates.push({
-      id: 'REC-SLEEP-REVIEW-001',
-      domain: 'sleep',
-      title: 'Consider clinician-led sleep-disorder evaluation',
-      actionClass: 'monitoring',
-      priority: 'high',
-      baseDisposition: 'clinician_review',
+      id: 'REC-SLEEP-REVIEW-001', domain: 'sleep', title: 'Consider clinician-led sleep-disorder evaluation', actionClass: 'monitoring', priority: 'high', baseDisposition: 'clinician_review',
       rationale: 'Loud snoring, unrefreshing sleep or a high sleep-screening signal should not be converted into an app diagnosis.',
       steps: ['Discuss persistent symptoms with a clinician.', 'Use formal diagnostic testing only when clinically indicated after appropriate evaluation.'],
-      relatedFindingIds: sleep ? [sleep.id] : [],
-      sourceIds: ['AASM-OSA-DIAGNOSTIC-2017'],
-      maturity: 'prototype',
+      relatedFindingIds: sleep ? [sleep.id] : [], sourceIds: ['AASM-OSA-DIAGNOSTIC-2017'], maturity: 'prototype',
     });
   }
 
@@ -196,15 +132,7 @@ function candidatesFor(answers: Answers, result: AssessmentResult): Candidate[] 
 
 export function buildRecommendationPlan(answers: Answers, result: AssessmentResult): RecommendationPlan {
   if (result.safetyGate.urgent) {
-    return {
-      version: 'RECOMMENDATIONS-1.0.0',
-      recommendations: [],
-      topRecommendationIds: [],
-      clinicianReviewIds: [],
-      blockedIds: [],
-      blockedReason: 'Routine recommendation planning is suppressed while an urgent red-flag pattern is active.',
-      disclaimer: 'Jaanch provides deterministic screening and prevention guidance, not diagnosis or autonomous prescription treatment.',
-    };
+    return { version: 'RECOMMENDATIONS-1.0.0', recommendations: [], topRecommendationIds: [], clinicianReviewIds: [], blockedIds: [], blockedReason: 'Routine recommendation planning is suppressed while an urgent red-flag pattern is active.', disclaimer: 'Jaanch provides deterministic screening and prevention guidance, not diagnosis or autonomous prescription treatment.' };
   }
 
   const candidates = candidatesFor(answers, result);
@@ -216,28 +144,12 @@ export function buildRecommendationPlan(answers: Answers, result: AssessmentResu
   const decisions = new Map(result.safetyGate.decisions.map((item) => [item.actionClass, item]));
   const recommendations = candidates.map((candidate): Recommendation => {
     const safety = decisions.get(candidate.actionClass);
-    const baseDisposition = candidate.baseDisposition ?? 'allowed';
-    const safetyDisposition = safety?.disposition ?? 'allowed';
-    return {
-      ...candidate,
-      disposition: stricterDisposition(baseDisposition, safetyDisposition),
-      safetyReasons: safety?.reasons ?? [],
-    };
-  }).sort((a, b) =>
-    priorityRank[a.priority] - priorityRank[b.priority]
-    || dispositionRank[a.disposition] - dispositionRank[b.disposition]
-    || a.title.localeCompare(b.title),
-  );
+    return { ...candidate, disposition: stricterDisposition(candidate.baseDisposition ?? 'allowed', safety?.disposition ?? 'allowed'), safetyReasons: safety?.reasons ?? [] };
+  }).sort((a, b) => priorityRank[a.priority] - priorityRank[b.priority] || dispositionRank[a.disposition] - dispositionRank[b.disposition] || a.title.localeCompare(b.title));
 
-  const topRecommendationIds = recommendations
-    .filter((item) => item.disposition !== 'blocked')
-    .slice(0, 5)
-    .map((item) => item.id);
-
+  const topRecommendationIds = recommendations.filter((item) => item.disposition !== 'blocked').slice(0, 5).map((item) => item.id);
   return {
-    version: 'RECOMMENDATIONS-1.0.0',
-    recommendations,
-    topRecommendationIds,
+    version: 'RECOMMENDATIONS-1.0.0', recommendations, topRecommendationIds,
     clinicianReviewIds: recommendations.filter((item) => item.disposition === 'clinician_review').map((item) => item.id),
     blockedIds: recommendations.filter((item) => item.disposition === 'blocked').map((item) => item.id),
     disclaimer: 'Recommendations are screening/prevention guidance. Medication changes and therapeutic/high-dose supplement regimens are not autonomously prescribed by Jaanch.',
