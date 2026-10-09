@@ -2,23 +2,24 @@
 
 ## Current state
 
-Jaanch is engineering-implemented through **M13.5 — Profile + Secure Persistence Architecture v1**.
+Jaanch is engineering-implemented through **M13.5 — Profile + Secure Persistence Architecture v1** and **M10.1 — Live AI Review + Web UX**.
 
 Current milestone:
 
-> **Persistence-architecture alpha candidate — local-only runtime; owner trust/result/report/clinical/profile/privacy gates still open.**
+> **AI-review web alpha candidate — deterministic product + persistence architecture implemented; live real-model utility gate and owner trust/privacy gates remain open.**
 
-The deterministic core, block intake, evidence graph, safety/applicability gates, normalized HbA1c/B12 reassessment, reviewed report-evidence ingestion, consumer Health Map, local longitudinal history, narrow BP/lipid/iron/thyroid interpretation, local profile portability and a versioned secure-persistence architecture are implemented.
+The deterministic core, block intake, evidence graph, safety/applicability gates, normalized HbA1c/B12 reassessment, reviewed report-evidence ingestion, consumer Health Map, longitudinal history, narrow BP/lipid/iron/thyroid interpretation, profile portability, versioned persistence architecture and an optional live-AI web review path are implemented.
 
-Open quality gates remain hands-on product gates, not paperwork:
+Open quality gates remain hands-on product gates:
 1. assessment trust;
 2. result comprehension;
 3. evidence-ingestion trust;
 4. narrow clinical interpretation trust;
 5. profile import/export/mock reliability;
-6. persistence/privacy comprehension.
+6. persistence/privacy comprehension;
+7. real-model AI utility and safety.
 
-Any trust/comprehension/evidence/privacy defect discovered in owner testing takes priority over roadmap expansion.
+Any trust/comprehension/evidence/privacy/AI-safety defect discovered in owner testing takes priority over roadmap expansion.
 
 ---
 
@@ -38,9 +39,7 @@ Exit gate: the user can tell what matters, what to do, what is unknown and what 
 Status: **ENGINEERING IMPLEMENTED — OWNER EVIDENCE-INGESTION RETEST REQUIRED**  
 Effort: High
 
-Candidate-only extraction, explicit review, provenance, no guessed unit/date, dedupe/latest semantics and batch reassessment are implemented. M13.4 consumes only the specific broader confirmed measurements it explicitly authorizes.
-
----
+Candidate-only extraction, explicit review, provenance, no guessed unit/date, dedupe/latest semantics and batch reassessment are implemented. M13.4 consumes only the broader confirmed measurements it explicitly authorizes.
 
 ## M13.4 — Narrow Clinical Interpretation Expansion
 Status: **ENGINEERING IMPLEMENTED — OWNER CLINICAL/PROFILE RETEST REQUIRED**  
@@ -51,19 +50,15 @@ Implemented:
 - lipid cardiovascular-risk context;
 - haemoglobin/ferritin anaemia/iron-status context;
 - TSH thyroid context;
-- authoritative/current source registry additions;
-- explicit adult/nonpregnant applicability policies;
+- source governance and applicability;
 - missing-evidence/investigation mappings;
 - safety-bounded recommendations;
-- anti-forgery measurement materialization and persistence sanitization;
-- M13.3 report-flow integration;
-- versioned `JAANCH-PROFILE-1.0` import/export;
-- five built-in synthetic mock profiles plus repo JSON fixtures;
-- deterministic clinical-expansion/profile verification suites.
+- anti-forgery measurement materialization;
+- report-flow integration;
+- `JAANCH-PROFILE-1.0` import/export;
+- five built-in synthetic mock profiles.
 
 Mission detail: `docs/missions/M13.4_NARROW_CLINICAL_INTERPRETATION_EXPANSION.md`.
-
----
 
 ## M13.5 — Profile + Secure Persistence Architecture v1
 Status: **ENGINEERING IMPLEMENTED — OWNER PERSISTENCE/PRIVACY REVIEW REQUIRED**  
@@ -73,56 +68,82 @@ Implemented:
 - `JAANCH-PERSISTENCE-1.0` envelope;
 - local-device vs authenticated ownership contract;
 - consent + policy-version semantics;
-- retention cap and delete/export contracts;
+- retention/delete/export contracts;
 - truthful security metadata;
-- legacy history migration compatibility;
+- legacy-history migration compatibility;
 - remote-persistence eligibility gate;
 - vendor-independent backend port;
-- revisioned same-owner cross-device merge semantics;
+- revisioned same-owner merge semantics;
 - immutable snapshot conflict rejection;
 - cloud-sync consent revocation fail-closed behavior;
 - `JAANCH-DELETION-1.0` tombstones;
-- `JAANCH-DATA-EXPORT-1.0` owned-data export;
-- persistence verification integrated into the root verification suite.
+- `JAANCH-DATA-EXPORT-1.0` owned-data export.
 
-Important runtime truth:
-- current web/mobile persistence is still local only;
-- web uses browser `localStorage`;
-- mobile uses AsyncStorage;
-- current application storage is explicitly classified `application_storage_unencrypted`;
-- no live account/auth provider or remote database is connected;
-- profile JSON import/export does not imply cloud consent.
-
-A future remote adapter must satisfy authenticated ownership, explicit cloud-sync consent, TLS and server-side encryption before the core marks a document `sync_eligible`.
+Runtime remains local-only: browser `localStorage` / mobile AsyncStorage, explicitly `application_storage_unencrypted`, with no live auth/cloud database.
 
 Mission detail: `docs/missions/M13.5_PROFILE_SECURE_PERSISTENCE_ARCHITECTURE.md`.
 
 ---
 
-## M10 live AI Utility Gate — PAUSED / NEXT CONDITIONAL WORK
+## M10.1 — Live AI Review + Web UX
+Status: **ENGINEERING IMPLEMENTED — LIVE REAL-MODEL UTILITY GATE / OWNER REVIEW REQUIRED**  
+Effort: **High**
 
-M10 engineering is implemented. Resume live-model evaluation only when the intake/result/evidence/clinical/persistence behavior is representative enough to judge AI fairly.
+Implemented:
+- visible `AI Review` web surface;
+- review requires a saved deterministic check-in;
+- explicit one-run consent;
+- privacy-minimized packet created in-browser only after consent;
+- raw answer map omitted before network transmission;
+- same-origin server endpoint with server-only OpenAI credentials;
+- existing Responses API / strict structured-output provider reused;
+- Jaanch schema and safety invariants remain the final acceptance gate;
+- invalid output is not displayed;
+- AI output never mutates deterministic state;
+- five-mock live gate command: `npm run ai:gate`;
+- web runtime verification integrated into `npm run verify`.
 
-Pass only if AI adds incremental contradiction detection, missing-consideration detection, useful explanation or safe disagreement articulation while respecting deterministic urgent/safety/applicability/evidence decisions and privacy minimization.
+Current live status:
+- no real-model call was run in the implementation session;
+- owner must configure `.env.local`, run the web experience and execute the five-mock gate;
+- M11 remains blocked until incremental value is demonstrated.
 
-M11 remains conditional on that gate.
+Mission detail: `docs/missions/M10.1_LIVE_AI_REVIEW_WEB_UX.md`.
+
+---
+
+## M11 — AI Review v2 / deeper contextual utility — CONDITIONAL
+
+Effort: **High if unlocked**
+
+Proceed only if M10.1 real-model evaluation demonstrates meaningful incremental value beyond deterministic output.
+
+Candidate scope only if justified:
+- better longitudinal explanation;
+- contradiction detection across saved evidence;
+- prioritized missing-context reasoning;
+- clinician-preparation summary;
+- higher-quality explanations while preserving deterministic boundaries.
+
+Do not turn M11 into autonomous diagnosis, treatment or an agent that can override safety/evidence gates.
+
+If M10.1 is mostly paraphrase/noise, defer M11.
 
 ---
 
 ## Strategic Review 3
 
-Run after owner validation plus meaningful M13.4/M13.5 hands-on evidence, or earlier if testing exposes a strategic flaw.
+Run after the M10.1 owner/live gate plus meaningful hands-on M13.1–M13.5 evidence, or earlier if testing exposes a strategic flaw.
 
 Review:
 - capture completeness;
 - report-ingestion trust;
 - clinical interpretation usefulness vs overreach;
 - result comprehension;
-- longitudinal value;
+- longitudinal repeat-use value;
 - profile/persistence/privacy direction;
-- storage/auth vendor choice vs core independence;
+- measurable AI value vs complexity/cost/privacy;
 - over-testing/under-testing risk;
-- measurable AI value;
 - pilot readiness.
 
 ---
@@ -137,6 +158,7 @@ Required before meaningful external pilot use:
 - threat model and encryption decisions;
 - delete/export behavior;
 - concrete authenticated backend/storage adapter if cloud persistence is enabled;
+- production server boundary for live AI if AI remains enabled;
 - accessibility;
 - telemetry/error policy;
 - reproducible verification/build gate;
@@ -161,7 +183,8 @@ Production builds, Play internal/TestFlight, crash monitoring, migrations, backu
 | M13.3 | Evidence-ingestion alpha candidate; owner report retest required |
 | M13.4 | Narrow-clinical-expansion alpha candidate; owner clinical/profile retest required |
 | M13.5 | Persistence-architecture alpha candidate; local-only runtime, privacy review required |
-| Owner gates passed | Usable consumer alpha with reviewed evidence + narrow interpretation |
+| M10.1 | Live-AI web integration implemented; real-model utility gate required |
+| Owner + AI gate passed | Usable consumer alpha with optional validated AI second pass |
 | M13.5 contract + concrete pilot backend + M15A | Controlled private-pilot candidate |
 | M15B | Production-candidate software, still dependent on clinical/legal/regulatory readiness |
 
@@ -173,15 +196,17 @@ Production builds, Play internal/TestFlight, crash monitoring, migrations, backu
 - Capturing a fact does not authorize arbitrary interpretation.
 - Report extraction does not equal evidence eligibility.
 - Missing unit/date/source must not be guessed.
-- New M13.4 rules remain `prototype` until qualified review changes maturity.
+- M13.4 rules remain `prototype` until qualified review changes maturity.
 - One measurement does not equal diagnosis.
 - No autonomous prescription-medication changes or therapeutic regimens.
 - Evidence completeness is not overall health.
 - Current local persistence must not be described as encrypted medical-record storage.
 - Remote persistence cannot be enabled without authenticated ownership, consent, TLS and encryption-at-rest.
 - Clinical semantics remain independent of storage vendor.
-- AI cannot repair weak deterministic intake/result/clinical design.
-- M11 remains conditional.
+- AI is optional, explicit-consent, minimized and advisory only.
+- AI cannot mutate deterministic urgent/safety/applicability/evidence decisions.
+- Provider credentials must never be shipped to browser/mobile clients.
+- M11 remains conditional on measured M10.1 utility.
 - M12 Rule Studio remains deferred.
 - Generic overall health score remains dropped.
 - Wearables/provider integrations/clinician portal remain deferred until core user value is proven.

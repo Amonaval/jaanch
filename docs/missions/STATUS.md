@@ -14,7 +14,8 @@
 - M09 — Recommendation Engine v1: IMPLEMENTED
 - Strategic Review 2: COMPLETE — CONTINUE WITH CHANGES
 - M09.1 — Clinical Applicability & Evidence Integrity Gate: IMPLEMENTED
-- M10 — AI Harness Runtime + Privacy/Evaluation: ENGINEERING IMPLEMENTED; LIVE UTILITY GATE PAUSED
+- M10 — AI Harness Runtime + Privacy/Evaluation: ENGINEERING IMPLEMENTED
+- M10.1 — Live AI Review + Web UX: ENGINEERING IMPLEMENTED; LIVE REAL-MODEL UTILITY GATE OPEN
 - M13 — Longitudinal Health + Local Persistence: IMPLEMENTED
 
 ## M13.1 — Assessment Quality Recovery + Block UX v2
@@ -98,17 +99,46 @@ Current runtime truth:
 - web still stores locally in browser `localStorage`;
 - mobile still stores locally in AsyncStorage;
 - these current stores are explicitly classified `application_storage_unencrypted` by Jaanch;
-- cloud sync remains OFF and is not inferred from JSON import/export;
+- cloud sync remains OFF;
 - no live auth provider or remote database has been connected.
 
-Remote persistence is allowed by contract only when all are true:
-1. authenticated profile ownership;
-2. explicit cloud-sync consent;
-3. TLS-required transport;
-4. server-side encryption-at-rest metadata;
-5. sync state resolves to `sync_eligible`.
-
 Mission detail: `docs/missions/M13.5_PROFILE_SECURE_PERSISTENCE_ARCHITECTURE.md`.
+
+## M10.1 — Live AI Review + Web UX
+Status: **ENGINEERING IMPLEMENTED — LIVE REAL-MODEL UTILITY GATE / OWNER REVIEW REQUIRED**  
+Effort: **High**
+
+Implemented:
+- new `AI Review` web surface based on the latest saved deterministic check-in;
+- explicit per-run consent before creation of the external review packet;
+- browser-side privacy minimization before any network request;
+- raw questionnaire answers omitted from the network payload;
+- same-origin `/api/ai-review` server endpoint mounted by Vite dev/preview;
+- API key/model configuration remains server-side in root `.env.local`;
+- `OPENAI_API_KEY` is not exposed through a `VITE_` variable;
+- server accepts only `JAANCH-AI-REVIEW-1.0`, POST-only, size-capped, no-store responses;
+- existing OpenAI Responses provider + strict structured output reused;
+- invalid/safety-violating AI output is hidden rather than partially rendered;
+- provider/model/harness/schema trace shown for reviewed output;
+- `npm run ai:gate` runs all five mock profiles through the configured live provider;
+- non-live web runtime verification added to `npm run verify`.
+
+The AI UX can show:
+- concise explanation;
+- preserved red flags;
+- missing considerations;
+- explicit disagreements with deterministic findings;
+- domain-level explanations and missing evidence;
+- treatment-advice gating reasons.
+
+Hard boundary:
+- AI never mutates deterministic findings, safety/applicability/evidence eligibility or recommendation state.
+
+Live model status:
+- **not run in the implementation session** because no user API credential was available;
+- M11 remains blocked until real-model owner testing demonstrates defensible incremental value.
+
+Mission detail: `docs/missions/M10.1_LIVE_AI_REVIEW_WEB_UX.md`.
 
 ## Combined owner validation gate
 Jaanch is still not product-validated until hands-on use confirms:
@@ -116,8 +146,9 @@ Jaanch is still not product-validated until hands-on use confirms:
 2. result hierarchy is understandable;
 3. report import is trustworthy;
 4. narrow clinical modules do not overstate certainty or prescribe autonomously;
-5. mock/import/export flow is reliable and reruns evidence through the current engine;
-6. persistence/privacy behavior is understandable and does not overclaim encryption/cloud safety.
+5. mock/import/export flow is reliable;
+6. persistence/privacy behavior is understandable and does not overclaim encryption/cloud safety;
+7. AI review is safe, privacy-understandable and materially useful beyond paraphrasing the deterministic result.
 
 Recommended owner retest:
 1. run all five built-in mocks;
@@ -125,27 +156,29 @@ Recommended owner retest:
 3. use missing/incorrect unit or date and confirm interpretation is blocked;
 4. test BP 148/94, TG >=1000, low Hb+ferritin and TSH 12.8 boundaries;
 5. compare report evidence with manual/profile evidence;
-6. confirm Vitamin D/glucose still remain recorded/unassessed;
-7. upgrade from a checkout/browser/device with existing local history and confirm it still loads;
-8. save a new check-in and verify history still round-trips after the persistence envelope migration;
-9. verify UI/product wording does not imply current local storage is encrypted medical-record storage;
-10. keep profile JSON portability conceptually separate from future account/cloud sync.
+6. confirm Vitamin D/glucose remain recorded/unassessed;
+7. verify existing local history still loads and saves after the persistence-envelope migration;
+8. verify current local storage wording does not imply encrypted medical-record storage;
+9. configure M10.1 live AI, run a saved low-risk profile and confirm AI does not invent novelty;
+10. run higher-signal mocks and judge whether AI finds useful missing considerations/explanations without diagnosis/treatment overreach;
+11. run `npm run ai:gate` and review all five live outputs before deciding on M11.
 
-Any trust/comprehension/evidence/privacy defect found in owner testing takes priority over roadmap work.
+Any trust/comprehension/evidence/privacy/AI-safety defect found in owner testing takes priority over roadmap work.
 
 ## Current product milestone
-**Persistence-architecture alpha candidate — local-only runtime; owner trust/result/report/clinical/profile/privacy gates still open.**
+**AI-review web alpha candidate — deterministic product + persistence architecture implemented; live real-model utility gate and owner trust/privacy gates remain open.**
 
 All clinical rules and mappings remain `prototype`; source capture does not mean clinical approval.
 
 ## Next work
-1. Fix any owner-discovered M13.1–M13.5 trust/result/evidence/privacy defect.
-2. Resume **M10 live AI Utility Gate** only when current deterministic product behavior is representative enough to judge AI fairly.
-3. M11 remains conditional on M10 proving incremental value.
-4. Strategic Review 3.
-5. M15A Pilot Safety / Privacy / Release Gate.
-6. A concrete auth/backend adapter may be selected during pilot infrastructure work, but must satisfy M13.5 rather than redefine it.
-7. M14 MCP / ChatGPT App later; M15B production/store hardening last.
+1. Fix any owner-discovered M13.1–M13.5 or M10.1 trust/result/evidence/privacy/AI-safety defect.
+2. Run the **M10.1 live AI Utility Gate** with a real configured model (`npm run ai:gate`) and hands-on web review.
+3. Proceed to M11 only if AI proves incremental value.
+4. Otherwise keep AI optional/deferred and run Strategic Review 3.
+5. Strategic Review 3.
+6. M15A Pilot Safety / Privacy / Release Gate.
+7. Choose/connect a concrete auth/backend adapter only when pilot infrastructure is justified; it must satisfy M13.5.
+8. M14 MCP / ChatGPT App later; M15B production/store hardening last.
 
 ## Active constraints
 - Assessment quality is release-blocking.
@@ -162,6 +195,7 @@ All clinical rules and mappings remain `prototype`; source capture does not mean
 - Therapeutic iron/thyroid/lipid regimens are not autonomously prescribed.
 - Evidence completeness is not overall health.
 - Deterministic urgent/safety/applicability/evidence rules remain authoritative.
+- AI review is advisory only and cannot mutate deterministic state.
 - Generic overall health score remains dropped.
 
 ## Session handover
@@ -172,4 +206,4 @@ Always verify current `main`, then read README, this status file, roadmap and th
 ## Execution agreement
 - Repository: `Amonaval/jaanch`
 - Normal mission commit budget: 1–2 commits.
-- High effort for assessment/result/evidence/safety/applicability/clinical/persistence/release work.
+- High effort for assessment/result/evidence/safety/applicability/clinical/persistence/AI/release work.

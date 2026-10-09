@@ -1,5 +1,13 @@
+import { loadEnvFile } from 'node:process';
+import { fileURLToPath } from 'node:url';
 import { createHap, mockProfileBundles, runAIReview, runProfileBundle } from '@jaanch/core';
 import { createOpenAIResponsesProvider } from './openaiResponsesProvider';
+
+try {
+  loadEnvFile(fileURLToPath(new URL('../../../.env.local', import.meta.url)));
+} catch {
+  // Shell/environment variables remain supported when no local env file exists.
+}
 
 const AS_OF = '2026-10-09T12:00:00.000Z';
 const provider = createOpenAIResponsesProvider();
