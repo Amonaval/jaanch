@@ -2,18 +2,33 @@ import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 import react from '@vitejs/plugin-react';
 import { defineConfig, loadEnv, type Plugin } from 'vite';
-import { createAIReviewHttpHandler, createAIReviewV2HttpHandler } from '@jaanch/ai-runtime';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 
-function liveAIReviewPlugin(environment: Record<string, string>): Plugin {
+type AIReviewRuntime = typeof import('@jaanch/ai-runtime');
+
+async function liveAIReviewPlugin(environment: Record<string, string>): Promise<Plugin | undefined> {
+  if (environment.JAANCH_AI_LIVE_ENABLED !== 'true') return undefined;
+
+  let runtime: AIReviewRuntime;
+  try {
+    runtime = await import('@jaanch/ai-runtime');
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    throw new Error(
+      `Live AI review is enabled, but the optional @jaanch/ai-runtime could not be loaded. ` +
+      `Set JAANCH_AI_LIVE_ENABLED=false to run the normal Jaanch web app without AI review. ` +
+      `Runtime load error: ${detail}`,
+    );
+  }
+
   const common = {
-    enabled: environment.JAANCH_AI_LIVE_ENABLED === 'true',
+    enabled: true,
     apiKey: environment.OPENAI_API_KEY,
     model: environment.JAANCH_AI_MODEL,
   };
-  const v1Handler = createAIReviewHttpHandler(common);
-  const v2Handler = createAIReviewV2HttpHandler(common);
+  const v1Handler = runtime.createAIReviewHttpHandler(common);
+  const v2Handler = runtime.createAIReviewV2HttpHandler(common);
   const mount = (middlewares: { use: (path: string, handler: (req: any, res: any) => void) => void }) => {
     middlewares.use('/api/ai-review', (request, response) => { void v1Handler(request, response); });
     middlewares.use('/api/ai-review-v2', (request, response) => { void v2Handler(request, response); });
@@ -25,7 +40,11 @@ function liveAIReviewPlugin(environment: Record<string, string>): Plugin {
   };
 }
 
-export default defineConfig(({ mode }) => {
+export default defineConfig(async ({ mode }) => {
   const environment = loadEnv(mode, repoRoot, '');
-  return { envDir: repoRoot, plugins: [react(), liveAIReviewPlugin(environment)] };
+  const aiPlugin = await liveAIReviewPlugin(environment);
+  return {
+    envDir: repoRoot,
+    plugins: [react(), ...(aiPlugin ? [aiPlugin] : [])],
+  };
 });
