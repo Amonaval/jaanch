@@ -2,54 +2,105 @@
 
 **Jaanch** is a deterministic, evidence-aware personal health assessment and prevention product.
 
-It asks adaptive questions, separates facts from inference and uncertainty, recommends the smallest useful next evidence, reassesses when new lab data arrives, applies deterministic safety/applicability gates, produces a traceable Health Map, and now stores longitudinal check-ins so changes can be compared over time.
+It captures health context, asks adaptive follow-ups, separates known facts from inference and uncertainty, recommends the smallest useful next evidence, reassesses when eligible lab data arrives, applies deterministic safety/applicability gates, produces a consumer Health Map, and stores local longitudinal check-ins so meaningful changes can be compared over time.
 
-The deterministic engine remains authoritative. AI is optional, opt-in, privacy-minimized, schema-constrained, and never allowed to silently override urgent, safety, applicability, or evidence-eligibility rules.
+The deterministic engine remains authoritative. AI is optional, opt-in, privacy-minimized, schema-constrained, and must never silently override urgent, safety, applicability, or evidence-eligibility rules.
 
 > **Prototype warning**
 >
-> Jaanch is currently a development prototype, not a medical device, diagnosis service, or replacement for a clinician. Current clinical rules, investigations, applicability policies, and recommendations remain `prototype` unless explicitly stated otherwise. M13 local history storage is also prototype storage and is not encrypted medical-record storage. Prefer demo/test data while evaluating the product.
+> Jaanch is a development prototype, not a medical device, diagnosis service, or replacement for a clinician. Current clinical rules, investigations, applicability policies and recommendations remain `prototype` unless explicitly stated otherwise. Local history storage is prototype storage and is not encrypted medical-record storage. Prefer demo/test data while evaluating the product.
+
+---
+
+## Current product state
+
+The repository is currently through **M13.2 — Result Quality + Health Map Consumer UX v3**.
+
+Engineering implementation is complete for the current alpha loop, but **owner hands-on validation is still required** for M13.1 intake quality and M13.2 result comprehension.
+
+Current milestone:
+
+> **Consumer-result alpha candidate — awaiting owner retest.**
+
+The two owner gates are:
+
+1. **Jaanch captured the material facts I expected it to know.**
+2. **Without opening technical details, I can tell what matters, what to do, what is unknown, and what changed.**
+
+If either gate fails, fix that before adding more clinical breadth, AI behavior, or persistence complexity.
 
 ---
 
 ## What works today
 
-You can already run this end-to-end loop:
-
 ```text
-Adaptive assessment
+Block-based health intake
       ↓
-Health Map
+Adaptive follow-ups
       ↓
-Known vs missing evidence
+Deterministic assessment + evidence graph
       ↓
-Smallest useful investigation set
+Safety / applicability gates
       ↓
-Add HbA1c / B12 lab evidence
+Consumer Health Map
+      ├─ What matters now
+      ├─ What you can do
+      ├─ What evidence supports
+      ├─ What is still uncertain
+      └─ What changed since last check-in
       ↓
-Reassessment: what changed?
+Smallest useful next evidence
+      ↓
+Eligible HbA1c / B12 lab reassessment
       ↓
 Safety-gated action plan
       ↓
-Save check-in
+Save immutable local check-in
       ↓
-Repeat later
-      ↓
-Compare history / trends
+Repeat and compare
 ```
 
-Implemented clinical depth is intentionally narrow for now:
+### Current intake capabilities
+
+- five primary blocks: About you, History, Current health, Lifestyle, Tests;
+- adaptive/safety follow-up blocks;
+- stable Back/Forward navigation separated from dynamic eligibility;
+- metric/imperial height, weight and waist entry;
+- broader diagnoses, concerns and family history plus manual/Other capture;
+- named medicines with category/purpose;
+- named supplements;
+- walking, steps, pace, exercise type, frequency, duration and intensity;
+- broad known-result capture including Vitamin D, glucose, lipids, hemoglobin, ferritin, TSH, blood pressure and manual Other;
+- unsupported markers are preserved as **recorded, not yet assessed** rather than silently interpreted.
+
+### Current interpreted clinical depth
+
+Intentionally narrow:
 
 - metabolic screening prototype;
 - vitamin B12 / nutrition prototype;
 - sleep screening prototype;
-- concerning chest-pain urgent escalation path;
+- concerning chest-pain urgent escalation;
 - HbA1c and vitamin B12 normalized lab reassessment;
 - pregnancy/pediatric/kidney/liver/frailty/polypharmacy/allergy safety/applicability gates;
 - deterministic investigation prioritization;
-- deterministic recommendation engine;
-- longitudinal local history and comparisons;
-- optional server-only AI review runtime, not required for the product.
+- deterministic recommendation engine.
+
+Capture breadth does **not** authorize interpretation breadth.
+
+### Current result UX
+
+The shared consumer result model gives web and mobile the same semantics:
+
+1. What matters now
+2. What you can do next
+3. What the evidence supports
+4. What is still uncertain
+5. What changed since the previous distinct saved check-in
+
+Evidence completeness is explicitly **not an overall health score**.
+
+Technical rule/source/HAP detail remains available but is secondary to consumer comprehension.
 
 ---
 
@@ -58,30 +109,33 @@ Implemented clinical depth is intentionally narrow for now:
 ```text
 apps/
   mobile/              React Native + Expo — primary phone UX
-  web/                 React + Vite — desktop/browser companion
+  web/                 React + Vite — browser companion
 
 packages/
-  core/                shared deterministic health engine
+  core/                deterministic health engine + shared presentation models
   ai-runtime/          server-only optional OpenAI review adapter
 
 docs/
-  product/             vision, constitution, roadmap
+  product/             product contracts and roadmap
   missions/            mission implementation/status
   reviews/             strategic reviews
-  ai-harness/          constrained AI review harness/policy
+  ai-harness/          constrained AI review policy
+
+HANDOVER_NEXT_SESSION.md
+                        canonical prompt/state for starting a fresh work session
 ```
 
 ---
 
-# 1. Fastest first test: run the web app
-
-If you have never tested Jaanch, **start here before phone setup**.
+# Run locally
 
 ## Prerequisites
 
-Current mobile baseline is Expo SDK 57 / React Native 0.86 / React 19.2.3, so use:
+Current mobile baseline:
 
-- Git
+- Expo SDK 57
+- React Native 0.86
+- React 19.2.3
 - Node.js **22.13+**
 - npm 10+ recommended
 
@@ -109,60 +163,18 @@ Vite normally prints a URL similar to:
 http://localhost:5173
 ```
 
-Open it in your browser.
-
-## Existing checkout: pull the npm workspace fix first
-
-If you cloned Jaanch before commit `385787c`, first run:
+## Existing checkout
 
 ```bash
 git pull
-```
-
-Then:
-
-```bash
 npm install
 npm run verify
 npm run web
 ```
 
-### If you saw this error
-
-```text
-npm ERR! code EUNSUPPORTEDPROTOCOL
-npm ERR! Unsupported URL Type "workspace:": workspace:*
-```
-
-That came from the old manifests using `@jaanch/core: "workspace:*"`.
-
-The repo now uses the npm-compatible local workspace version `@jaanch/core: "0.1.0"`. Because `@jaanch/core` is declared as a root workspace with version `0.1.0`, npm automatically links the local package instead of downloading another copy.
-
-After pulling the fix, a normal `npm install` should work.
-
-If a failed install left stale generated state, clean it once and reinstall.
-
-macOS/Linux:
-
-```bash
-rm -rf node_modules
-rm -f package-lock.json
-npm install
-```
-
-Windows PowerShell:
-
-```powershell
-Remove-Item -Recurse -Force node_modules -ErrorAction SilentlyContinue
-Remove-Item -Force package-lock.json -ErrorAction SilentlyContinue
-npm install
-```
-
-Only remove `package-lock.json` here if it was generated by the failed/pre-fix install. After a successful install, keep your normal lockfile workflow.
-
 ---
 
-# 2. Verification before manual testing
+# Verification
 
 From repo root:
 
@@ -172,164 +184,103 @@ npm run verify
 
 This runs non-live checks for:
 
-- adaptive planner;
+- adaptive/block planner behavior;
+- intake/navigation regressions;
 - rule execution;
 - evidence graph invariants;
 - investigation prioritization;
-- safety gates;
-- applicability gates;
-- canonical lab evidence handling;
+- safety and applicability gates;
+- canonical lab handling;
 - recommendations;
-- presentation semantics;
+- consumer Health Map semantics;
 - longitudinal snapshot/comparison logic;
 - AI packet/schema/safety contracts;
 - server AI request construction without making a live model call.
 
-A live OpenAI request is **not required**.
-
-You can also run pieces separately:
+Individual suites:
 
 ```bash
 npm run verify:core
 npm run verify:ai-runtime
 ```
 
----
-
-# 3. What I recommend you test on web
-
-## Scenario A — low-signal baseline
-
-Use a generally healthy adult profile.
-
-Expected:
-
-- assessment completes;
-- no disease is presented as diagnosed from the questionnaire;
-- findings distinguish evidence from uncertainty;
-- action plan stays bounded;
-- governance section says current logic is prototype.
-
-## Scenario B — metabolic screening signal
-
-Try:
-
-- age around 40+;
-- low physical activity;
-- higher waist/weight;
-- parent/sibling with diabetes.
-
-Expected:
-
-- metabolic finding rises in priority;
-- missing glycemic evidence is explicit;
-- HbA1c/fasting-glucose investigation is suggested to reduce uncertainty;
-- the product does **not** claim you have diabetes;
-- lifestyle recommendations remain safety gated.
-
-## Scenario C — vegetarian/vegan + fatigue or tingling
-
-Expected:
-
-- B12/nutrition uncertainty appears;
-- B12 investigation may be suggested;
-- no B12 value is invented;
-- no therapeutic dose is prescribed.
-
-From the result screen, add a recent B12 result such as:
-
-```text
-150 pg/mL
-```
-
-Expected:
-
-- the assessment becomes lab-informed;
-- missing B12 evidence resolves;
-- the B12 test recommendation can disappear;
-- low measured B12 can trigger clinician-review guidance;
-- high-dose replacement is still not autonomously prescribed.
-
-## Scenario D — urgent chest-pain path
-
-Select chest pain/pressure and answer the concerning follow-up positively.
-
-Expected:
-
-- urgent escalation is prominent;
-- routine wellness/investigation planning is suppressed;
-- the app does not bury urgency inside a long plan.
-
-## Scenario E — longitudinal M13 loop
-
-1. Complete an assessment.
-2. Save the check-in.
-3. Start a new check-in.
-4. Change a meaningful answer or add new lab evidence.
-5. Save again.
-
-Expected:
-
-- both snapshots remain stored;
-- latest vs previous comparison appears;
-- evidence completeness changes are shown;
-- finding changes are shown;
-- investigation/action changes are shown;
-- lab changes are shown.
+There is currently **no repository CI status check attached to `main`**, so local verification is important.
 
 ---
 
-# 4. Run Jaanch on Android — recommended phone path
+# Owner retest: what to test now
 
-Android is currently the easiest physical-device test for the SDK 57 baseline.
+Do this before M13.3 if possible.
 
-## Step 1 — install dependencies
+### 1. Realistic full profile
 
-From repo root:
+Confirm Jaanch can represent the important facts you expect it to know, including manual diagnoses/concerns, named medicines, walking/activity, supplements and known tests.
+
+### 2. Vegetarian + low/known B12 + recorded Vitamin D
+
+Expected:
+
+- B12 can participate in the interpreted evidence path when entered in the supported format;
+- Vitamin D can be recorded with value/unit/date;
+- Vitamin D remains clearly **recorded/unassessed** until a sourced interpretation module exists;
+- Jaanch does not invent treatment.
+
+### 3. Medicines and unlisted context
+
+Try a cholesterol medicine, blood-pressure medicine, an unlisted diagnosis and an unlisted concern.
+
+Expected: facts are retained even when not deterministically interpreted.
+
+### 4. Walking without formal exercise
+
+Enter regular walking and little/no formal gym exercise.
+
+Expected: walking is not silently treated as inactivity.
+
+### 5. Navigation stress
+
+- reach an adaptive follow-up;
+- go Back and Forward;
+- edit an earlier answer so the adaptive plan changes.
+
+Expected: eligible content stays reachable, retained answers are not silently deleted, and plan changes are understandable.
+
+### 6. Urgent path
+
+Trigger the concerning chest-pain path.
+
+Expected: urgency dominates and routine wellness planning is suppressed.
+
+### 7. Result comprehension
+
+Without opening technical details, answer:
+
+- What matters?
+- What can I do?
+- What is known?
+- What is uncertain?
+- What evidence should I gather next?
+
+### 8. Longitudinal change
+
+Save one check-in, meaningfully change activity/measurement/lab evidence, reassess and compare.
+
+Expected: Jaanch compares against the previous **distinct** saved state and summarizes meaningful changes rather than only showing a raw completeness delta.
+
+---
+
+# Android phone testing
+
+Android is currently the easiest physical-device path.
 
 ```bash
 npm install
-```
-
-Then align Expo-managed dependencies:
-
-```bash
 npm run mobile:fix
 npm run doctor:mobile
-```
-
-Equivalent manual commands:
-
-```bash
-cd apps/mobile
-npx expo install --fix
-npx expo-doctor
-cd ../..
-```
-
-## Step 2 — install a compatible Expo Go
-
-Use an Expo Go build compatible with **SDK 57**.
-
-If the Google Play build reports an SDK mismatch, use Expo's `expo.dev/go` page and select SDK 57 for Android rather than downgrading Jaanch.
-
-## Step 3 — start Jaanch explicitly for Expo Go
-
-From repo root:
-
-```bash
 npm run mobile
 ```
 
-`npm run mobile` intentionally starts Expo with `--go`, because `expo-dev-client` is also installed in the project and plain `expo start` would otherwise prefer the development client.
-
-Expo prints a QR code.
-
-## Step 4 — scan on Android
-
-- Keep laptop and phone on the same Wi-Fi network.
-- Open Expo Go.
-- Scan the QR code.
+`npm run mobile` explicitly starts Expo in **Expo Go** mode.
 
 If LAN discovery fails:
 
@@ -338,22 +289,16 @@ cd apps/mobile
 npx expo start --go --tunnel
 ```
 
-Tunnel mode is slower but often fixes restrictive router/VPN/network setups.
-
-## If Metro/Expo gets into a stale state
+If Metro is stale:
 
 ```bash
 cd apps/mobile
 npx expo start --go --clear
 ```
 
----
+Use an Expo Go build compatible with **SDK 57**.
 
-# 5. Development-client build on Android
-
-Use this when you want a native Jaanch development build rather than Expo Go.
-
-## Cloud development build
+## Development client
 
 ```bash
 cd apps/mobile
@@ -361,41 +306,21 @@ npx eas-cli@latest login
 npx eas-cli@latest build --platform android --profile development
 ```
 
-Install the generated APK on the phone.
-
-Then from repo root run:
+Then:
 
 ```bash
 npm run mobile:dev
 ```
 
-This targets the development client explicitly.
-
----
-
-# 6. Install a standalone Android APK
-
-The repo contains `apps/mobile/eas.json` with an internal `preview` profile configured to produce an APK.
-
-One-time login:
+## Standalone Android APK
 
 ```bash
 cd apps/mobile
 npx eas-cli@latest login
-npx eas-cli@latest whoami
-```
-
-Build:
-
-```bash
 npx eas-cli@latest build --platform android --profile preview
 ```
 
-EAS will give you a build page/link. Open it on the Android phone and install the APK.
-
-This is the easiest way to get a standalone **Jaanch** icon/app without keeping Expo Go open.
-
-Current Android package ID:
+Current Android package:
 
 ```text
 com.amonaval.jaanch
@@ -403,169 +328,108 @@ com.amonaval.jaanch
 
 ---
 
-# 7. iPhone / iOS testing
+# iOS testing
 
-For **SDK 57**, do not assume the App Store version of Expo Go can run this project on a physical iPhone. Current Expo guidance notes that newer SDKs may not be supported by the App Store Expo Go build.
-
-For a physical iPhone, prefer a development/preview build through EAS.
-
-Development build:
+For SDK 57, prefer an EAS development/preview build for a physical iPhone rather than assuming the App Store Expo Go build is compatible.
 
 ```bash
 cd apps/mobile
 npx eas-cli@latest build --platform ios --profile development
 ```
 
-Preview/internal build:
+or:
 
 ```bash
 npx eas-cli@latest build --platform ios --profile preview
 ```
 
-Apple signing/provisioning requirements apply, and an Apple Developer Program setup may be required depending on the distribution method.
-
-For broader iPhone testing later, TestFlight is the more practical path.
-
-Current bundle ID:
+Current bundle identifier:
 
 ```text
 com.amonaval.jaanch
 ```
 
----
-
-# 8. Mobile app identity
-
-```text
-Name: Jaanch
-Slug: jaanch
-Version: 0.1.0
-Android package: com.amonaval.jaanch
-iOS bundle identifier: com.amonaval.jaanch
-```
-
-Confirm final package/bundle identity before public store setup because changing application identity after distribution is inconvenient.
+Apple signing/provisioning requirements apply.
 
 ---
 
-# 9. M13 local history and privacy
+# Local persistence and privacy
 
-M13 intentionally uses local-first persistence so the longitudinal product loop can be validated before adding accounts/backend complexity.
-
-Current prototype storage:
+Current prototype persistence:
 
 - web: browser `localStorage`;
 - mobile: `@react-native-async-storage/async-storage`.
 
-Saved check-ins are immutable versioned snapshots containing the assessment state required for later comparison.
+Saved check-ins are immutable versioned snapshots used for longitudinal comparison.
 
-Important limitations:
+Current limitations:
 
-- this is **not encrypted clinical-record storage**;
-- clearing browser site data can erase web history;
-- clearing app data/reinstalling can erase phone history;
-- there is no account sync yet;
-- there is no backup/restore yet;
-- there is no cross-device history yet.
+- not encrypted clinical-record storage;
+- clearing browser/app data can erase history;
+- no account sync;
+- no backup/restore;
+- no cross-device history.
 
-For now, prefer demo/test health data while evaluating the product.
-
-Secure identity, consent, retention/delete/export controls, encrypted persistence and cross-device sync are future pre-pilot work.
+Secure identity, retention/delete/export controls, encrypted persistence and cross-device continuity belong to **M13.5** and the later pilot release gate.
 
 ---
 
-# 10. Optional AI review
+# Optional AI review
 
-You do **not** need AI to use or test Jaanch.
+AI is **not required** to use Jaanch.
 
-The optional server runtime is here:
+The optional server-only runtime lives in:
 
 ```text
 packages/ai-runtime/
 ```
 
-API keys must never be placed in `apps/web` or `apps/mobile`.
+Never put API keys in `apps/web` or `apps/mobile`.
 
-M10 engineering is implemented, but the **real-model AI Utility Gate is still pending**. M11 must remain conditional until a configured model demonstrates useful incremental review value without weakening deterministic safety/applicability/evidence boundaries.
+M10 engineering is implemented, but the **live AI Utility Gate is paused** until intake/result quality is representative enough to judge AI fairly.
 
-For your first product test: **ignore AI and test deterministic Jaanch first.**
-
----
-
-# 11. Useful commands
-
-From repository root:
-
-```bash
-# install everything
-npm install
-
-# all non-live verification
-npm run verify
-
-# web
-npm run web
-
-# Android/Expo Go target
-npm run mobile
-
-# development-client target
-npm run mobile:dev
-
-# align Expo dependencies
-npm run mobile:fix
-
-# Expo diagnostics
-npm run doctor:mobile
-
-# core verification only
-npm run verify:core
-
-# server AI-runtime request-construction verification
-npm run verify:ai-runtime
-```
+M11 remains conditional. AI must prove incremental contradiction/missing-consideration/explanation value; paraphrasing the deterministic engine is not enough.
 
 ---
 
-# 12. Troubleshooting
+# Troubleshooting
 
 ## `EUNSUPPORTEDPROTOCOL` / `workspace:*`
 
-Error:
+Old error:
 
 ```text
 npm ERR! code EUNSUPPORTEDPROTOCOL
 npm ERR! Unsupported URL Type "workspace:": workspace:*
 ```
 
-Fix:
+The repo no longer uses `workspace:*` for `@jaanch/core`; consumers reference local package version `0.1.0`, which npm workspaces auto-link.
+
+After pulling latest:
 
 ```bash
-git pull
 npm install
 ```
 
-The issue was fixed in repository commit `385787c` by replacing the old `workspace:*` dependency notation with the package's actual workspace version.
+If stale failed-install state remains, clean it once.
 
-If it persists, confirm your checkout contains:
+Windows PowerShell:
 
-```json
-"@jaanch/core": "0.1.0"
+```powershell
+Remove-Item -Recurse -Force node_modules -ErrorAction SilentlyContinue
+Remove-Item -Force package-lock.json -ErrorAction SilentlyContinue
+npm install
 ```
 
-in the mobile/web/AI-runtime package manifests.
-
-Then clean stale generated dependency state once and reinstall.
-
-## Node version warning
-
-Check:
+macOS/Linux:
 
 ```bash
-node -v
+rm -rf node_modules
+rm -f package-lock.json
+npm install
 ```
 
-Use **Node 22.13+** for Expo SDK 57.
+Only remove the lockfile for recovery from stale/pre-fix generated state.
 
 ## Expo dependency mismatch
 
@@ -574,186 +438,52 @@ npm run mobile:fix
 npm run doctor:mobile
 ```
 
-## Expo Go opens the wrong runtime / asks for development client
+## Expo opens development-client mode instead of Expo Go
 
-Run:
+Use:
 
 ```bash
 npm run mobile
 ```
 
-The repo now forces `expo start --go` for this command.
-
-For an installed development client use:
+For an installed development client:
 
 ```bash
 npm run mobile:dev
 ```
 
-## Android Expo Go says project SDK is incompatible
-
-Install an Expo Go build compatible with SDK 57 from Expo's SDK-specific download page, then restart:
-
-```bash
-cd apps/mobile
-npx expo start --go --clear
-```
-
-## Phone cannot reach Metro
-
-Try:
-
-```bash
-cd apps/mobile
-npx expo start --go --tunnel
-```
-
-Also check VPN/firewall/router restrictions.
-
-## History disappeared
-
-Current history is local prototype storage. Clearing browser/app storage or reinstalling the app can erase it. Cloud persistence is intentionally not implemented yet.
-
 ---
 
-# 13. When should you expect a "working product"?
+# Next missions
 
-## **Now — after M13**
+The canonical sequence is in `docs/product/ROADMAP.md`.
 
-Jaanch is a **working end-to-end prototype**.
+Immediate order:
 
-You should test it now rather than waiting for more missions.
+1. **Owner retest M13.1 + M13.2.** Fix trust/result defects first if found.
+2. **M13.3 — Clinical Evidence Capture v2 / Report UX — High.**
+3. **M13.4 — Narrow Clinical Interpretation Expansion — High.**
+4. **M13.5 — Profile + Secure Persistence Architecture v1 — High.**
+5. Resume **M10 live AI Utility Gate** only when representative intake/results exist.
+6. **M11** only if AI proves useful.
+7. **Strategic Review 3.**
+8. **M15A — Pilot Safety / Privacy / Release Gate.**
+9. **M14 — MCP / ChatGPT App** later.
+10. **M15B — Store / Production Hardening** last.
 
-You can already:
+### Next engineering mission: M13.3
 
-- complete an adaptive assessment;
-- see explainable findings;
-- see missing evidence;
-- add supported lab evidence;
-- reassess;
-- get safety-gated next actions;
-- save a check-in;
-- repeat and compare changes.
+M13.3 should make health evidence easier to capture accurately:
 
-What is still rough is primarily product UX, persistence/security, clinical breadth and release hardening—not the existence of the core loop.
-
-## **After M13.1 — coherent alpha**
-
-M13.1 should focus on your actual hands-on observations:
-
-- onboarding;
-- questionnaire progress/navigation;
-- wording;
-- loading/empty/error states;
-- Health Map visual hierarchy;
-- clear "what do I do next?" flow;
-- hiding engineering/governance detail behind expandable sections;
-- reset/history management;
-- mobile ergonomics.
-
-After M13.1 the product should feel much less like an engineering prototype.
-
-## **After M13.2 + M15A — controlled private-pilot candidate**
-
-This requires secure/profile-aware persistence and a real pilot safety/privacy/release gate.
-
-## **After selected clinical expansion + M15B — production candidate**
-
-Still subject to qualified clinical review, intended-market legal/regulatory review and pilot evidence.
-
----
-
-# 14. Recommended next missions
-
-Do **not** add broad health-domain breadth before using the current product yourself.
-
-### M13.1 — First-Run UX & Product Usability Hardening — HIGH
-
-**Next after your first hands-on test.**
-
-Use real installation/questionnaire/result feedback to improve the actual experience.
-
-### M13.2 — Profile + Secure Persistence Architecture v1 — HIGH
-
-After UX validation:
-
-- user/profile identity;
-- secure persistence design;
-- consent/retention/delete/export;
-- history backup/sync;
-- cross-device continuity;
-- backend boundary that does not couple clinical logic to storage.
-
-### M13.3 — Lab / Report Capture UX — MEDIUM/HIGH
-
-- easier lab entry;
 - report image/PDF ingestion;
-- extracted values require user confirmation;
-- extraction never silently becomes eligible medical evidence;
-- provenance retained.
+- candidate extraction rather than silent acceptance;
+- user confirmation before evidence eligibility;
+- marker/date/unit/source/reference-range provenance;
+- extraction confidence/errors;
+- faster manual entry;
+- unsupported markers remain recorded/unassessed.
 
-### M10 AI Utility Gate — HIGH, parallel/optional
-
-Run real-model fixture evaluation when an API environment is available.
-
-- pass → M11 may proceed;
-- fail/paraphrase/unsafe/too variable → keep M11 deferred.
-
-### M11 — AI Review Comparison & Safe Escalation — HIGH, CONDITIONAL
-
-Only if M10 Utility Gate passes.
-
-- show agreements/disagreements;
-- show evidence needed to resolve disagreement;
-- keep deterministic safety authoritative;
-- never silently merge into an "AI verdict".
-
-### M13.4 — Narrow Clinical Expansion — HIGH
-
-Only after the current loop is useful in real hands-on use.
-
-Candidate additions, one or a few at a time:
-
-- blood pressure/cardiovascular screening;
-- lipids;
-- iron/anemia;
-- vitamin D if justified;
-- thyroid screening context where appropriate.
-
-Every domain must include source, applicability, evidence, investigation, recommendation and golden-scenario coverage.
-
-### Strategic Review 3 — HIGH
-
-After longitudinal UX feedback and whichever AI path survives.
-
-Review actual product usefulness, retention/retest value, user misunderstandings, clinical breadth priorities, AI value, privacy and pilot readiness.
-
-### M15A — Pilot Safety / Privacy / Release Gate — HIGH
-
-Required before meaningful outside pilot use:
-
-- qualified clinical review of supported rule set;
-- privacy/consent model;
-- threat model;
-- secure delete/export;
-- accessibility;
-- telemetry/error policy;
-- reproducible build/verification gate;
-- intended-market claims/regulatory review.
-
-### M14 — MCP / ChatGPT App — HIGH, later
-
-Only after standalone Jaanch value is validated. ChatGPT should be another interface over Jaanch, not the clinical source of truth.
-
-### M15B — Store / Production Hardening — HIGH
-
-- production Android/iOS builds;
-- Play internal track/TestFlight;
-- crash monitoring;
-- release/version migrations;
-- backup/recovery;
-- store policies/assets;
-- operational readiness.
+Do **not** use report extraction as permission to expand clinical interpretation automatically.
 
 ---
 
@@ -761,4 +491,6 @@ Only after standalone Jaanch value is validated. ChatGPT should be another inter
 
 > **Jaanch organizes what is known, what is uncertain, what evidence matters next, what changed over time, and what safe action follows — with every conclusion traceable.**
 
-That is the core product. AI, account sync, report extraction and ChatGPT integration are supporting layers around it.
+AI, account sync, report extraction and ChatGPT integration are supporting layers around that core.
+
+For a fresh development session, start with `HANDOVER_NEXT_SESSION.md`.

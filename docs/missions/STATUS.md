@@ -40,7 +40,8 @@ Implemented:
 - internal HAP can retain richer captured context; external AI minimization policy remains separate;
 - longitudinal snapshots retain custom/manual capture context;
 - materially redesigned web/mobile assessment surfaces;
-- intake/navigation verification suite added to core verification.
+- intake/navigation verification suite added to core verification;
+- web selection/editing and mobile numeric-clearing regressions hardened before owner retest.
 
 ## M13.2 — Result Quality + Health Map Consumer UX v3
 Status: **ENGINEERING IMPLEMENTED — OWNER RESULT-UX RETEST REQUIRED**
@@ -54,7 +55,7 @@ Implemented:
 - result hierarchy: What matters now → What you can do → What evidence supports → What remains uncertain;
 - concrete recommendation steps surfaced instead of rationale-only cards;
 - supported evidence separated from uncertainty rather than flattened into one finding list;
-- current unsaved result compared with latest saved check-in;
+- current unsaved result compared with the previous distinct saved check-in;
 - change summary includes finding direction, eligible lab changes and evidence-completeness delta;
 - recorded-but-uninterpreted facts remain visible without becoming unsupported conclusions;
 - technical governance/HAP demoted behind details on web;
@@ -68,7 +69,7 @@ M13.1/M13.2 are not product-validated until hands-on use confirms both:
 
 Recommended scenarios:
 1. healthy/low-risk adult;
-2. vegetarian with known low B12 + low Vitamin D;
+2. vegetarian with known low B12 + recorded low Vitamin D;
 3. cholesterol medicine + blood-pressure medicine;
 4. daily walker with little formal exercise;
 5. unlisted diagnosis + unlisted concern;
@@ -81,15 +82,17 @@ Recommended scenarios:
 12. repeat check-in with no meaningful change;
 13. compare web/mobile result meaning and ordering.
 
+Any new trust/comprehension defect found in owner testing takes priority over the roadmap.
+
 ## Current product milestone
 **Consumer-result alpha candidate — awaiting owner retest.**
 
-The M13 build remains an engineering prototype. M13.1 repaired intake/navigation trust problems; M13.2 repairs result comprehension and action hierarchy.
+M13.1 repaired intake/navigation trust problems; M13.2 repairs result comprehension and action hierarchy. Clinical interpretation breadth remains deliberately narrow.
 
 ## Next work after retest
 1. Fix any M13.1/M13.2 defects found in hands-on use.
 2. **M13.3 — Clinical Evidence Capture v2 / Report UX** — High.
-3. **M13.4 — Narrow Clinical Interpretation Expansion** — High, only after M13.1/M13.2 pass.
+3. **M13.4 — Narrow Clinical Interpretation Expansion** — High, only after intake/result trust is credible.
 4. **M13.5 — Profile + Secure Persistence Architecture v1** — High.
 5. Resume **M10 live AI Utility Gate** only after intake/result quality is representative.
 6. **M11** remains conditional on M10 proving incremental value.
@@ -107,6 +110,15 @@ The M13 build remains an engineering prototype. M13.1 repaired intake/navigation
 - Deterministic urgent/safety/applicability rules remain authoritative.
 - Cloud persistence remains behind intake/result stabilization.
 - No generic overall health score.
+
+## Session handover
+Canonical new-session prompt/state:
+
+```text
+HANDOVER_NEXT_SESSION.md
+```
+
+A new session should verify the current `main` head and read that handover plus `README.md`, this status file and `docs/product/ROADMAP.md` before implementation.
 
 ## Execution agreement
 - Repository: `Amonaval/jaanch`
