@@ -8,7 +8,7 @@
     "verify": "tsx src/verify.ts"
   },
   "dependencies": {
-    "@jaanch/core": "workspace:*",
+    "@jaanch/core": "0.1.0",
     "openai": "latest"
   },
   "devDependencies": {
