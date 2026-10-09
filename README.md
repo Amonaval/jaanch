@@ -1,159 +1,181 @@
 # Jaanch
 
-**Jaanch** is a deterministic, evidence-aware personal health assessment and prevention product.
+**Jaanch** is a deterministic, evidence-aware personal health assessment and prevention prototype.
 
-It captures health context, separates known facts from inference and uncertainty, recommends the smallest useful next evidence, reassesses when eligible measured data arrives, applies deterministic safety/applicability gates, produces a consumer Health Map, supports reviewed report evidence, longitudinal check-ins, bounded clinical interpretation, profile portability and a versioned persistence architecture.
+It captures health context, separates facts from inference/uncertainty, applies deterministic safety/applicability/evidence gates, supports measured/report evidence, longitudinal check-ins, bounded clinical interpretation and an optional privacy-minimized AI second pass.
 
-An optional web AI second pass exists, but the deterministic engine remains authoritative.
-
-> **Prototype warning**
->
-> Jaanch is a development prototype, not a medical device, diagnosis service or replacement for a clinician. Current clinical rules remain `prototype` unless explicitly promoted by qualified review. Current local web/mobile storage is not application-layer encrypted medical-record storage. Prefer synthetic/demo data while evaluating.
+> Jaanch is a development prototype, not a medical device, diagnosis service or replacement for a clinician. Current clinical rules remain `prototype` unless explicitly promoted by qualified review. Current browser/mobile local storage is not application-layer encrypted medical-record storage.
 
 ---
 
-## Current state
+## Strategic Review 3 — current product decision
 
-Engineering implemented:
-- M01–M09.1 deterministic foundation;
-- M10 AI harness/privacy/runtime;
-- M10.1 live web AI review;
-- **M11 AI Review v2 / deeper contextual utility**;
-- M13–M13.5 longitudinal/product-quality/report/clinical/profile/persistence architecture.
+SR3 reviewed Jaanch as a skeptical consumer rather than as its engineer.
+
+Decision:
+
+> **CONTINUE WITH MAJOR CHANGES — pause feature expansion and reset the consumer experience.**
+
+Full review:
+
+```text
+docs/reviews/SR3_CONSUMER_VALUE_WOW_FACTOR.md
+```
+
+SR3 concluded that the trust/evidence architecture is strong, but the visible product is not yet “very good” and does not consistently create a wow moment.
+
+Product-review scores included:
+
+| Area | Score / 10 |
+|---|---:|
+| Safety / evidence integrity | 8.5 |
+| Deterministic architecture | 8.0 |
+| Immediate user value | 4.5 |
+| Personalization depth | 4.0 |
+| Ease / friction | 3.5 |
+| Longitudinal pull | 2.5 |
+| Wow factor | 2.5 |
 
 Current milestone:
 
-> **Context-aware AI-review web alpha candidate — owner trust/privacy/real-model utility gates remain open.**
-
-M11 was implemented because the owner explicitly chose to proceed before the M10.1 live real-model gate was completed. Therefore implementation does **not** mean AI utility is proven.
+> **Trustworthy alpha foundation — consumer-value reset required before pilot work.**
 
 ---
 
-## Core product loop
+## Main SR3 findings
+
+### 1. Too much architecture, too little compression
+The current Health Map exposes many cards, counters, evidence gaps and trace details. The product should instead synthesize the first screen into 1–3 memorable health priorities.
+
+### 2. Actions are safe but often obvious
+Advice such as exercise more, improve eating pattern, repeat BP or discuss abnormal labs is responsible but not sufficiently differentiated. Jaanch needs cross-signal decision synthesis.
+
+### 3. Repeat-use UX undermines longitudinal value
+`Start new check-in` currently resets the profile. Returning users should begin from their latest saved profile and answer only what changed.
+
+### 4. Report-first use is cumbersome
+Current report import preserves provenance well, but requires a saved baseline plus pasted OCR/text and candidate review before value appears.
+
+### 5. AI engineering is ahead of proven AI value
+M10/M10.1/M11 remain useful experimental infrastructure, but further AI expansion is frozen until the core consumer result becomes genuinely useful.
+
+---
+
+# NEXT — M13.6
+
+## Consumer Value Reset: Health Intelligence Brief + Smart Recheck
+
+Effort: **High**
+
+Mission doc:
 
 ```text
-Capture health context
-      ↓
-Adaptive deterministic assessment
-      ↓
-Evidence graph + findings + missing evidence
-      ↓
-Safety / applicability gates
-      ↓
-Consumer Health Map
-      ↓
-Manual evidence OR reviewed report import
-      ↓
-Eligibility / freshness / provenance gates
-      ↓
-Reassessment + safety-gated actions
-      ↓
-Save immutable check-in
-      ↓
-Versioned local persistence
-      ↓
-Optional explicit-consent AI second pass
-      ↓
-Repeat / compare
+docs/missions/M13.6_CONSUMER_VALUE_RESET_PLAN.md
 ```
 
-### Current bounded clinical interpretation
+Required outcomes:
 
-Prototype modules:
-1. blood pressure / cardiovascular context;
-2. lipids / cardiovascular-risk context;
-3. anaemia / iron-status evidence;
-4. thyroid evidence.
+1. One-screen **Health Intelligence Brief**.
+2. Maximum 1–3 health priorities/themes.
+3. Deterministic cross-rule synthesis when multiple signals belong to one health priority.
+4. Every priority answers:
+   - what Jaanch sees;
+   - why it matters to this person;
+   - evidence chain;
+   - next best action;
+   - what can wait;
+   - what evidence could change the conclusion.
+5. Evidence-completeness percentage demoted from hero metric.
+6. Profiles & mocks / protocol / runtime-debug surfaces moved out of primary consumer navigation.
+7. **Smart Recheck** starts from latest saved profile instead of blank state.
+8. Stable profile/history/medicine context retained.
+9. Concise “what changed” preview before saving.
+10. Evidence/provenance stays available behind detail.
+11. AI v2 remains optional and cannot define the core Health Brief.
 
-Boundaries:
-- one measurement does not automatically become a diagnosis;
-- no autonomous prescription changes;
-- no therapeutic iron/thyroid/lipid/high-dose supplement regimens;
+M13.6 exit gate: on each of the five mocks, a user should understand within 10 seconds **what matters, why, what to do next and what evidence matters next**.
+
+---
+
+## After M13.6
+
+### M13.7 — Report-First Intelligence + Friction Reduction
+
+Target journey:
+
+```text
+Upload report
+  → structured extraction
+  → verify uncertain / safety-critical fields
+  → ask minimum missing context
+  → Health Intelligence Brief
+```
+
+Only after M13.6/M13.7 owner testing says **“I would actually use this again”** should pilot/production infrastructure resume.
+
+---
+
+## Frozen until consumer-value gates pass
+
+- further AI missions;
+- mobile parity work;
+- cloud/auth/backend;
+- M14 ChatGPT/MCP;
+- M12 Rule Studio;
+- broad clinical-domain expansion;
+- M15A pilot hardening;
+- M15B store/production hardening.
+
+---
+
+## Existing foundation that remains valuable
+
+Engineering is implemented through M11 and M13.5, including:
+
+- adaptive deterministic assessment;
+- evidence graph;
+- rule/source governance;
+- safety and applicability gates;
+- prioritized investigations;
+- normalized HbA1c/B12 reassessment;
+- bounded BP/lipid/haemoglobin/ferritin/TSH interpretation;
+- conservative recommendations;
+- report candidate/provenance/review flow;
+- local longitudinal snapshots/comparison;
+- profile import/export + five synthetic mocks;
+- versioned persistence/security contracts;
+- M10/M11 privacy-minimized AI review infrastructure.
+
+The next phase should reuse these foundations rather than expand them.
+
+---
+
+## Current clinical boundaries
+
+Supported bounded prototype interpretation includes:
+- metabolic screening;
+- B12/nutrition;
+- sleep;
+- chest-pain red-flag escalation;
+- blood pressure;
+- lipids;
+- anaemia/iron status;
+- thyroid evidence.
+
+Important constraints:
+- one measurement is not automatically a diagnosis;
 - missing unit/date/source is not guessed;
-- pregnancy-specific interpretation is not claimed for these adult modules;
-- Vitamin D and fasting/random glucose remain captured/unassessed in the current expansion.
-
----
-
-# AI Review v2 — M11
-
-Versioned contracts:
-
-```text
-Packet:  JAANCH-AI-REVIEW-2.0
-Output:  AI-ASSESSMENT-2.0
-Harness: 2.0
-```
-
-The v1 M10/M10.1 contracts remain in the repo for traceability.
-
-## What v2 sends after explicit consent
-
-Current deterministic review packet plus a bounded context capsule:
-- age band, not exact age;
-- condition and concern codes;
-- medication categories, not names/doses;
-- supplement categories, not names/doses;
-- structured family-history codes;
-- reproductive-context code when present;
-- bounded activity fields.
-
-It does **not** send:
-- raw questionnaire answer map;
-- free-text notes;
-- custom free-text history/concerns;
-- medication names/doses/frequency;
-- supplement names/doses/frequency;
-- raw previous snapshot;
-- full older history.
-
-When at least two saved check-ins exist, v2 can additionally send deterministic deltas from the latest two check-ins only:
-- finding changes;
-- eligible normalized lab changes;
-- eligible BP/lipid/Hb/ferritin/TSH measurement changes;
-- recommendation changes;
-- evidence-completeness delta.
-
-These are observations, not causal conclusions.
-
-## What v2 can return
-
-- whether AI made a **material addition**;
-- concise base explanation;
-- longitudinal synthesis;
-- prioritized evidence gaps grounded in supplied IDs;
-- traceable evidence/trend/engine contradictions;
-- short clinician-conversation brief;
-- treatment-gating reasons.
-
-Important invariants:
-- no invented trend when no previous comparison exists;
-- unknown evidence/finding IDs invalidate the output;
-- if `materialAddition=false`, v2 cannot still emit contradictions or prioritized gaps;
-- M10 base safety validation remains nested inside M11 validation;
-- invalid output is hidden rather than partially displayed.
-
-## Web endpoint
-
-```text
-POST /api/ai-review-v2
-```
-
-The old `/api/ai-review` remains for v1 traceability.
-
-Current endpoints are mounted through Vite development/preview middleware. This is **not** a production authenticated health-data API.
+- no autonomous prescription-medication changes;
+- no autonomous therapeutic iron/thyroid/lipid/high-dose supplement regimen;
+- unsupported contexts remain not-assessed/recorded rather than silently inferred.
 
 ---
 
 # Run locally
 
-## Prerequisites
-
+Prerequisites:
 - Node.js **22.13+**
 - npm 10+ recommended
-- Expo SDK 57 / React Native 0.86 for mobile
-
-Fresh clone:
 
 ```bash
 git clone https://github.com/Amonaval/jaanch.git
@@ -172,207 +194,45 @@ npm run verify
 npm run web
 ```
 
----
-
-# Enable live AI locally
-
-Copy config:
+Mobile development remains available but is frozen as a roadmap priority:
 
 ```bash
-cp .env.example .env.local
-```
-
-PowerShell:
-
-```powershell
-Copy-Item .env.example .env.local
-```
-
-Edit `.env.local`:
-
-```text
-JAANCH_AI_LIVE_ENABLED=true
-OPENAI_API_KEY=<your OpenAI API key>
-JAANCH_AI_MODEL=gpt-6-sol
-```
-
-`.env.local` is gitignored. Never rename the provider key using a `VITE_` prefix.
-
-Then:
-
-```bash
-npm run web
-```
-
-In the browser:
-1. complete or import an assessment;
-2. save a check-in;
-3. open **AI Review**;
-4. explicitly consent;
-5. inspect what will be shared/omitted;
-6. run contextual AI review.
-
-Provider credentials remain server-side.
-
----
-
-# AI live gates
-
-M10.1 v1:
-
-```bash
-npm run ai:gate
-```
-
-M11 v2:
-
-```bash
-npm run ai:gate:v2
-```
-
-The v2 command runs all five synthetic profiles and reports:
-- provider/model;
-- validation status;
-- highest priority;
-- `materialAddition`;
-- evidence-gap count;
-- contradiction count;
-- clinician-question count;
-- aggregate signal count;
-- provider/validation errors.
-
-A larger signal count is not automatically better. Low-risk profiles should often stay quiet.
-
-Longitudinal utility must be judged using genuine multi-check-in history; single-snapshot mocks cannot prove it.
-
----
-
-# Verification
-
-```bash
-npm run verify
-```
-
-Important AI checks include:
-- explicit consent;
-- current packet minimization;
-- stale/ineligible lab omission;
-- urgent downgrade rejection;
-- unsupported-domain self-care rejection;
-- treatment-advice gating;
-- strict OpenAI structured output + `store:false`;
-- v2 omission of free text and medication/supplement names;
-- v2 structured-category retention;
-- raw prior snapshot omission;
-- longitudinal delta construction;
-- no invented trend without a previous check-in;
-- traceable-ID enforcement;
-- `materialAddition=false` quietness;
-- raw-body/minimization/unexpected-field HTTP rejection.
-
-No GitHub CI status should be assumed. Run local verification.
-
----
-
-# Profiles & mocks
-
-Protocol: `JAANCH-PROFILE-1.0`.
-
-Fixtures:
-
-```text
-examples/mock-profiles/
-  low-risk-adult.json
-  cardiometabolic-lipids.json
-  vegetarian-b12-iron.json
-  thyroid-signal.json
-  severe-triglycerides.json
-```
-
-Profile JSON is portability/testing infrastructure, not cloud identity or cloud-sync consent.
-
----
-
-# Persistence
-
-Current runtime:
-- web: browser `localStorage`;
-- mobile: AsyncStorage;
-- current stores are classified `application_storage_unencrypted`;
-- cloud sync OFF;
-- no live auth provider or remote database.
-
-Future remote persistence requires authenticated ownership, explicit cloud consent, TLS and server encryption according to M13.5.
-
----
-
-# Mobile
-
-```bash
-npm install
 npm run mobile:fix
 npm run doctor:mobile
 npm run mobile
 ```
 
-If LAN discovery fails:
-
-```bash
-cd apps/mobile
-npx expo start --go --tunnel
-```
-
-M11 live AI UX is currently web-only.
-
 ---
 
-# Repository highlights
+## Optional AI review development
+
+AI is not required for core Jaanch.
+
+Copy `.env.example` to `.env.local` and configure server-side values only:
 
 ```text
-packages/core/src/aiReview.ts                 # M10 v1 contract
-packages/core/src/aiReviewRuntime.ts          # M10.1 v1 packet runtime
-packages/core/src/aiReviewV2.ts               # M11 contextual/longitudinal contract
-packages/ai-runtime/src/openaiResponsesProvider.ts
-packages/ai-runtime/src/openaiContextReviewProvider.ts
-packages/ai-runtime/src/httpHandler.ts
-packages/ai-runtime/src/httpHandlerV2.ts
-apps/web/src/AIReviewScreen.tsx
-docs/ai-harness/HEALTH_ASSESSMENT_HARNESS.md
-docs/ai-harness/HEALTH_ASSESSMENT_HARNESS_V2.md
+JAANCH_AI_LIVE_ENABLED=true
+OPENAI_API_KEY=<your-key>
+JAANCH_AI_MODEL=<configured model>
 ```
 
----
+Commands:
 
-# Recommended owner test now
+```bash
+npm run ai:gate
+npm run ai:gate:v2
+```
 
-1. `npm run verify`.
-2. Run all five deterministic mocks.
-3. Configure live AI.
-4. Run AI Review v2 for all five mocks.
-5. Run `npm run ai:gate:v2`.
-6. Confirm low-risk stays appropriately quiet.
-7. Confirm high-signal profiles prioritize rather than explode into generic recommendations.
-8. Confirm no medication/dose changes.
-9. Create/use a genuine second check-in and inspect longitudinal synthesis.
-10. Confirm AI distinguishes new evidence from actual health change.
-11. Decide whether AI is genuinely worth keeping.
-
-Any trust/evidence/privacy/AI-safety defect takes priority over new roadmap work.
+The current Vite AI middleware is development/preview infrastructure, not a production authenticated health-data API.
 
 ---
 
-# Next planned mission
+## Product north stars after SR3
 
-**Strategic Review 3 — High effort.**
+> **Does this materially improve what the user understands or can decide within 60 seconds?**
 
-Evaluate whole-product usefulness and reduce the pilot roadmap before adding more AI or infrastructure.
+> **Can the user repeat the key insight to another person after closing Jaanch?**
 
-Do not automatically start M11.1/M12 AI expansion just because M11 exists.
+> **Does the output justify the amount of information the user had to provide?**
 
----
-
-## Product principle
-
-> **Jaanch organizes what is known, what is uncertain, what evidence matters next, what changed over time, and what safe action follows — with every conclusion traceable. AI may review that structure, but it never replaces it.**
-
-For a fresh development session, start with `HANDOVER_NEXT_SESSION.md`.
+For a fresh development session, start with `HANDOVER_NEXT_SESSION.md` and the SR3 review.
