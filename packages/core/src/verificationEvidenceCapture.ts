@@ -1,10 +1,15 @@
 import { latestEligibleLabs, normalizeLabRecords } from './labs';
+import { assess } from './engine';
+import { buildRecommendationPlan } from './recommendations';
+import { createAssessmentSnapshot } from './longitudinal';
+import { reassessSnapshotWithConfirmedReportEvidence } from './reportWorkflow';
 import {
   confirmReportEvidenceCandidate,
   createReportProvenance,
   extractReportCandidatesFromText,
   mergeConfirmedReportEvidence,
 } from './reportEvidence';
+import type { Answers } from './types';
 import type { VerificationCaseResult } from './verification';
 
 const check=(id:string,condition:boolean,details:string):VerificationCaseResult=>({id,passed:condition,details:condition?undefined:details});
@@ -59,6 +64,14 @@ export function runEvidenceCaptureVerification(): VerificationCaseResult[] {
     const latest=latestEligibleLabs(normalizeLabRecords(withNewer.labs,'2026-10-09T00:00:00.000Z'));
     results.push(check('report-exact-duplicate-is-deduplicated',duplicate.duplicate===true&&duplicate.labs.length===1,'Expected exact duplicate report evidence to replace provenance rather than create duplicate rows.'));
     results.push(check('report-newer-result-remains-distinct-and-wins-latest',withNewer.labs.length===2&&latest[0]?.value===5.7,'Expected a distinct newer result to remain in history while the existing latest-result semantics select it.'));
+  }
+
+  if(hba1c&&vitaminD){
+    const answers:Answers={age:37,sex:'male',heightCm:175,weightKg:70,currentConcerns:['none']};
+    const assessment=assess(answers);
+    const baseline=createAssessmentSnapshot({answers,assessment,recommendationPlan:buildRecommendationPlan(answers,assessment),capturedAt:'2026-10-08T00:00:00.000Z',id:'report-baseline'});
+    const batch=reassessSnapshotWithConfirmedReportEvidence({baseline,confirmed:[confirmReportEvidenceCandidate(hba1c),confirmReportEvidenceCandidate(vitaminD)],capturedAt:'2026-10-09T00:00:00.000Z',id:'report-reassessment'});
+    results.push(check('report-batch-creates-one-reassessed-snapshot',batch.snapshot.id==='report-reassessment'&&batch.snapshot.labs.length===1&&batch.snapshot.capturedContext?.recordedMeasurements.some(item=>item.markerId==='vitamin_d_25oh')===true,'Expected reviewed report candidates to be applied together to one reassessed snapshot while unsupported markers remain recorded context.'));
   }
 
   const lowConfidence=extractReportCandidatesFromText({

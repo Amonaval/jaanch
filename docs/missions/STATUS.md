@@ -18,56 +18,76 @@
 - M13 — Longitudinal Health + Local Persistence: IMPLEMENTED
 
 ## M13.1 — Assessment Quality Recovery + Block UX v2
-Status: **ENGINEERING IMPLEMENTED — OWNER TRUST-GATE RETEST REQUIRED**
+Status: **ENGINEERING IMPLEMENTED — OWNER TRUST-GATE RETEST REQUIRED**  
 Effort: **High**
 
 Implemented:
-- replaced one-question/Next flow with stable block navigation;
-- five primary sections: About you, History, Current health, Lifestyle, Tests;
-- adaptive history/safety/sleep/follow-up blocks inserted only when relevant;
-- stable Back/Forward history separated from dynamic eligibility;
-- plan-changing edits clear stale forward history so new safety/adaptive blocks are not skipped;
-- clickable section navigation for direct review/edit;
-- metric/imperial height, waist and weight entry with canonical storage;
-- broader condition and concern catalogues plus Other/manual capture;
-- named medicines with category/purpose and named supplements;
-- broader family-history capture plus manual entry;
-- explicit walking capture (days, minutes, steps, pace);
-- structured exercise types, days, minutes and intensity;
-- broader known-test capture including Vitamin D, glucose, lipids, hemoglobin, ferritin, TSH, blood pressure and Other;
-- HbA1c/B12 stay on the normalized interpreted-lab path;
-- broader markers are retained as `recorded_unassessed` context rather than silently interpreted;
-- internal HAP can retain richer captured context; external AI minimization policy remains separate;
-- longitudinal snapshots retain custom/manual capture context;
-- materially redesigned web/mobile assessment surfaces;
-- intake/navigation verification suite added to core verification;
-- web selection/editing and mobile numeric-clearing regressions hardened before owner retest.
+- five primary assessment sections with adaptive/safety follow-ups;
+- stable block Back/Forward navigation and plan-change invalidation;
+- metric/imperial canonical measurements;
+- broader conditions, concerns, family history and manual Other paths;
+- named medicines/supplements;
+- walking plus structured exercise capture;
+- broader known-result capture;
+- HbA1c/B12 remain on the interpreted lab path while unsupported markers stay `recorded_unassessed`;
+- richer longitudinal/HAP context and web/mobile intake UX;
+- intake/navigation verification and post-implementation editing hardening.
+
+Owner gate:
+> **Jaanch captured the material facts I expected it to know.**
 
 ## M13.2 — Result Quality + Health Map Consumer UX v3
-Status: **ENGINEERING IMPLEMENTED — OWNER RESULT-UX RETEST REQUIRED**
+Status: **ENGINEERING IMPLEMENTED — OWNER RESULT-UX RETEST REQUIRED**  
 Effort: **High**
 
 Implemented:
-- new shared `buildConsumerResultViewModel` for web/mobile result semantics;
-- four bounded hero states: urgent / attention / needs evidence / quiet;
-- explicit warning that evidence completeness is not an overall health score;
-- one best-next-step summary at the top of the Health Map;
-- result hierarchy: What matters now → What you can do → What evidence supports → What remains uncertain;
-- concrete recommendation steps surfaced instead of rationale-only cards;
-- supported evidence separated from uncertainty rather than flattened into one finding list;
-- current unsaved result compared with the previous distinct saved check-in;
-- change summary includes finding direction, eligible lab changes and evidence-completeness delta;
-- recorded-but-uninterpreted facts remain visible without becoming unsupported conclusions;
-- technical governance/HAP demoted behind details on web;
-- mobile and web consume the same shared result narrative;
-- presentation regression suite expanded for result semantics and longitudinal change narrative.
+- shared `buildConsumerResultViewModel` across web/mobile;
+- bounded urgent / attention / needs-evidence / quiet hero semantics;
+- evidence completeness explicitly not represented as overall health;
+- hierarchy: What matters now → What you can do → What evidence supports → What remains uncertain → What changed;
+- concrete recommendation steps;
+- supported evidence separated from uncertainty;
+- recorded-but-uninterpreted facts retained visibly;
+- comparison against the previous distinct saved check-in;
+- meaningful finding/lab/evidence-completeness change summaries;
+- technical governance detail demoted behind consumer meaning.
 
-## Combined owner retest gate
-M13.1/M13.2 are not product-validated until hands-on use confirms both:
+Owner gate:
+> **Without opening technical details, I can tell what matters, what to do, what is unknown, and what changed.**
+
+## M13.3 — Clinical Evidence Capture v2 / Report UX
+Status: **ENGINEERING IMPLEMENTED — OWNER EVIDENCE-INGESTION RETEST REQUIRED**  
+Effort: **High**
+
+Implemented:
+- provider-neutral report candidate/provenance contract;
+- deterministic text/OCR candidate extraction and marker normalization;
+- extraction confidence and parsing/clarification visibility;
+- explicit review/confirmation before evidence promotion;
+- existing HbA1c/B12 unit/date/verification/freshness/plausibility gates remain authoritative;
+- unsupported markers remain `recorded_unassessed` after confirmation;
+- exact duplicate replacement and latest-result semantics;
+- report provenance retained through normalized evidence;
+- batch application of reviewed candidates into one reassessed immutable snapshot based on the latest saved check-in;
+- dedicated web report-import surface with browser PDF/image/text picker;
+- dedicated mobile report-import surface with `expo-document-picker`;
+- editable value/unit/date/reference range before confirmation;
+- deterministic M13.3 verification scenarios.
+
+Alpha limitation:
+- raw PDF/image bytes are **not** automatically OCR-parsed in this mission;
+- attachment preserves source provenance and the user pastes report text/OCR output;
+- a future extraction provider may implement the provider-neutral contract, but cannot bypass confirmation or clinical eligibility gates.
+
+Mission detail: `docs/missions/M13.3_CLINICAL_EVIDENCE_CAPTURE_V2_REPORT_UX.md`.
+
+## Combined owner validation gate
+Jaanch is not product-validated until hands-on use confirms all three:
 1. **Jaanch captured the material facts I expected it to know.**
 2. **Without opening technical details, I can tell what matters, what to do, what is unknown, and what changed.**
+3. **Report import makes evidence capture easier without silently accepting extracted values or over-interpreting unsupported markers.**
 
-Recommended scenarios:
+Recommended retest scenarios:
 1. healthy/low-risk adult;
 2. vegetarian with known low B12 + recorded low Vitamin D;
 3. cholesterol medicine + blood-pressure medicine;
@@ -78,37 +98,42 @@ Recommended scenarios:
 8. edit an earlier section so the adaptive plan changes;
 9. urgent chest-pain path;
 10. repeat check-in preserving manual/custom facts;
-11. repeat check-in with meaningful activity/measurement/lab change;
+11. repeat check-in with meaningful change;
 12. repeat check-in with no meaningful change;
-13. compare web/mobile result meaning and ordering.
+13. compare web/mobile result meaning and ordering;
+14. attach a report, extract candidates, edit a wrong value/unit/date and confirm only reviewed items;
+15. confirm HbA1c/B12 plus unsupported Vitamin D/lipids and verify only supported evidence can influence deterministic findings;
+16. re-import an exact duplicate and then a newer distinct result;
+17. compare web/mobile report-import semantics.
 
-Any new trust/comprehension defect found in owner testing takes priority over the roadmap.
+Any new trust/comprehension/evidence-integrity defect found in owner testing takes priority over the roadmap.
 
 ## Current product milestone
-**Consumer-result alpha candidate — awaiting owner retest.**
+**Evidence-ingestion alpha candidate — awaiting owner trust/result/report retest.**
 
-M13.1 repaired intake/navigation trust problems; M13.2 repairs result comprehension and action hierarchy. Clinical interpretation breadth remains deliberately narrow.
+Clinical interpretation breadth remains deliberately narrow.
 
 ## Next work after retest
-1. Fix any M13.1/M13.2 defects found in hands-on use.
-2. **M13.3 — Clinical Evidence Capture v2 / Report UX** — High.
-3. **M13.4 — Narrow Clinical Interpretation Expansion** — High, only after intake/result trust is credible.
-4. **M13.5 — Profile + Secure Persistence Architecture v1** — High.
-5. Resume **M10 live AI Utility Gate** only after intake/result quality is representative.
-6. **M11** remains conditional on M10 proving incremental value.
-7. Strategic Review 3.
-8. M15A Pilot Safety / Privacy / Release Gate.
-9. M14 MCP / ChatGPT App later; M15B production/store hardening last.
+1. Fix any M13.1/M13.2/M13.3 defects found in hands-on use.
+2. **M13.4 — Narrow Clinical Interpretation Expansion** — High, only after trust gates are credible.
+3. **M13.5 — Profile + Secure Persistence Architecture v1** — High.
+4. Resume **M10 live AI Utility Gate** only after intake/result/evidence quality is representative.
+5. **M11** remains conditional on M10 proving incremental value.
+6. Strategic Review 3.
+7. M15A Pilot Safety / Privacy / Release Gate.
+8. M14 MCP / ChatGPT App later; M15B production/store hardening last.
 
 ## Active constraints
 - Assessment quality is release-blocking.
 - Result comprehension is release-blocking.
+- Evidence-ingestion trust is release-blocking.
 - Capture breadth does not authorize interpretation breadth.
 - Manual/unassessed facts must not become diagnoses automatically.
+- Report extraction must never equal evidence eligibility.
 - Evidence completeness must never be represented as overall health.
 - AI must not compensate for poor intake or confusing deterministic results.
-- Deterministic urgent/safety/applicability rules remain authoritative.
-- Cloud persistence remains behind intake/result stabilization.
+- Deterministic urgent/safety/applicability/evidence rules remain authoritative.
+- Cloud persistence remains behind intake/result/evidence stabilization.
 - No generic overall health score.
 
 ## Session handover
@@ -118,9 +143,9 @@ Canonical new-session prompt/state:
 HANDOVER_NEXT_SESSION.md
 ```
 
-A new session should verify the current `main` head and read that handover plus `README.md`, this status file and `docs/product/ROADMAP.md` before implementation.
+A new session should verify the current `main` head and read that handover plus `README.md`, this status file and `docs/product/ROADMAP.md` before implementation. When handover text and current mission docs differ, current `main` plus `STATUS.md`/`ROADMAP.md` govern.
 
 ## Execution agreement
 - Repository: `Amonaval/jaanch`
 - Normal mission commit budget: 1–2 commits.
-- High effort for assessment quality, result quality, safety, applicability, AI, persistence, clinical expansion and release gates.
+- High effort for assessment quality, result quality, evidence capture, safety, applicability, AI, persistence, clinical expansion and release gates.

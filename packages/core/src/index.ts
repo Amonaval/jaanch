@@ -28,6 +28,7 @@ export * from './verificationAI';
 export { assess } from './engine';
 export * from './labs';
 export * from './reportEvidence';
+export * from './reportWorkflow';
 export * from './labView';
 export * from './healthMapView';
 export * from './hap';
