@@ -1,136 +1,236 @@
 # Jaanch Roadmap
 
 ## Phase 1 — Deterministic foundation — COMPLETE
-- Master-question baseline.
-- Adaptive follow-up selection.
-- Versioned rule registry.
-- Evidence graph and finding model.
-- Screening/test priority engine.
-- Red-flag interruption prototype.
-- HAP export.
-- Core verification harness.
+- adaptive questioning;
+- versioned rules;
+- evidence graph;
+- findings + missing evidence;
+- investigation priority;
+- core verification.
 
-## Phase 2 — Safety, reassessment and actions — COMPLETE THROUGH M09
-### M06 — Safety Gate + Clinical Source Baseline — COMPLETE
-- special-population context;
-- medication/supplement/allergy context;
-- kidney/liver constraints;
-- recommendation-class gates;
-- source/reference registry;
-- maturity/provenance baseline.
+## Phase 2 — Safety, reassessment and actions — COMPLETE
+- M06 Safety Gate + Clinical Source Baseline;
+- M07 shared Health Map presentation;
+- M08 normalized/fresh lab reassessment;
+- M09 bounded safety-gated recommendations;
+- SR2 applicability/evidence-integrity review;
+- M09.1 applicability gating + canonical lab ingestion.
 
-### M07 — Health Map UX v2 — COMPLETE
-- shared platform-neutral presentation model;
-- prioritized findings/actions;
-- evidence completeness;
-- safety/investigation/governance presentation.
-
-### M08 — Lab Reassessment + normalization/freshness — COMPLETE
-- normalized lab records;
-- units/date/source/verification/freshness;
-- reassessment and changed-result view;
-- lab provenance.
-
-### M09 — Recommendation Engine v1 — COMPLETE
-- bounded lifestyle/diet/exercise/monitoring/clinician-review actions;
-- safety-gated therapeutic boundaries.
-
-## Strategic Review 2 — COMPLETE
-Decision: **CONTINUE WITH CHANGES**.
-
-Key finding: population applicability and evidence-ingestion integrity had to be hardened before live AI review.
-
-## M09.1 — Clinical Applicability & Evidence Integrity Gate — COMPLETE
-- first-class applicability contracts;
-- pre-rule population gating;
-- applicability-aware investigations/recommendations;
-- canonical normalized lab pathway;
-- raw-lab questionnaire bypass removed;
-- contradictory-answer normalization;
-- applicability UX/governance/verification.
-
-## Phase 3 — Harnessed AI review
+## Phase 3 — Optional harnessed AI — ENGINEERING READY, VALUE NOT YET PROVEN
 ### M10 — AI Harness Runtime + Privacy/Evaluation — ENGINEERING COMPLETE
-Implemented:
-- canonical Jaanch harness naming/versioning;
-- privacy-minimized `JAANCH-AI-REVIEW-1.0` packet;
-- explicit external-AI opt-in boundary;
-- eligible-lab-only sharing;
-- strict `AI-ASSESSMENT-1.0` JSON Schema;
-- local post-provider safety/applicability invariant validation;
-- immutable/separate AI review result;
-- provider/model/harness/schema trace;
-- deterministic provider-error/invalid-output fallback;
-- fixed-fixture utility/safety evaluation;
-- server-only OpenAI Responses adapter behind disabled-by-default feature configuration;
-- request baseline uses strict JSON-Schema structured output and `store:false`.
+- privacy-minimized external packet;
+- explicit opt-in;
+- eligible-evidence-only sharing;
+- strict structured output + local invariant validation;
+- server-only OpenAI adapter;
+- model/harness/schema trace;
+- deterministic fallback;
+- offline utility-gate fixtures.
 
-### AI Utility Gate — NEXT DECISION POINT
-A real configured model must be evaluated before M11 proceeds.
+### AI Utility Gate — PENDING
+A real configured model must demonstrate incremental review value before M11 proceeds.
 
-Continue into M11 only if live evaluation demonstrates incremental review value while preserving deterministic safety, applicability and evidence eligibility.
+Pass criteria include useful contradiction/missing-consideration detection without relaxing deterministic urgent/safety/applicability/evidence rules.
 
-If AI is primarily paraphrase, invents facts, relaxes safety, treats ineligible evidence as current, or is too variable:
-- DEFER M11;
-- MOVE M13 Longitudinal Health next.
+If the model mainly paraphrases, is too variable, or violates invariants, defer M11.
 
-### M11 — AI Review Comparison & Safe Escalation — HIGH, CONDITIONAL
-Proceed only after a defensible `continue_m11` utility-gate result.
-- agreement/disagreement display;
-- evidence needed to resolve disagreement;
-- safest interim action;
-- deterministic urgent/safety/applicability constraints remain authoritative;
-- no silent merged medical verdict;
-- no more-permissive AI override.
+### M11 — AI Review Comparison & Safe Escalation — CONDITIONAL
+Only if the AI Utility Gate passes.
 
-## Phase 4 — Longitudinal product loop
-### M13 — Longitudinal Health + Persistence — MEDIUM/HIGH
-- assessment persistence/history;
-- trends;
-- compare;
-- retest loop;
-- before/after Health Map;
-- lab history;
-- action-plan evolution.
+---
 
-Move M13 ahead of M11 if the M10 AI Utility Gate is not convincingly passed or live evaluation remains unavailable.
+# Phase 4 — Longitudinal product loop
 
-### M12 — Rule Studio v1 — DEFERRED
-Revisit only when rule-authoring volume becomes a demonstrated bottleneck.
+## M13 — Longitudinal Health + Local Persistence — COMPLETE
+Jaanch now supports:
+- explicit saved check-ins;
+- immutable snapshots;
+- local web/mobile persistence;
+- retest/new-check-in flow;
+- latest-vs-previous finding comparison;
+- investigation changes;
+- action-plan changes;
+- lab trends;
+- shared longitudinal presentation semantics.
 
-## Strategic Review 3
-Run after longitudinal work plus whichever AI path survives the utility gate. Review end-to-end user value, retention/retest value, AI incremental usefulness, disagreement behavior, privacy/data minimization, pilot readiness and ChatGPT/MCP fit.
+### Product checkpoint: **TEST THE PRODUCT NOW**
+Do not wait for more missions before using Jaanch yourself.
 
-## Phase 5 — Distribution and hardening
-### M14 — MCP / ChatGPT App
-- API/tool contracts;
-- interactive ChatGPT surface;
-- sequencing remains in Jaanch core;
-- explicit permission and data-sharing boundaries.
+Current end-to-end loop:
 
-### M15 — Validation & Release Hardening
-Before public release:
-- qualified clinical-content review/approval workflow;
+`Assess → Health Map → Missing evidence → Add labs → Reassess → Safe actions → Save → Retest → Compare`
+
+Your hands-on feedback now has higher value than adding more architecture or medical domains.
+
+---
+
+## M13.1 — First-Run UX & Product Usability Hardening — NEXT — HIGH
+Start only after the first real web/phone test so fixes are grounded in actual friction.
+
+Scope:
+- onboarding / prototype disclaimer that is useful rather than noisy;
+- clearer assessment progress and navigation;
+- better mobile visual hierarchy;
+- Health Map simplification;
+- make “what should I do next?” unmistakable;
+- improve empty/loading/error states;
+- history/check-in UX;
+- reset/delete controls;
+- reduce developer-looking content on primary surfaces;
+- keep provenance/audit detail expandable rather than removed.
+
+### Milestone after M13.1
+**Usable alpha.**
+
+It should feel like one coherent consumer product rather than a collection of engine outputs.
+
+---
+
+## M13.2 — Profile + Secure Persistence Architecture v1 — HIGH
+Do after UX validation.
+
+Scope:
+- profile/user identity model;
+- explicit consent/retention/delete/export semantics;
+- secure persistence architecture;
+- backend boundary;
+- backup/sync/cross-device continuity;
+- migration/version contract;
+- keep clinical core independent of storage vendor.
+
+Supabase or another backend may be evaluated here, but backend complexity should not precede validation of the local product loop.
+
+### Milestone after M13.2
+Multi-session/account architecture ready for controlled external testing, subject to pilot safety/privacy review.
+
+---
+
+## M13.3 — Lab / Report Capture UX — MEDIUM/HIGH
+Scope:
+- faster manual lab entry;
+- report-image/PDF capture flow;
+- parsed values require explicit user confirmation before becoming eligible evidence;
+- unit/date/source provenance retained;
+- extraction confidence/errors surfaced;
+- no OCR/AI extraction silently becomes clinical truth.
+
+---
+
+## M13.4 — Narrow Clinical Expansion — HIGH
+Only after the current loop is useful in hands-on testing.
+
+Add a few high-value domains at a time, potentially:
+- blood pressure / cardiovascular screening;
+- lipids;
+- iron/anemia context;
+- thyroid screening context where justified;
+- vitamin D only if evidence/product value justifies it.
+
+Every new domain must include:
+- authoritative source mapping;
+- applicability contract;
+- evidence model;
+- investigation mapping;
+- recommendation boundary;
+- safety interaction;
+- golden scenarios.
+
+No “100 diseases” expansion.
+
+---
+
+# Strategic Review 3 — HIGH
+Run after M13.1/M13.2 direction is clear and after initial real usage feedback.
+
+Review:
+- actual user value after one assessment and repeated check-ins;
+- comprehension/misinterpretation;
+- retention/retest value;
+- whether action plans feel useful;
+- what medical breadth is justified;
+- whether AI adds measurable value;
+- privacy/data minimization;
+- pilot readiness;
+- ChatGPT/MCP fit.
+
+---
+
+# Phase 5 — Pilot and distribution
+
+## M15A — Pilot Safety / Privacy / Release Gate — HIGH
+Required before real external pilot users.
+
+Scope:
+- qualified clinical review/approval of the deliberately narrow supported rule set;
 - source freshness/review process;
-- reproducible verification/release gate;
-- privacy/consent model;
-- audit trail;
-- accessibility;
+- privacy/consent/data-retention model;
 - threat model;
-- jurisdiction-specific legal/regulatory assessment for intended claims/distribution;
-- release checklist.
+- local/cloud encryption decisions;
+- delete/export controls;
+- accessibility;
+- telemetry/error policy;
+- reproducible verification/build gate;
+- jurisdiction-specific legal/regulatory/claims assessment;
+- pilot release checklist.
 
-## Deferred breadth
-Until the AI Utility Gate / longitudinal decision:
-- additional health domains except where required to validate abstractions;
-- wearables;
-- lab-provider integrations;
-- clinician portal;
-- generic overall health score;
-- large declarative rule DSL.
+### Milestone after M15A
+**Controlled private-pilot candidate**, assuming the required clinical/privacy/legal gates are actually satisfied.
+
+---
+
+## M14 — MCP / ChatGPT App — HIGH, LATER
+Do after standalone Jaanch demonstrates value.
+
+ChatGPT should be a conversational surface over Jaanch tools such as:
+- start assessment;
+- submit answers;
+- get next questions;
+- get Health Map;
+- submit labs;
+- get action plan;
+- compare check-ins.
+
+Jaanch core continues to control medical sequencing and safety.
+
+---
+
+## M15B — Store / Production Hardening — HIGH
+Scope:
+- production Android/iOS builds;
+- Play internal testing / TestFlight;
+- crash/error monitoring;
+- app version/data migrations;
+- backup/recovery;
+- production persistence hardening;
+- store policies/assets;
+- operational runbook;
+- production release checklist.
+
+### Milestone after M15B
+**Production candidate**, still dependent on real clinical/regulatory review and pilot evidence rather than code completion alone.
+
+---
+
+# Product maturity checkpoints
+
+| Checkpoint | What Jaanch should be |
+|---|---|
+| **M13 — now** | Working end-to-end prototype; owner should test immediately |
+| **M13.1** | Usable alpha with coherent consumer UX |
+| **M13.2 + M15A** | Controlled private-pilot candidate with persistence/privacy/safety foundations |
+| **M13.4 + pilot learning** | Clinically broader but still deliberately bounded product |
+| **M15B** | Production-candidate software, subject to external clinical/legal/regulatory readiness |
+
+---
+
+## Deferred / conditional
+- M11 remains conditional on the M10 real-model AI Utility Gate.
+- M12 Rule Studio remains deferred until authoring volume is a demonstrated bottleneck.
+- Generic overall health score remains dropped.
+- Wearables, broad lab-provider integrations and clinician portal remain deferred until core user value is proven.
 
 ## Execution cadence
-- Build in 1–2 commits per mission.
-- Execute related missions in bounded batches; retain mission-level verification and status.
-- Medium effort is default; use High for architecture/safety/AI/reconciliation/distribution missions.
-- Strategic reviews may continue, change, defer, merge or drop later work.
+- 1–2 commits per mission.
+- Medium effort by default.
+- High for safety, applicability, AI, persistence, clinical expansion and release gates.
+- Strategic reviews can change/drop/defer planned work.

@@ -2,10 +2,15 @@
   "name": "jaanch",
   "private": true,
   "version": "0.1.0",
+  "engines": {
+    "node": ">=22.13.0"
+  },
   "workspaces": ["apps/*", "packages/*"],
   "scripts": {
     "web": "npm --workspace @jaanch/web run dev",
     "mobile": "npm --workspace @jaanch/mobile run start",
+    "mobile:fix": "cd apps/mobile && npx expo install --fix",
+    "doctor:mobile": "cd apps/mobile && npx expo-doctor",
     "verify:core": "npm --workspace @jaanch/core run verify",
     "verify:ai-runtime": "npm --workspace @jaanch/ai-runtime run verify",
     "verify": "npm run verify:core && npm run verify:ai-runtime"

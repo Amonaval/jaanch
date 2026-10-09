@@ -1,0 +1,17 @@
+{
+  "expo": {
+    "name": "Jaanch",
+    "slug": "jaanch",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "scheme": "jaanch",
+    "android": {
+      "package": "com.amonaval.jaanch"
+    },
+    "ios": {
+      "bundleIdentifier": "com.amonaval.jaanch",
+      "supportsTablet": true
+    }
+  }
+}

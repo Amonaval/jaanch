@@ -1,1 +1,19 @@
-{"name":"@jaanch/mobile","private":true,"version":"0.1.0","main":"expo/AppEntry.js","scripts":{"start":"expo start","android":"expo start --android","ios":"expo start --ios"},"dependencies":{"@jaanch/core":"workspace:*","expo":"latest","react":"latest","react-native":"latest"}}
+{
+  "name": "@jaanch/mobile",
+  "private": true,
+  "version": "0.1.0",
+  "main": "expo/AppEntry.js",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios"
+  },
+  "dependencies": {
+    "@jaanch/core": "workspace:*",
+    "@react-native-async-storage/async-storage": "2.2.0",
+    "expo": "^57.0.0",
+    "expo-dev-client": "~57.0.19",
+    "react": "19.2.3",
+    "react-native": "0.86.0"
+  }
+}

@@ -1,15 +1,30 @@
-import { useMemo, useState } from 'react';
-import { assess, buildApplicabilityViewModel, buildHealthMapViewModel, buildLabReassessmentViewModel, buildRecommendationPlan, buildRecommendationViewModel, createHap, getAssessmentPlan, reassessWithLabs, SKIPPED_ANSWER, type AnswerValue, type Answers, type LabMarkerId, type LabRecord } from '@jaanch/core';
+import { useEffect, useMemo, useState } from 'react';
+import {
+  addSnapshot, assess, buildApplicabilityViewModel, buildHealthMapViewModel, buildLabReassessmentViewModel,
+  buildLongitudinalViewModel, buildRecommendationPlan, buildRecommendationViewModel, createAssessmentSnapshot,
+  createHap, decodeLongitudinalHistory, emptyLongitudinalHistory, encodeLongitudinalHistory, getAssessmentPlan,
+  reassessWithLabs, SKIPPED_ANSWER,
+  type AnswerValue, type Answers, type LabMarkerId, type LabRecord, type LongitudinalHistory,
+} from '@jaanch/core';
+
+const HISTORY_KEY = 'jaanch.history.v1';
 
 export default function App(){
  const [answers,setAnswers]=useState<Answers>({});
  const [done,setDone]=useState(false);
  const [currentId,setCurrentId]=useState<string>();
- const [history,setHistory]=useState<string[]>([]);
+ const [navHistory,setNavHistory]=useState<string[]>([]);
  const [labRecords,setLabRecords]=useState<LabRecord[]>([]);
  const [labMarker,setLabMarker]=useState<LabMarkerId>('vitamin_b12');
  const [labValue,setLabValue]=useState('');
  const [labDate,setLabDate]=useState(()=>new Date().toISOString().slice(0,10));
+ const [savedMessage,setSavedMessage]=useState('');
+ const [longitudinalHistory,setLongitudinalHistory]=useState<LongitudinalHistory>(()=>{
+   if(typeof window==='undefined') return emptyLongitudinalHistory();
+   return decodeLongitudinalHistory(window.localStorage.getItem(HISTORY_KEY));
+ });
+ useEffect(()=>{if(typeof window!=='undefined') window.localStorage.setItem(HISTORY_KEY,encodeLongitudinalHistory(longitudinalHistory));},[longitudinalHistory]);
+
  const plan=useMemo(()=>getAssessmentPlan(answers),[answers]);
  const current=plan.questions.find(item=>item.question.id===currentId) ?? plan.nextQuestion;
  const q=current?.question;
@@ -21,14 +36,26 @@ export default function App(){
  const labView=useMemo(()=>reassessment?buildLabReassessmentViewModel(reassessment):undefined,[reassessment]);
  const recommendationPlan=useMemo(()=>buildRecommendationPlan(answers,result),[answers,result]);
  const recommendationView=useMemo(()=>buildRecommendationViewModel(recommendationPlan),[recommendationPlan]);
+ const longitudinalView=useMemo(()=>buildLongitudinalViewModel(longitudinalHistory),[longitudinalHistory]);
+
  const setCurrent=(id:string,v:AnswerValue)=>{setCurrentId(id);setAnswers(a=>({...a,[id]:v}));};
  const toggleMulti=(id:string,v:string)=>{setCurrentId(id);setAnswers(a=>{const existing=Array.isArray(a[id])?a[id] as string[]:[]; const next=existing.includes(v)?existing.filter(x=>x!==v):v==='none'?['none']:[...existing.filter(x=>x!=='none'),v]; return {...a,[id]:next};});};
- const advance=()=>{if(!q)return; const next=plan.nextQuestion; if(!next){setDone(true);return;} setHistory(h=>[...h,q.id]); setCurrentId(next.question.id);};
- const skip=()=>{if(!q)return; setHistory(h=>[...h,q.id]); setAnswers(a=>({...a,[q.id]:SKIPPED_ANSWER})); setCurrentId(undefined);};
- const back=()=>setHistory(h=>{const copy=[...h]; const previous=copy.pop(); if(previous)setCurrentId(previous); return copy;});
+ const advance=()=>{if(!q)return; const next=plan.nextQuestion; if(!next){setDone(true);return;} setNavHistory(h=>[...h,q.id]); setCurrentId(next.question.id);};
+ const skip=()=>{if(!q)return; setNavHistory(h=>[...h,q.id]); setAnswers(a=>({...a,[q.id]:SKIPPED_ANSWER})); setCurrentId(undefined);};
+ const back=()=>setNavHistory(h=>{const copy=[...h]; const previous=copy.pop(); if(previous)setCurrentId(previous); return copy;});
  const addLab=()=>{const value=Number(labValue); if(!Number.isFinite(value)||!labDate)return; setLabRecords(items=>[...items,{id:`lab-${labMarker}-${Date.now()}`,markerId:labMarker,value,unit:labMarker==='hba1c'?'%':'pg/mL',collectedAt:`${labDate}T00:00:00.000Z`,source:'manual',verification:'user_confirmed'}]); setLabValue('');};
+ const saveCheckIn=()=>{
+   const snapshot=createAssessmentSnapshot({answers,labs:reassessment?.normalizedLabs??[],assessment:result,recommendationPlan});
+   setLongitudinalHistory(history=>addSnapshot(history,snapshot));
+   setSavedMessage(`Saved ${new Date(snapshot.capturedAt).toLocaleString()}`);
+ };
+ const startNewCheckIn=()=>{setAnswers({});setDone(false);setCurrentId(undefined);setNavHistory([]);setLabRecords([]);setLabValue('');setSavedMessage('');};
+ const clearHistory=()=>{if(typeof window!=='undefined' && window.confirm('Clear all locally saved Jaanch check-ins on this browser?')) setLongitudinalHistory(emptyLongitudinalHistory());};
+
  if(done || (plan.complete && !currentId)) return <main>
   <header><h1>{healthMap.title}</h1><p>{healthMap.evidence.label}</p></header>
+  <section><h2>Save this check-in</h2><p>Keep this result locally so a future assessment can show what changed.</p><button onClick={saveCheckIn}>Save check-in</button> <button onClick={startNewCheckIn}>Start a new check-in</button>{savedMessage&&<p><small>{savedMessage}</small></p>}<p><small>Prototype privacy note: browser history uses localStorage and is not encrypted medical-record storage.</small></p></section>
+  {longitudinalView.snapshotCount>0&&<section><h2>{longitudinalView.title}</h2><p>{longitudinalView.snapshotCount} locally saved check-in{longitudinalView.snapshotCount===1?'':'s'}.</p>{longitudinalView.comparison&&<><h3>Latest vs previous</h3><p>Evidence completeness change: {longitudinalView.comparison.evidenceCompletenessDelta>=0?'+':''}{longitudinalView.comparison.evidenceCompletenessDelta}%</p>{longitudinalView.comparison.findingTrends.filter(x=>x.direction!=='unchanged').length>0&&<ul>{longitudinalView.comparison.findingTrends.filter(x=>x.direction!=='unchanged').map(x=><li key={x.findingId}><b>{x.title}</b> — {x.direction}{x.beforeStatus||x.afterStatus?<><br/><small>{x.beforeStatus??'not present'} → {x.afterStatus??'not present'}</small></>:null}</li>)}</ul>}{longitudinalView.comparison.resolvedInvestigationIds.length>0&&<p><b>Resolved investigations:</b> {longitudinalView.comparison.resolvedInvestigationIds.join(', ')}</p>}{longitudinalView.comparison.addedInvestigationIds.length>0&&<p><b>New investigations:</b> {longitudinalView.comparison.addedInvestigationIds.join(', ')}</p>}{longitudinalView.comparison.recommendationTrends.length>0&&<ul>{longitudinalView.comparison.recommendationTrends.map(x=><li key={x.id}>Action: <b>{x.title}</b> — {x.change.replace('_',' ')}</li>)}</ul>}{longitudinalView.comparison.labTrends.length>0&&<ul>{longitudinalView.comparison.labTrends.map(x=><li key={x.markerId}>Lab: <b>{x.markerId}</b> — {x.beforeValue??'—'} → {x.afterValue??'—'} {x.unit??''}</li>)}</ul>}</>}<details><summary>Saved check-ins</summary><ol>{longitudinalHistory.snapshots.map(snapshot=><li key={snapshot.id}>{new Date(snapshot.capturedAt).toLocaleString()} · evidence {snapshot.assessment.evidenceCompleteness}% · {snapshot.assessment.findings.length} finding(s)</li>)}</ol><button onClick={clearHistory}>Clear local history</button></details></section>}
   {healthMap.urgentMessages.map(x=><aside key={x}><b>Urgent:</b> {x}</aside>)}
   <section><h2>Top priorities</h2>{healthMap.topPriorities.length?<ol>{healthMap.topPriorities.map(x=><li key={x.id}><b>{x.title}</b><br/>{x.detail}</li>)}</ol>:<p>No high-priority item from the current evidence.</p>}</section>
   <section><h2>{recommendationView.title}</h2><p><small>{recommendationView.disclaimer}</small></p>{recommendationView.blockedReason?<aside>{recommendationView.blockedReason}</aside>:<>{recommendationView.top.length?<ol>{recommendationView.top.map(x=><li key={x.id}><b>{x.title}</b> — {x.priorityLabel} · {x.dispositionLabel}<br/>{x.rationale}<ul>{x.steps.map(step=><li key={step}>{step}</li>)}</ul><small>{x.maturityLabel} · {x.sourceIds.join(', ')}</small>{x.safetyReasons.length?<p><small>Safety: {x.safetyReasons.join(' ')}</small></p>:null}</li>)}</ol>:<p>No new action recommendation from the current evidence.</p>}{recommendationView.additional.length>0&&<details><summary>Additional actions</summary><ul>{recommendationView.additional.map(x=><li key={x.id}><b>{x.title}</b> — {x.dispositionLabel}<br/>{x.rationale}</li>)}</ul></details>}{recommendationView.blocked.length>0&&<details><summary>Blocked by safety context</summary><ul>{recommendationView.blocked.map(x=><li key={x.id}><b>{x.title}</b> — {x.safetyReasons.join(' ') || 'Blocked by safety policy.'}</li>)}</ul></details>}</>}</section>
@@ -42,5 +69,5 @@ export default function App(){
  </main>;
  if(!q || !current) return <main><h1>Jaanch</h1><p>No questions available.</p></main>;
  const value=answers[q.id];
- return <main><header><h1>Jaanch</h1><p>Deterministic personal health assessment</p></header><progress value={plan.answered} max={Math.max(plan.questions.length,1)}/><section><small>{q.master?'Master question':'Adaptive follow-up'} · {q.domain}</small><h2>{q.title}</h2>{q.description&&<p>{q.description}</p>}{q.type==='number'?<input type="number" min={q.min} max={q.max} value={typeof value==='number'?value:''} onChange={e=>setCurrent(q.id,Number(e.target.value))}/>:<div>{q.options?.map(o=>{const selected=q.type==='multi'?Array.isArray(value)&&value.includes(o.value):value===(q.type==='boolean'?(o.value==='yes'):o.value); return <button aria-pressed={selected} key={o.value} onClick={()=>q.type==='multi'?toggleMulti(q.id,o.value):setCurrent(q.id,q.type==='boolean'?o.value==='yes':o.value)}>{selected?'✓ ':''}{o.label}</button>})}</div>}<p><strong>Why asked:</strong> {current.whyAsked.join(' ')}</p></section><nav><button disabled={!history.length} onClick={back}>Back</button><button onClick={skip}>Skip / don't know</button><button disabled={value===undefined || (Array.isArray(value)&&value.length===0)} onClick={advance}>Continue</button></nav></main>;
+ return <main><header><h1>Jaanch</h1><p>Deterministic personal health assessment</p>{longitudinalView.snapshotCount>0&&<p><small>{longitudinalView.snapshotCount} previous check-in{longitudinalView.snapshotCount===1?'':'s'} saved locally.</small></p>}</header><progress value={plan.answered} max={Math.max(plan.questions.length,1)}/><section><small>{q.master?'Master question':'Adaptive follow-up'} · {q.domain}</small><h2>{q.title}</h2>{q.description&&<p>{q.description}</p>}{q.type==='number'?<input type="number" min={q.min} max={q.max} value={typeof value==='number'?value:''} onChange={e=>setCurrent(q.id,Number(e.target.value))}/>:<div>{q.options?.map(o=>{const selected=q.type==='multi'?Array.isArray(value)&&value.includes(o.value):value===(q.type==='boolean'?(o.value==='yes'):o.value); return <button aria-pressed={selected} key={o.value} onClick={()=>q.type==='multi'?toggleMulti(q.id,o.value):setCurrent(q.id,q.type==='boolean'?o.value==='yes':o.value)}>{selected?'✓ ':''}{o.label}</button>})}</div>}<p><strong>Why asked:</strong> {current.whyAsked.join(' ')}</p></section><nav><button disabled={!navHistory.length} onClick={back}>Back</button><button onClick={skip}>Skip / don't know</button><button disabled={value===undefined || (Array.isArray(value)&&value.length===0)} onClick={advance}>Continue</button></nav></main>;
 }

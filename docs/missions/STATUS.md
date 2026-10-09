@@ -15,54 +15,77 @@
 - Strategic Review 2: COMPLETE — CONTINUE WITH CHANGES
 - M09.1 — Clinical Applicability & Evidence Integrity Gate: IMPLEMENTED
 - M10 — AI Harness Runtime + Privacy/Evaluation: ENGINEERING IMPLEMENTED
+- M13 — Longitudinal Health + Local Persistence: IMPLEMENTED
 
-## M10 closure
-- Added privacy-minimized `JAANCH-AI-REVIEW-1.0` packet.
-- External AI packet creation requires explicit opt-in consent.
-- Raw questionnaire answers are not shared; only derived/relevant evidence is projected.
-- Only eligible normalized lab evidence is shared externally; stale/unverified/future/ineligible labs are omitted.
-- Added strict `AI-ASSESSMENT-1.0` JSON Schema plus local validation/invariant enforcement.
-- Deterministic urgent/safety/applicability boundaries cannot be silently relaxed by AI output.
-- Added deterministic AI Utility Gate evaluation primitives and golden fixtures.
-- Added server-only `@jaanch/ai-runtime` OpenAI Responses adapter; mobile/web never own API keys.
-- Live provider is disabled by default and requires explicit enablement/configuration.
-- OpenAI request uses strict JSON-Schema structured output and `store:false` baseline.
-- Canonical Markdown harness is loaded into the provider request and version metadata is retained.
-- Provider errors/invalid output leave the deterministic assessment unchanged.
-- `npm run verify` now includes AI-core and server request-construction checks.
+## M13 closure
+- Added immutable versioned assessment snapshots and versioned longitudinal history.
+- Snapshot captures answers, normalized lab evidence, deterministic assessment, recommendation plan, timestamp and stable ID.
+- Added latest-vs-previous comparison for evidence completeness, findings, investigations, recommendations and lab values.
+- Added safe history serialization/decoding and bounded newest-first retention.
+- Web persists explicit saved check-ins in browser `localStorage`.
+- Mobile persists explicit saved check-ins in AsyncStorage.
+- Both platforms expose save, new check-in, comparison, saved-history and clear-history flows.
+- Added longitudinal golden scenarios to `npm run verify:core`.
+- Added detailed root `README.md` for web, Expo Go, physical-phone testing, EAS Android APK installation, troubleshooting and test scenarios.
+- Added Expo SDK 57 mobile baseline, app identity and EAS development/preview/production profiles.
+- Current local history storage is prototype/unencrypted; use demo data while evaluating.
 
-## AI Utility Gate
-Status: **PENDING REAL-MODEL EVALUATION**
+## Product milestone
+**Working end-to-end prototype: NOW.**
 
-The repository/runtime implementation is complete, but no live API credential/model run is available in this session. Do not claim that M11 is approved from canned fixtures alone.
+The owner should test Jaanch on web and phone before adding broad new medical scope.
 
-Gate outcome must be one of:
-- `CONTINUE M11` only if a real configured model adds expected review value while preserving safety/applicability/evidence boundaries; or
-- `DEFER M11` if behavior is primarily paraphrase, unsafe, unsupported-context leakage, evidence misuse, or too variable.
+## Current recommended work
+### Hands-on product validation
+Run the README test scenarios and capture:
+- installation/startup blockers;
+- questionnaire friction;
+- confusing wording;
+- Health Map information overload/underload;
+- missing next-step clarity;
+- longitudinal/history usefulness;
+- mobile-specific usability problems.
 
-## Current
-AI Utility Gate live evaluation: NEXT DECISION POINT
-Effort: High
+### Then: M13.1 — First-Run UX & Product Usability Hardening
+Effort: **High**
 
-## Conditional next work
-- If gate passes: M11 — AI Review Comparison & Safe Escalation: High
-- If gate does not pass / remains unavailable: M13 — Longitudinal Health + Persistence: Medium/High
+Use actual hands-on feedback to harden onboarding, navigation, progress, results hierarchy, next actions, error/empty/loading states, history controls and the simple-vs-auditable information balance.
 
-## Active SR2 constraints
-- No adult-oriented rule/test mapping may silently run in an unsupported population.
+## Parallel decision point
+### M10 AI Utility Gate — PENDING REAL-MODEL EVALUATION
+M10 engineering exists, but a real configured model has not yet proven incremental value.
+
+- Pass → M11 AI Review Comparison & Safe Escalation may proceed.
+- Fail / mainly paraphrase / remains unavailable → keep M11 deferred and focus on standalone Jaanch value.
+
+## Recommended next missions
+1. **M13.1 — First-Run UX & Product Usability Hardening** — High
+2. **M13.2 — Profile + Secure Persistence Architecture v1** — High
+3. **M13.3 — Lab/Report Capture UX** — Medium/High
+4. **M10 Utility Gate** — High, parallel/optional decision gate
+5. **M11 — AI Review Comparison & Safe Escalation** — High, CONDITIONAL
+6. **M13.4 — Narrow Clinical Expansion** — High
+7. **Strategic Review 3** — High
+8. **M15A — Pilot Safety / Privacy / Release Gate** — High
+9. **M14 — MCP / ChatGPT App** — High, after standalone value is validated
+10. **M15B — Store / Production Hardening** — High
+
+## Active constraints
+- Do not add broad health-domain breadth before hands-on validation of the current loop.
+- No adult-oriented rule/test mapping may silently run in unsupported populations.
 - One canonical normalized lab-ingestion path drives lab-informed findings.
-- Investigation planning respects applicability before ordinary prioritization.
+- Investigation planning respects applicability.
 - Contradictory inputs are normalized before rule execution.
 - AI must not treat stale/unverified/ineligible lab records as active evidence.
 - AI must not upgrade prototype logic to clinical authority.
-- Live AI data sharing must be opt-in and minimized.
+- Live AI sharing must be opt-in/minimized.
 - Deterministic urgent/safety/applicability restrictions remain authoritative.
-- M11 proceeds only if M10 proves incremental review value with a real configured model.
+- M11 proceeds only if M10 proves incremental value with a real configured model.
 - Do not introduce a generic overall health score.
 
 ## Execution agreement
 - Repository: `Amonaval/jaanch`
 - Commit budget: 1–2 commits per mission
 - Default effort: Medium
-- Safety/applicability/AI/reconciliation missions use High effort.
+- Safety/applicability/AI/reconciliation/persistence/release missions use High effort where warranted.
 - Strategic reviews may continue, change, drop or defer roadmap work.
