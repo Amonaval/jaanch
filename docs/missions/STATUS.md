@@ -45,8 +45,8 @@ Implemented:
 - exact duplicate/latest-result semantics;
 - one reassessed immutable snapshot per reviewed report batch.
 
-M13.4 integration update:
-- confirmed BP/lipid/haemoglobin/ferritin/TSH measurements can now feed the **bounded M13.4 interpretation path** only after their verification/unit/date/freshness/applicability gates pass;
+M13.4 integration:
+- confirmed BP/lipid/haemoglobin/ferritin/TSH measurements can feed the bounded interpretation path only after verification/unit/date/freshness/applicability gates pass;
 - Vitamin D, fasting/random glucose and unknown markers remain recorded/unassessed.
 
 Mission detail: `docs/missions/M13.3_CLINICAL_EVIDENCE_CAPTURE_V2_REPORT_UX.md`.
@@ -56,94 +56,105 @@ Status: **ENGINEERING IMPLEMENTED — OWNER CLINICAL/PROFILE RETEST REQUIRED**
 Effort: **High**
 
 Implemented clinical domains:
-- **blood pressure / cardiovascular context** — `CV-BP-001`, sourced to 2024 ESC;
-- **lipid cardiovascular-risk context** — `CV-LIPID-001`, sourced to 2026 ACC/AHA dyslipidemia guidance;
-- **anaemia / iron-status evidence** — `NUT-IRON-001`, sourced to WHO haemoglobin/ferritin guidance;
-- **thyroid evidence** — `MET-THYROID-001`, sourced to NICE NG145.
+- blood pressure / cardiovascular context — `CV-BP-001`, 2024 ESC;
+- lipid cardiovascular-risk context — `CV-LIPID-001`, 2026 ACC/AHA dyslipidemia guidance;
+- anaemia / iron-status evidence — `NUT-IRON-001`, WHO haemoglobin/ferritin guidance;
+- thyroid evidence — `MET-THYROID-001`, NICE NG145.
 
 Evidence integrity:
-- broader measurements remain stored as captured measurements rather than being blindly added to the old HbA1c/B12 lab engine;
 - eligibility requires user confirmation, supported unit, valid date, freshness and plausible range;
 - private derived evidence is rebuilt only by the trusted capture path;
 - public `assess(...)` strips forged internal M13.4 fields;
 - persisted snapshots/profile exports strip internal derived evidence.
 
-New investigation mappings:
-- `MEASURE-BP`
-- `LAB-LIPID-PANEL`
-- `LAB-HEMOGLOBIN`
-- `LAB-FERRITIN`
-- `LAB-TSH`
-
-New safety-bounded recommendations:
-- `REC-BP-RECHECK-001`
-- `REC-LIPID-RISK-001`
-- `REC-IRON-REVIEW-001`
-- `REC-THYROID-REVIEW-001`
-
-### Profile portability / mocks
-Protocol: `JAANCH-PROFILE-1.0`
-
-Implemented:
-- profile JSON import/export on web/mobile;
+Profile portability:
+- `JAANCH-PROFILE-1.0` import/export on web/mobile;
 - imported profiles rerun the current deterministic engine;
-- export preserves the runnable draft plus optional local history;
-- web downloads `.jaanch-profile.json`;
-- mobile imports `.json` via document picker and exports through the native share sheet;
-- five built-in mock scenarios plus matching repo fixtures under `examples/mock-profiles/`.
-
-Mocks:
-1. low-risk adult;
-2. cardiometabolic + lipids;
-3. vegetarian + B12 + iron/anaemia;
-4. thyroid signal;
-5. severe triglyceride signal.
-
-Profile portability is **not** secure cloud persistence or identity. M13.5 still owns that architecture.
+- five synthetic mock profiles + repo fixtures.
 
 Mission detail: `docs/missions/M13.4_NARROW_CLINICAL_INTERPRETATION_EXPANSION.md`.
+
+## M13.5 — Profile + Secure Persistence Architecture v1
+Status: **ENGINEERING IMPLEMENTED — OWNER PERSISTENCE/PRIVACY REVIEW REQUIRED**  
+Effort: **High**
+
+Implemented:
+- `JAANCH-PERSISTENCE-1.0` versioned persistence envelope;
+- local-device vs authenticated owner boundary;
+- consent state and policy-version contract;
+- retention policy (`until_user_deletes`, capped history);
+- truthful security metadata for current local storage;
+- explicit remote-persistence eligibility gate;
+- vendor-independent `SecurePersistencePort`;
+- legacy `JAANCH-HISTORY-1.0` backward compatibility + migration helper;
+- same-owner cross-device merge semantics with immutable-snapshot conflict rejection;
+- consent revocation fail-closed behavior;
+- `JAANCH-DELETION-1.0` tombstones with no health-history payload;
+- `JAANCH-DATA-EXPORT-1.0` owned-data export semantics;
+- persistence decode sanitization of private M13.4 derived fields;
+- verification wired into `npm run verify`.
+
+Current runtime truth:
+- web still stores locally in browser `localStorage`;
+- mobile still stores locally in AsyncStorage;
+- these current stores are explicitly classified `application_storage_unencrypted` by Jaanch;
+- cloud sync remains OFF and is not inferred from JSON import/export;
+- no live auth provider or remote database has been connected.
+
+Remote persistence is allowed by contract only when all are true:
+1. authenticated profile ownership;
+2. explicit cloud-sync consent;
+3. TLS-required transport;
+4. server-side encryption-at-rest metadata;
+5. sync state resolves to `sync_eligible`.
+
+Mission detail: `docs/missions/M13.5_PROFILE_SECURE_PERSISTENCE_ARCHITECTURE.md`.
 
 ## Combined owner validation gate
 Jaanch is still not product-validated until hands-on use confirms:
 1. assessment captures material facts;
 2. result hierarchy is understandable;
 3. report import is trustworthy;
-4. the new clinical modules do not overstate certainty or prescribe autonomously;
-5. mock/import/export flow is reliable and reruns evidence through the current engine.
+4. narrow clinical modules do not overstate certainty or prescribe autonomously;
+5. mock/import/export flow is reliable and reruns evidence through the current engine;
+6. persistence/privacy behavior is understandable and does not overclaim encryption/cloud safety.
 
-Recommended M13.4 retest:
+Recommended owner retest:
 1. run all five built-in mocks;
 2. export one mock/profile and re-import it;
 3. use missing/incorrect unit or date and confirm interpretation is blocked;
-4. test BP 148/94 and verify “measurement signal / confirm”, not “diagnosed hypertension”;
-5. test TG ≥1000 and verify clinician-review boundary without medication change;
-6. test female nonpregnant Hb 10.7 + ferritin 8 and verify cause-oriented review without autonomous iron dose;
-7. test TSH 12.8 and verify confirmation/FT4 context rather than diagnosis;
-8. test pregnancy and verify adult BP/lipid/iron/thyroid rules suppress where configured;
-9. import the same values through report capture and compare semantics with manual/profile capture;
-10. confirm Vitamin D/glucose still remain recorded/unassessed in M13.4.
+4. test BP 148/94, TG >=1000, low Hb+ferritin and TSH 12.8 boundaries;
+5. compare report evidence with manual/profile evidence;
+6. confirm Vitamin D/glucose still remain recorded/unassessed;
+7. upgrade from a checkout/browser/device with existing local history and confirm it still loads;
+8. save a new check-in and verify history still round-trips after the persistence envelope migration;
+9. verify UI/product wording does not imply current local storage is encrypted medical-record storage;
+10. keep profile JSON portability conceptually separate from future account/cloud sync.
 
-Any trust/comprehension/evidence-integrity defect found in owner testing takes priority over the roadmap.
+Any trust/comprehension/evidence/privacy defect found in owner testing takes priority over roadmap work.
 
 ## Current product milestone
-**Narrow-clinical-expansion alpha candidate — awaiting owner trust/result/report/clinical/profile retest.**
+**Persistence-architecture alpha candidate — local-only runtime; owner trust/result/report/clinical/profile/privacy gates still open.**
 
-All new clinical rules and mappings remain `prototype`; source capture does not mean clinical approval.
+All clinical rules and mappings remain `prototype`; source capture does not mean clinical approval.
 
 ## Next work
-1. Fix any owner-discovered M13.1–M13.4 trust/result/evidence defect.
-2. **M13.5 — Profile + Secure Persistence Architecture v1 — High.**
-3. Resume **M10 live AI Utility Gate** only after intake/result/evidence/clinical quality is representative.
-4. M11 remains conditional on M10 proving incremental value.
-5. Strategic Review 3.
-6. M15A Pilot Safety / Privacy / Release Gate.
+1. Fix any owner-discovered M13.1–M13.5 trust/result/evidence/privacy defect.
+2. Resume **M10 live AI Utility Gate** only when current deterministic product behavior is representative enough to judge AI fairly.
+3. M11 remains conditional on M10 proving incremental value.
+4. Strategic Review 3.
+5. M15A Pilot Safety / Privacy / Release Gate.
+6. A concrete auth/backend adapter may be selected during pilot infrastructure work, but must satisfy M13.5 rather than redefine it.
 7. M14 MCP / ChatGPT App later; M15B production/store hardening last.
 
 ## Active constraints
 - Assessment quality is release-blocking.
 - Result comprehension is release-blocking.
 - Evidence-ingestion trust is release-blocking.
-- Clinical expansion must stay narrow and source-governed.
+- Privacy/security claims are release-blocking.
+- Current local storage must not be described as application-layer encrypted.
+- Cloud upload cannot be inferred from local profile import/export.
+- Remote persistence requires authenticated ownership + consent + TLS + server encryption.
 - One measurement does not automatically become a diagnosis.
 - Capturing a fact does not automatically authorize interpretation.
 - Missing provenance must not be guessed.
