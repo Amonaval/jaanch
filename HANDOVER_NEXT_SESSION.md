@@ -7,52 +7,42 @@ You are taking over active development of **Jaanch**, a deterministic, evidence-
 Repository: `Amonaval/jaanch`  
 Default branch: `main`
 
-M11 code commit:
-
-```text
-7d48d0e17d851b36eb09eedf8421f8da7f17662c
-M11: add contextual longitudinal AI review v2
-```
-
-A docs/privacy-hardening closure commit is expected to be newer. **Always fetch current `main` before writing anything. Never overwrite a newer head.**
+Always fetch current `main` before writing.
 
 Read completely:
 
 ```text
-README.md
+docs/reviews/SR3_CONSUMER_VALUE_WOW_FACTOR.md
 docs/missions/STATUS.md
 docs/product/ROADMAP.md
-docs/product/ASSESSMENT_QUALITY_STANDARD.md
-docs/missions/M10_AI_HARNESS_RUNTIME.md
-docs/missions/M10.1_LIVE_AI_REVIEW_WEB_UX.md
-docs/missions/M11_AI_REVIEW_V2_CONTEXTUAL_UTILITY.md
-docs/missions/M13.1_ASSESSMENT_QUALITY_RECOVERY.md
-docs/missions/M13.2_RESULT_QUALITY_HEALTH_MAP_UX.md
-docs/missions/M13.3_CLINICAL_EVIDENCE_CAPTURE_V2_REPORT_UX.md
-docs/missions/M13.4_NARROW_CLINICAL_INTERPRETATION_EXPANSION.md
-docs/missions/M13.5_PROFILE_SECURE_PERSISTENCE_ARCHITECTURE.md
+docs/missions/M13.6_CONSUMER_VALUE_RESET_PLAN.md
+README.md
 ```
 
-Then inspect the actual current source relevant to the requested task.
+Then inspect current source relevant to the task.
 
-## 2. Product thesis / non-negotiable boundaries
+## 2. Strategic Review 3 is the controlling decision
 
-Jaanch is **not** an AI diagnosis chatbot.
+SR3 decision:
 
-Core loop:
+> **CONTINUE WITH MAJOR CHANGES — PAUSE FEATURE EXPANSION, RESET THE CONSUMER EXPERIENCE.**
 
-```text
-Capture context → adaptive deterministic assessment
-→ evidence/findings/missing evidence
-→ safety/applicability
-→ measured/report evidence eligibility
-→ reassessment + safe actions
-→ immutable check-in + local persistence
-→ optional explicit-consent AI review
-→ repeat / compare
-```
+Do not interpret engineering completion through M11/M13.5 as product success.
 
-Non-negotiable:
+SR3 explicitly judged:
+- safety/evidence integrity: strong;
+- architecture: strong;
+- immediate user value: weak/moderate;
+- friction: high;
+- longitudinal pull: weak;
+- wow factor: weak.
+
+The current product is **not pilot-ready** and should not receive more AI/backend/mobile/platform expansion before visible user value improves.
+
+## 3. Core product boundaries remain non-negotiable
+
+Jaanch is not an AI diagnosis chatbot.
+
 1. questionnaire signals are not diagnoses;
 2. confidence is not disease probability;
 3. no generic overall health score;
@@ -64,278 +54,191 @@ Non-negotiable:
 9. prescription-medication changes are never autonomous;
 10. therapeutic/high-dose iron/thyroid/lipid/supplement regimens are not autonomously generated;
 11. urgent red flags override routine flow;
-12. applicability runs before adult rules/recommendations;
+12. applicability runs before rules/recommendations;
 13. AI cannot override deterministic urgent/safety/applicability/evidence gates;
 14. clinical maturity remains explicit (`prototype` / `reviewed` / `approved`);
-15. profile JSON portability does not imply cloud consent;
-16. remote persistence requires authenticated ownership + explicit consent + TLS + encryption at rest;
-17. browser localStorage/mobile AsyncStorage are not Jaanch-encrypted medical-record stores;
-18. provider API keys never ship to browser/mobile clients;
-19. external AI review requires explicit per-run consent and minimum-necessary data;
-20. invalid/safety-violating AI output is not displayed as usable advice;
-21. longitudinal AI must never infer a trend when no prior comparison exists;
-22. AI must not manufacture novelty simply to justify its presence.
+15. current browser/mobile storage is not Jaanch-encrypted medical-record storage;
+16. provider secrets never enter browser/mobile code;
+17. AI remains explicit-consent/minimum-necessary and optional.
 
-## 3. Implemented mission state
+Do not weaken these boundaries to make the product feel simpler.
 
-Engineering implemented:
+## 4. What is already implemented and should be reused
 
-```text
-M01–M09.1 deterministic engine/safety/governance
-M10 AI harness/privacy/runtime
-M10.1 Live AI Review + Web UX — live utility gate still open
-M11 AI Review v2 / deeper contextual utility — owner/real-model utility gate open
-M13 longitudinal local history
-M13.1 Assessment Quality Recovery — owner trust retest open
-M13.2 Consumer Health Map — owner result retest open
-M13.3 Clinical Evidence Capture v2 / Report UX — owner report retest open
-M13.4 Narrow Clinical Interpretation Expansion — owner clinical/profile retest open
-M13.5 Profile + Secure Persistence Architecture — owner persistence/privacy review open
-```
+### Deterministic foundation
+M01–M09.1:
+- adaptive assessment;
+- evidence graph;
+- rule/source registry;
+- safety;
+- applicability;
+- minimum-useful investigations;
+- normalized lab reassessment;
+- recommendations;
+- verification.
 
-Do not reconstruct completed missions unless current code or hands-on testing exposes a real defect.
+### Product/evidence foundation
+M13–M13.5:
+- local longitudinal snapshots;
+- assessment-quality recovery;
+- consumer Health Map;
+- reviewed report evidence capture;
+- bounded BP/lipids/anaemia-iron/thyroid interpretation;
+- profile import/export + five mocks;
+- versioned local persistence/security architecture.
 
-## 4. Clinical/evidence state
+### AI infrastructure
+M10/M10.1/M11:
+- privacy-minimized v1/v2 packets;
+- strict output schemas;
+- safety invariant validation;
+- server-only OpenAI provider;
+- contextual capsule;
+- latest-two-check-in deltas;
+- material-addition gate;
+- contradiction/evidence-gap/clinician-prep output;
+- v1/v2 live gate commands.
 
-M13.4 bounded prototype domains:
-- BP / cardiovascular context — `CV-BP-001`;
-- lipids — `CV-LIPID-001`;
-- anaemia/iron — `NUT-IRON-001`;
-- thyroid — `MET-THYROID-001`.
+AI utility remains unproven. Keep it optional/experimental.
 
-`packages/core/src/clinicalMeasurements.ts` remains the trust boundary for broader measurements. Do not weaken confirmation/unit/date/freshness/plausibility rules or accept forged internal `__m134_*` evidence.
+## 5. Main SR3 product failures
 
-Vitamin D, fasting/random glucose and unknown markers remain recorded/unassessed in this expansion.
+### A. Card-wall result
+The result exposes many sections/counters/details but does not compress enough into a memorable health story.
 
-M13.3 report ingestion remains candidate-only until explicit review; missing unit/date stays missing.
+### B. Generic actions
+Recommendations are safe but often obvious. The missing value is cross-signal decision synthesis.
 
-## 5. Profile/persistence state
+### C. Repeat-use failure
+`apps/web/src/App.tsx` currently resets answers/context/labs on `Start new check-in`.
 
-Profile protocol:
+This must be replaced by Smart Recheck from the latest saved profile.
 
-```text
-JAANCH-PROFILE-1.0
-```
+### D. Report-first friction
+Current report flow requires saved baseline + pasted OCR/text + candidate review before value appears.
 
-Five mocks:
+### E. Developer surfaces in consumer navigation
+Profiles & mocks, protocol versions and runtime traces should not define primary UX.
 
-```text
-low-risk-adult
-cardiometabolic-lipids
-vegetarian-b12-iron
-thyroid-signal
-severe-triglycerides
-```
+### F. AI over-investment
+No further AI mission until the core Health Brief itself is compelling and live-model utility is proven.
 
-Persistence protocols:
+## 6. NEXT MISSION — M13.6
 
-```text
-JAANCH-PERSISTENCE-1.0
-JAANCH-DELETION-1.0
-JAANCH-DATA-EXPORT-1.0
-```
+**M13.6 — Consumer Value Reset: Health Intelligence Brief + Smart Recheck**  
+Effort: **High**
 
-Current runtime is local only:
-- web `localStorage`;
-- mobile AsyncStorage;
-- classified `application_storage_unencrypted`;
-- no cloud sync/auth database.
-
-## 6. M10/M10.1 AI v1 state
-
-Stable contracts:
+Mission doc:
 
 ```text
-JAANCH-AI-REVIEW-1.0
-AI-ASSESSMENT-1.0
-Harness 1.1
+docs/missions/M13.6_CONSUMER_VALUE_RESET_PLAN.md
 ```
 
-Properties:
-- explicit consent;
-- raw answer map omitted;
-- stale/ineligible labs omitted;
-- strict output schema;
-- treatment advice gated;
-- deterministic urgent state cannot be downgraded;
-- unsupported applicability cannot receive prohibited self-care;
-- provider credentials server-side;
-- OpenAI request uses `store:false`;
-- v1 endpoint `/api/ai-review` remains for traceability.
+Required implementation outcomes:
 
-## 7. M11 AI Review v2 state
+1. Replace current result card wall with a one-screen **Health Intelligence Brief**.
+2. Maximum 1–3 health priorities/themes.
+3. Add deterministic cross-rule synthesis where several findings clearly belong to one health priority.
+4. Every priority answers:
+   - what Jaanch sees;
+   - why it matters to this person;
+   - evidence chain;
+   - next best action;
+   - what can wait;
+   - what evidence would change the conclusion.
+5. Demote evidence-completeness percentage.
+6. Move developer/mock/protocol/runtime surfaces out of primary navigation.
+7. Smart Recheck starts from latest saved profile instead of blank state.
+8. Retain stable profile/history/medicine context.
+9. Prioritize time-sensitive or missing fields on recheck.
+10. Show a pre-save “what changed” confirmation.
+11. Keep evidence/provenance in expandable detail.
+12. AI v2 may be shown only as optional compact second-opinion infrastructure; it cannot define the core brief.
 
-New contracts:
+## 7. M13.6 mock gates
+
+### Low-risk adult
+Must be concise and appropriately quiet. Do not create generic wellness filler just to have content.
+
+### Cardiometabolic + lipids
+Must synthesize waist/body composition, HbA1c, BP, LDL/TG and family history into a coherent priority instead of isolated cards.
+
+### Vegetarian + B12 + iron
+Must explain concurrent B12 + anaemia/iron evidence, distinguish known facts from cause uncertainty, and prioritize cause-oriented next steps.
+
+### Thyroid signal
+Must clearly explain the marked TSH signal and treatment context without diagnosis or autonomous dose advice.
+
+### Severe triglycerides
+TG >=1000 must dominate less-important lipid details and preserve clinician-review boundaries.
+
+## 8. M13.6 exit gate
+
+For each mock, within 10 seconds of the first result screen, user should know:
+
+1. top concern;
+2. why;
+3. next action;
+4. next evidence.
+
+Returning-user gate:
+- stable data prefilled;
+- unchanged routine recheck substantially faster than first intake;
+- user does not rebuild profile/history from zero;
+- changes previewed before saving.
+
+## 9. After M13.6
+
+Planned next:
+
+**M13.7 — Report-First Intelligence + Friction Reduction — High**
+
+Target:
 
 ```text
-JAANCH-AI-REVIEW-2.0
-AI-ASSESSMENT-2.0
-Harness 2.0
+upload report
+→ structured extraction
+→ review uncertain/high-risk fields
+→ ask minimum missing context
+→ Health Intelligence Brief
 ```
 
-Core:
+Do not weaken provenance/confirmation/unit/date/freshness rules.
 
-```text
-packages/core/src/aiReviewV2.ts
-packages/core/src/verificationAIV2.ts
-```
+## 10. Frozen until value gates pass
 
-Runtime:
+Do not start without explicit owner override:
+- further AI expansion;
+- mobile parity;
+- cloud/auth/backend;
+- M14 ChatGPT/MCP;
+- M12 Rule Studio;
+- broad clinical-domain expansion;
+- M15A pilot hardening;
+- M15B store/production hardening.
 
-```text
-packages/ai-runtime/src/openaiContextReviewProvider.ts
-packages/ai-runtime/src/httpHandlerV2.ts
-packages/ai-runtime/src/verifyV2.ts
-packages/ai-runtime/src/liveUtilityGateV2.ts
-```
+## 11. New north-star tests
 
-Web:
+Before adding work ask:
 
-```text
-apps/web/src/AIReviewScreen.tsx
-apps/web/vite.config.ts
-```
+> **Does this materially improve what the user understands or can decide within 60 seconds?**
 
-Harness:
+and:
 
-```text
-docs/ai-harness/HEALTH_ASSESSMENT_HARNESS_V2.md
-```
+> **Can the user repeat the key insight to another person after closing the app?**
 
-### v2 packet content
+and:
 
-Includes current minimized v1 packet plus coded context:
-- age band;
-- condition/concern codes;
-- medication/supplement categories;
-- family-history codes;
-- reproductive-context code;
-- bounded activity.
+> **Does the output justify the amount of information the user had to provide?**
 
-Explicitly omits:
-- raw answer map;
-- free text;
-- medication/supplement names/dose/frequency;
-- raw previous snapshot;
-- older full history.
+If not, defer the work.
 
-If a previous check-in exists, sends deterministic latest-two-check-in deltas only:
-- finding changes;
-- normalized lab changes;
-- eligible BP/lipid/Hb/ferritin/TSH measurement changes;
-- recommendation changes;
-- evidence-completeness delta.
+## 12. Working rules
 
-### v2 output
-
-Adds:
-- `utility.materialAddition`;
-- longitudinal synthesis;
-- prioritized evidence gaps with source IDs;
-- traceable contradiction types;
-- clinician-prep brief;
-- nested v1 base review.
-
-Invariants:
-- no longitudinal claim without longitudinal input;
-- unknown source/related IDs rejected;
-- `materialAddition=false` cannot coexist with contradictions/prioritized gaps;
-- v1 safety validation still applies.
-
-### v2 HTTP boundary
-
-Endpoint:
-
-```text
-POST /api/ai-review-v2
-```
-
-Current Vite dev/preview boundary:
-- explicit consent;
-- strict v2 protocol/purpose;
-- body cap;
-- `no-store` response headers;
-- minimization flags enforced;
-- unexpected top-level/current/context/longitudinal/minimization fields rejected;
-- request bodies not logged.
-
-This is still **not production security infrastructure**. A real deployment needs appropriate authentication/authorization, origin/CSRF controls, rate limiting, abuse controls and server deployment review.
-
-## 8. Verification / live gates
-
-Root verification:
-
-```bash
-npm run verify
-```
-
-M11 live gate:
-
-```bash
-npm run ai:gate:v2
-```
-
-M10.1 v1 gate remains:
-
-```bash
-npm run ai:gate
-```
-
-No live model was declared to have passed merely because M11 engineering was implemented.
-
-## 9. Owner gates still open
-
-Must test:
-1. M13.1 capture completeness/navigation;
-2. M13.2 result comprehension;
-3. M13.3 report trust;
-4. M13.4 clinical/profile behavior;
-5. M13.5 persistence/privacy wording and migration;
-6. M11 low-risk quietness;
-7. M11 high-signal prioritization without overreach;
-8. no medication/dose changes;
-9. `npm run ai:gate:v2` all five mocks;
-10. genuine two-check-in longitudinal synthesis;
-11. distinction between evidence change and health change;
-12. privacy wording matches what leaves browser.
-
-Any trust/evidence/privacy/AI-safety defect outranks roadmap expansion.
-
-## 10. Next planned work
-
-If no owner defect is supplied, do **Strategic Review 3 — High**.
-
-Do not automatically create M11.1/M12 AI work. Strategic Review 3 should decide:
-- whether AI v2 is genuinely valuable;
-- what should be removed or simplified;
-- whether product breadth is sufficient for a controlled pilot;
-- whether a concrete backend is justified;
-- the smallest M15A pilot safety/privacy/release plan.
-
-Later:
-- M15A pilot gate;
-- concrete backend only if justified and compliant with M13.5;
-- M14 ChatGPT/MCP later;
-- M15B production/store hardening last.
-
-## 11. Working rules
-
-- Prefer bounded high-value work over frameworks.
-- Normal mission budget 1–2 coherent commits.
-- Keep clinical semantics backend-independent.
+- Fix value/friction issues before architecture expansion.
+- Prefer deletion/simplification to adding another surface.
+- Preserve deterministic safety/evidence boundaries.
+- Normal mission budget 1–2 coherent commits when practical.
 - Do not add GitHub Actions unless requested.
-- Preserve source/rule/evidence IDs and provenance.
-- Keep `prototype/reviewed/approved` explicit.
-- Do not restore `@jaanch/core: "workspace:*"`; workspace consumers use `0.1.0`.
-- Fix owner-discovered trust defects before roadmap work.
-- Do not expose provider secrets to clients.
-- Do not treat AI novelty as product value.
-
-## 12. When this handover is opened
-
-1. Fetch current `main`.
-2. Read canonical files in section 1.
-3. Inspect actual current source relevant to the task.
-4. Prioritize owner-discovered defects.
-5. Otherwise run Strategic Review 3 next.
-6. At mission closure update code/verification/docs/status/roadmap/handover and state next effort.
+- Do not restore `@jaanch/core: "workspace:*"`.
+- Update mission docs, STATUS, ROADMAP and handover at closure.
