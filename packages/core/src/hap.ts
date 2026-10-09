@@ -1,4 +1,5 @@
 import type { RecommendationPlan } from './recommendations';
+import type { AssessmentCaptureContext } from './intake';
 import type { Answers, AssessmentResult, NormalizedLabRecord } from './types';
 
 export type HealthAssessmentPacket = {
@@ -6,6 +7,7 @@ export type HealthAssessmentPacket = {
   generatedAt: string;
   purpose: 'screening_and_prevention';
   answers: Answers;
+  capturedContext?: AssessmentCaptureContext;
   labEvidence?: NormalizedLabRecord[];
   recommendationPlan?: RecommendationPlan;
   engineAssessment: AssessmentResult;
@@ -16,12 +18,19 @@ export type HealthAssessmentPacket = {
   };
 };
 
-export function createHap(answers: Answers, result: AssessmentResult, labEvidence?: NormalizedLabRecord[], recommendationPlan?: RecommendationPlan): HealthAssessmentPacket {
+export function createHap(
+  answers: Answers,
+  result: AssessmentResult,
+  labEvidence?: NormalizedLabRecord[],
+  recommendationPlan?: RecommendationPlan,
+  capturedContext?: AssessmentCaptureContext,
+): HealthAssessmentPacket {
   return {
     protocol: 'HAP-1.0',
     generatedAt: new Date().toISOString(),
     purpose: 'screening_and_prevention',
     answers,
+    ...(capturedContext ? { capturedContext } : {}),
     ...(labEvidence?.length ? { labEvidence } : {}),
     ...(recommendationPlan ? { recommendationPlan } : {}),
     engineAssessment: result,
