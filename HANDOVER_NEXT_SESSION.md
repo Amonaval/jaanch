@@ -7,14 +7,14 @@ You are taking over active development of **Jaanch**, a deterministic, evidence-
 Repository: `Amonaval/jaanch`  
 Default branch: `main`
 
-M10.1 code commit:
+M11 code commit:
 
 ```text
-6d4fde672979ee20038a8985180c1d80c8596ce3
-M10.1: wire live AI review into web
+7d48d0e17d851b36eb09eedf8421f8da7f17662c
+M11: add contextual longitudinal AI review v2
 ```
 
-A documentation/closure commit is newer. **Always fetch current `main` before writing anything. Never overwrite a newer head.**
+A docs/privacy-hardening closure commit is expected to be newer. **Always fetch current `main` before writing anything. Never overwrite a newer head.**
 
 Read completely:
 
@@ -25,6 +25,7 @@ docs/product/ROADMAP.md
 docs/product/ASSESSMENT_QUALITY_STANDARD.md
 docs/missions/M10_AI_HARNESS_RUNTIME.md
 docs/missions/M10.1_LIVE_AI_REVIEW_WEB_UX.md
+docs/missions/M11_AI_REVIEW_V2_CONTEXTUAL_UTILITY.md
 docs/missions/M13.1_ASSESSMENT_QUALITY_RECOVERY.md
 docs/missions/M13.2_RESULT_QUALITY_HEALTH_MAP_UX.md
 docs/missions/M13.3_CLINICAL_EVIDENCE_CAPTURE_V2_REPORT_UX.md
@@ -32,43 +33,48 @@ docs/missions/M13.4_NARROW_CLINICAL_INTERPRETATION_EXPANSION.md
 docs/missions/M13.5_PROFILE_SECURE_PERSISTENCE_ARCHITECTURE.md
 ```
 
-Then inspect current source relevant to the requested work.
+Then inspect the actual current source relevant to the requested task.
 
-## 2. Product thesis / hard boundaries
+## 2. Product thesis / non-negotiable boundaries
 
 Jaanch is **not** an AI diagnosis chatbot.
 
 Core loop:
 
 ```text
-Capture context → adaptive assessment → deterministic evidence/findings
-→ missing/contradicting/supporting evidence → smallest useful next evidence
-→ manual/report measurement capture → eligibility gates → reassessment
-→ safety-gated actions → immutable check-in → versioned persistence
-→ optional explicit-consent AI second pass → repeat/compare
+Capture context → adaptive deterministic assessment
+→ evidence/findings/missing evidence
+→ safety/applicability
+→ measured/report evidence eligibility
+→ reassessment + safe actions
+→ immutable check-in + local persistence
+→ optional explicit-consent AI review
+→ repeat / compare
 ```
 
 Non-negotiable:
 1. questionnaire signals are not diagnoses;
-2. confidence is confidence in an assessment statement, not disease probability;
+2. confidence is not disease probability;
 3. no generic overall health score;
 4. evidence completeness is not overall health;
-5. capture does not authorize interpretation;
+5. capture does not automatically authorize interpretation;
 6. report extraction creates candidates only;
-7. unit/date/source facts must not be guessed;
+7. unit/date/source must not be guessed;
 8. one measurement does not automatically become a diagnosis;
 9. prescription-medication changes are never autonomous;
-10. therapeutic/high-dose supplement or iron/thyroid/lipid regimens are not autonomously generated;
+10. therapeutic/high-dose iron/thyroid/lipid/supplement regimens are not autonomously generated;
 11. urgent red flags override routine flow;
 12. applicability runs before adult rules/recommendations;
 13. AI cannot override deterministic urgent/safety/applicability/evidence gates;
 14. clinical maturity remains explicit (`prototype` / `reviewed` / `approved`);
-15. local profile JSON does not imply cloud consent;
-16. remote health persistence requires authenticated ownership + explicit sync consent + TLS + encryption-at-rest;
-17. browser localStorage/mobile AsyncStorage must not be described as Jaanch-encrypted medical-record storage;
-18. provider API keys must never be shipped to browser/mobile clients;
-19. external AI review requires explicit consent and minimum-necessary evidence;
-20. invalid/safety-violating AI output must not be displayed as usable advice.
+15. profile JSON portability does not imply cloud consent;
+16. remote persistence requires authenticated ownership + explicit consent + TLS + encryption at rest;
+17. browser localStorage/mobile AsyncStorage are not Jaanch-encrypted medical-record stores;
+18. provider API keys never ship to browser/mobile clients;
+19. external AI review requires explicit per-run consent and minimum-necessary data;
+20. invalid/safety-violating AI output is not displayed as usable advice;
+21. longitudinal AI must never infer a trend when no prior comparison exists;
+22. AI must not manufacture novelty simply to justify its presence.
 
 ## 3. Implemented mission state
 
@@ -76,66 +82,52 @@ Engineering implemented:
 
 ```text
 M01–M09.1 deterministic engine/safety/governance
-M10 AI harness/privacy/runtime engineering
-M10.1 Live AI Review + Web UX — live real-model utility gate OPEN
-M13 local longitudinal history
+M10 AI harness/privacy/runtime
+M10.1 Live AI Review + Web UX — live utility gate still open
+M11 AI Review v2 / deeper contextual utility — owner/real-model utility gate open
+M13 longitudinal local history
 M13.1 Assessment Quality Recovery — owner trust retest open
-M13.2 Consumer Health Map v3 — owner result retest open
+M13.2 Consumer Health Map — owner result retest open
 M13.3 Clinical Evidence Capture v2 / Report UX — owner report retest open
 M13.4 Narrow Clinical Interpretation Expansion — owner clinical/profile retest open
-M13.5 Profile + Secure Persistence Architecture v1 — owner persistence/privacy review open
+M13.5 Profile + Secure Persistence Architecture — owner persistence/privacy review open
 ```
 
 Do not reconstruct completed missions unless current code or hands-on testing exposes a real defect.
 
 ## 4. Clinical/evidence state
 
-M13.3 report ingestion:
-- attachment provenance preserved;
-- pasted report text/OCR candidate extraction;
-- extraction alone changes nothing;
-- explicit review required;
-- missing unit/date stays missing;
-- exact duplicate/latest semantics;
-- reviewed batch creates one reassessed immutable snapshot.
+M13.4 bounded prototype domains:
+- BP / cardiovascular context — `CV-BP-001`;
+- lipids — `CV-LIPID-001`;
+- anaemia/iron — `NUT-IRON-001`;
+- thyroid — `MET-THYROID-001`.
 
-M13.4 bounded interpreted domains:
-- BP / cardiovascular context — `CV-BP-001`, `ESC-BP-2024`;
-- lipids — `CV-LIPID-001`, `AHA-ACC-DYSLIPIDEMIA-2026`;
-- anaemia/iron — `NUT-IRON-001`, WHO haemoglobin/ferritin;
-- thyroid — `MET-THYROID-001`, NICE NG145.
+`packages/core/src/clinicalMeasurements.ts` remains the trust boundary for broader measurements. Do not weaken confirmation/unit/date/freshness/plausibility rules or accept forged internal `__m134_*` evidence.
 
-All remain prototype. Vitamin D, fasting/random glucose and unknown markers remain recorded/unassessed in this expansion.
+Vitamin D, fasting/random glucose and unknown markers remain recorded/unassessed in this expansion.
 
-`packages/core/src/clinicalMeasurements.ts` remains the trust boundary for broader measurements. Do not weaken its verification/unit/date/freshness/plausibility gates or expose forged `__m134_*` fields.
+M13.3 report ingestion remains candidate-only until explicit review; missing unit/date stays missing.
 
-## 5. Profile portability / mocks
+## 5. Profile/persistence state
 
-Protocol: `JAANCH-PROFILE-1.0`.
+Profile protocol:
 
-Imported profiles rerun the current deterministic engine; stored conclusions are not trusted. Internal M13.4 evidence is stripped and rebuilt from eligible evidence.
+```text
+JAANCH-PROFILE-1.0
+```
 
 Five mocks:
 
 ```text
-examples/mock-profiles/low-risk-adult.json
-examples/mock-profiles/cardiometabolic-lipids.json
-examples/mock-profiles/vegetarian-b12-iron.json
-examples/mock-profiles/thyroid-signal.json
-examples/mock-profiles/severe-triglycerides.json
+low-risk-adult
+cardiometabolic-lipids
+vegetarian-b12-iron
+thyroid-signal
+severe-triglycerides
 ```
 
-Profile JSON is portability/testing, not cloud consent.
-
-## 6. M13.5 persistence architecture
-
-Core:
-
-```text
-packages/core/src/persistence.ts
-```
-
-Protocols:
+Persistence protocols:
 
 ```text
 JAANCH-PERSISTENCE-1.0
@@ -143,188 +135,207 @@ JAANCH-DELETION-1.0
 JAANCH-DATA-EXPORT-1.0
 ```
 
-Current runtime:
-- web: browser `localStorage`;
-- mobile: AsyncStorage;
+Current runtime is local only:
+- web `localStorage`;
+- mobile AsyncStorage;
 - classified `application_storage_unencrypted`;
-- local-only;
-- no auth/cloud database.
+- no cloud sync/auth database.
 
-Remote eligibility requires authenticated owner + explicit cloud-sync consent + TLS + server encryption. `SecurePersistencePort` is vendor independent.
-
-## 7. M10 / M10.1 AI architecture
-
-### Existing M10 core
-
-Core module:
-
-```text
-packages/core/src/aiReview.ts
-```
+## 6. M10/M10.1 AI v1 state
 
 Stable contracts:
-- packet `JAANCH-AI-REVIEW-1.0`;
-- output `AI-ASSESSMENT-1.0`;
-- harness `1.1`;
-- explicit external-AI consent;
+
+```text
+JAANCH-AI-REVIEW-1.0
+AI-ASSESSMENT-1.0
+Harness 1.1
+```
+
+Properties:
+- explicit consent;
 - raw answer map omitted;
 - stale/ineligible labs omitted;
-- strict local schema/invariant validation;
+- strict output schema;
+- treatment advice gated;
 - deterministic urgent state cannot be downgraded;
 - unsupported applicability cannot receive prohibited self-care;
-- treatment advice stays gated;
-- AI disagreements must reference known finding IDs.
+- provider credentials server-side;
+- OpenAI request uses `store:false`;
+- v1 endpoint `/api/ai-review` remains for traceability.
 
-Server-only provider:
+## 7. M11 AI Review v2 state
 
-```text
-packages/ai-runtime/src/openaiResponsesProvider.ts
-```
-
-Uses OpenAI Responses API, strict JSON-schema structured output and `store:false`.
-
-### M10.1 packet-only server boundary
-
-New shared helper:
+New contracts:
 
 ```text
-packages/core/src/aiReviewRuntime.ts
+JAANCH-AI-REVIEW-2.0
+AI-ASSESSMENT-2.0
+Harness 2.0
 ```
 
-`runAIReviewPacket(...)` lets the server review the already-minimized packet without receiving the full HAP/raw answer map.
-
-New HTTP boundary:
+Core:
 
 ```text
-packages/ai-runtime/src/httpHandler.ts
+packages/core/src/aiReviewV2.ts
+packages/core/src/verificationAIV2.ts
 ```
 
-Rules:
-- POST only;
-- only `JAANCH-AI-REVIEW-1.0` body;
-- consent must be true;
-- raw/arbitrary answer bodies rejected;
-- default 256 KiB body cap;
-- response `no-store`;
-- health request bodies are not logged.
+Runtime:
 
-### M10.1 web UX
+```text
+packages/ai-runtime/src/openaiContextReviewProvider.ts
+packages/ai-runtime/src/httpHandlerV2.ts
+packages/ai-runtime/src/verifyV2.ts
+packages/ai-runtime/src/liveUtilityGateV2.ts
+```
 
-New:
+Web:
 
 ```text
 apps/web/src/AIReviewScreen.tsx
 apps/web/vite.config.ts
 ```
 
-Web navigation exposes **AI Review**.
-
-Flow:
-1. save deterministic check-in;
-2. open AI Review;
-3. consent to one review;
-4. only then create minimized packet;
-5. inspect counts of shared facts/missing evidence/labs and omitted raw fields;
-6. press Run AI review;
-7. POST minimized packet to `/api/ai-review`;
-8. display output only if Jaanch validation passes.
-
-AI UX shows explanation, red flags, missing considerations, disagreements, domain explanations, advisory actions, safety gating and provider/model/harness/schema trace.
-
-It never mutates deterministic state.
-
-### Local configuration
-
-Root `.env.example` exists. Copy to `.env.local` (gitignored):
+Harness:
 
 ```text
-JAANCH_AI_LIVE_ENABLED=true
-OPENAI_API_KEY=<key>
-JAANCH_AI_MODEL=gpt-6-sol
+docs/ai-harness/HEALTH_ASSESSMENT_HARNESS_V2.md
 ```
 
-`npm run web` loads root `.env.local` through Vite server config. API key is not a `VITE_` variable.
+### v2 packet content
 
-The current live endpoint is a Vite dev/preview server integration. Production needs a real server/serverless mount later; do not expose keys from a static build.
+Includes current minimized v1 packet plus coded context:
+- age band;
+- condition/concern codes;
+- medication/supplement categories;
+- family-history codes;
+- reproductive-context code;
+- bounded activity.
 
-### Live gate
+Explicitly omits:
+- raw answer map;
+- free text;
+- medication/supplement names/dose/frequency;
+- raw previous snapshot;
+- older full history.
 
-```bash
-npm run ai:gate
+If a previous check-in exists, sends deterministic latest-two-check-in deltas only:
+- finding changes;
+- normalized lab changes;
+- eligible BP/lipid/Hb/ferritin/TSH measurement changes;
+- recommendation changes;
+- evidence-completeness delta.
+
+### v2 output
+
+Adds:
+- `utility.materialAddition`;
+- longitudinal synthesis;
+- prioritized evidence gaps with source IDs;
+- traceable contradiction types;
+- clinician-prep brief;
+- nested v1 base review.
+
+Invariants:
+- no longitudinal claim without longitudinal input;
+- unknown source/related IDs rejected;
+- `materialAddition=false` cannot coexist with contradictions/prioritized gaps;
+- v1 safety validation still applies.
+
+### v2 HTTP boundary
+
+Endpoint:
+
+```text
+POST /api/ai-review-v2
 ```
 
-Runs all five mocks against the configured provider with fixed fixture assessment date `2026-10-09T12:00:00Z` and prints validation/priority/disagreement/missing-consideration/signal data plus JSON report.
+Current Vite dev/preview boundary:
+- explicit consent;
+- strict v2 protocol/purpose;
+- body cap;
+- `no-store` response headers;
+- minimization flags enforced;
+- unexpected top-level/current/context/longitudinal/minimization fields rejected;
+- request bodies not logged.
 
-The CLI loads root `.env.local` when available.
+This is still **not production security infrastructure**. A real deployment needs appropriate authentication/authorization, origin/CSRF controls, rate limiting, abuse controls and server deployment review.
 
-**No live real-model gate was run in the M10.1 implementation session. M11 remains blocked.**
+## 8. Verification / live gates
 
-## 8. Verification
-
-Root:
+Root verification:
 
 ```bash
 npm run verify
 ```
 
-M10.1 adds `packages/ai-runtime/src/verifyWeb.ts` verifying:
-- minimized packet forwarding;
-- shared strict output schema;
-- provider/model traceability;
-- server consent enforcement;
-- raw-body rejection.
+M11 live gate:
 
-Existing M10 tests continue to cover minimization, stale evidence omission, urgent downgrade rejection, unsupported-domain guidance rejection, strict structured output and `store:false`.
+```bash
+npm run ai:gate:v2
+```
 
-Do not claim CI passed unless actual checks exist.
+M10.1 v1 gate remains:
+
+```bash
+npm run ai:gate
+```
+
+No live model was declared to have passed merely because M11 engineering was implemented.
 
 ## 9. Owner gates still open
 
-Owner should test:
+Must test:
 1. M13.1 capture completeness/navigation;
 2. M13.2 result comprehension;
 3. M13.3 report trust;
-4. all five M13.4 mocks;
-5. profile import/export;
-6. M13.5 local persistence/privacy wording and migration;
-7. configure M10.1 live AI;
-8. low-risk mock should remain appropriately quiet;
-9. higher-signal mocks should gain useful explanation/missing-context reasoning without diagnosis/treatment overreach;
-10. `npm run ai:gate` all five outputs;
-11. judge whether AI is worth invoking again, not just whether it produces novelty.
+4. M13.4 clinical/profile behavior;
+5. M13.5 persistence/privacy wording and migration;
+6. M11 low-risk quietness;
+7. M11 high-signal prioritization without overreach;
+8. no medication/dose changes;
+9. `npm run ai:gate:v2` all five mocks;
+10. genuine two-check-in longitudinal synthesis;
+11. distinction between evidence change and health change;
+12. privacy wording matches what leaves browser.
 
-Any trust/result/evidence/privacy/AI-safety defect outranks roadmap work.
+Any trust/evidence/privacy/AI-safety defect outranks roadmap expansion.
 
-## 10. Next decision
+## 10. Next planned work
 
-If no owner defect is supplied:
-1. run M10.1 live web review + five-mock utility gate with a real configured model;
-2. if incremental value is defensible → **M11 — AI Review v2 / deeper contextual utility — High**;
-3. if value is weak/noisy → keep AI optional/deferred and run Strategic Review 3 without forcing M11;
-4. then M15A Pilot Safety / Privacy / Release Gate;
-5. select a concrete auth/backend only when pilot infrastructure is justified and it satisfies M13.5;
-6. M14 ChatGPT/MCP later; M15B production/store hardening last.
+If no owner defect is supplied, do **Strategic Review 3 — High**.
+
+Do not automatically create M11.1/M12 AI work. Strategic Review 3 should decide:
+- whether AI v2 is genuinely valuable;
+- what should be removed or simplified;
+- whether product breadth is sufficient for a controlled pilot;
+- whether a concrete backend is justified;
+- the smallest M15A pilot safety/privacy/release plan.
+
+Later:
+- M15A pilot gate;
+- concrete backend only if justified and compliant with M13.5;
+- M14 ChatGPT/MCP later;
+- M15B production/store hardening last.
 
 ## 11. Working rules
 
-- Prefer high-value bounded work over broad frameworks.
+- Prefer bounded high-value work over frameworks.
 - Normal mission budget 1–2 coherent commits.
-- Keep web/mobile meaning shared in core where appropriate.
+- Keep clinical semantics backend-independent.
 - Do not add GitHub Actions unless requested.
-- Use authoritative/current sources for clinical rules.
-- Preserve source IDs, rule versions, evidence IDs and provenance.
+- Preserve source/rule/evidence IDs and provenance.
 - Keep `prototype/reviewed/approved` explicit.
-- Do not restore `@jaanch/core: "workspace:*"`; workspace consumers use version `0.1.0`.
+- Do not restore `@jaanch/core: "workspace:*"`; workspace consumers use `0.1.0`.
 - Fix owner-discovered trust defects before roadmap work.
-- Do not connect sensitive cloud storage without identity/consent/security semantics.
-- Do not expose provider secrets to browser/mobile bundles.
-- Do not unlock M11 just because M10.1 is wired; require real utility evidence.
+- Do not expose provider secrets to clients.
+- Do not treat AI novelty as product value.
 
-## 12. What to do when this handover is opened
+## 12. When this handover is opened
 
 1. Fetch current `main`.
-2. Read the canonical files in section 1.
-3. Inspect current source relevant to the task.
-4. Prioritize any owner-discovered defect.
-5. Otherwise follow the next-decision gate above.
-6. At mission closure update code, verification, mission docs, STATUS/ROADMAP/README/handover and state the exact next effort.
+2. Read canonical files in section 1.
+3. Inspect actual current source relevant to the task.
+4. Prioritize owner-discovered defects.
+5. Otherwise run Strategic Review 3 next.
+6. At mission closure update code/verification/docs/status/roadmap/handover and state next effort.

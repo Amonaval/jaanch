@@ -17,13 +17,40 @@ function isObject(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
 
+function hasOnlyKeys(value: Record<string, unknown>, allowed: readonly string[]) {
+  const allowedSet = new Set(allowed);
+  return Object.keys(value).every((key) => allowedSet.has(key));
+}
+
 function packetFromBody(value: unknown): AIReviewV2Packet {
-  if (!isObject(value) || !isObject(value.packet)) throw new Error('Request body must contain an AI Review v2 packet.');
+  if (!isObject(value) || !hasOnlyKeys(value, ['packet']) || !isObject(value.packet)) {
+    throw new Error('Request body must contain only an AI Review v2 packet.');
+  }
   const packet = value.packet;
+  if (!hasOnlyKeys(packet, ['protocol','generatedAt','purpose','consent','current','context','longitudinal','minimization'])) {
+    throw new Error('AI Review v2 packet contains unexpected top-level fields.');
+  }
   if (packet.protocol !== AI_REVIEW_V2_PACKET_PROTOCOL) throw new Error(`Unsupported AI Review v2 packet protocol: ${String(packet.protocol ?? 'missing')}.`);
-  if (!isObject(packet.consent) || packet.consent.externalAIReview !== true) throw new Error('AI Review v2 requires explicit per-run consent.');
+  if (!isObject(packet.consent) || !hasOnlyKeys(packet.consent, ['externalAIReview']) || packet.consent.externalAIReview !== true) throw new Error('AI Review v2 requires explicit per-run consent.');
   if (packet.purpose !== 'contextual_longitudinal_review') throw new Error('Unsupported AI Review v2 purpose.');
-  if (!isObject(packet.minimization) || packet.minimization.rawAnswersShared !== false || packet.minimization.freeTextShared !== false || packet.minimization.previousRawSnapshotShared !== false) {
+
+  if (!isObject(packet.current) || !hasOnlyKeys(packet.current, ['protocol','generatedAt','purpose','consent','evidence','labs','safety','applicability','engineAssessment','governance','minimization'])) {
+    throw new Error('AI Review v2 current-assessment envelope contains unexpected fields.');
+  }
+  if (packet.current.protocol !== 'JAANCH-AI-REVIEW-1.0' || packet.current.purpose !== 'independent_screening_review') {
+    throw new Error('AI Review v2 current assessment must use the minimized JAANCH-AI-REVIEW-1.0 contract.');
+  }
+
+  if (!isObject(packet.context) || !hasOnlyKeys(packet.context, ['ageBand','diagnosedConditionCodes','currentConcernCodes','medicationCategories','supplementCategories','familyHistoryCodes','reproductiveContext','activity'])) {
+    throw new Error('AI Review v2 context capsule contains unexpected fields.');
+  }
+  if (!isObject(packet.longitudinal) || !hasOnlyKeys(packet.longitudinal, ['available','currentCapturedAt','previousCapturedAt','evidenceCompletenessDelta','findingTrends','labTrends','measurementTrends','recommendationTrends'])) {
+    throw new Error('AI Review v2 longitudinal capsule contains unexpected fields.');
+  }
+  if (!isObject(packet.minimization) || !hasOnlyKeys(packet.minimization, ['rawAnswersShared','freeTextShared','medicationNamesShared','supplementNamesShared','previousRawSnapshotShared','omittedRawAnswerCount','omittedIneligibleLabRecordCount','omittedFreeTextFieldCount','omittedPreviousSnapshotCount'])) {
+    throw new Error('AI Review v2 minimization metadata contains unexpected fields.');
+  }
+  if (packet.minimization.rawAnswersShared !== false || packet.minimization.freeTextShared !== false || packet.minimization.medicationNamesShared !== false || packet.minimization.supplementNamesShared !== false || packet.minimization.previousRawSnapshotShared !== false) {
     throw new Error('AI Review v2 packet violates the minimum-necessary data contract.');
   }
   return packet as unknown as AIReviewV2Packet;

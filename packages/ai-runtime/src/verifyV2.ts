@@ -53,8 +53,13 @@ let minimizationBlocked = false;
 try { await reviewAIV2HttpBody({ packet: { ...packet, minimization: { ...packet.minimization, freeTextShared: true } } }, provider); } catch { minimizationBlocked = true; }
 assert(minimizationBlocked, 'V2 HTTP runtime must reject packets that claim free text is shared.');
 
+let smuggledFieldBlocked = false;
+try { await reviewAIV2HttpBody({ packet: { ...packet, rawHistory: [{ secret: 'must-not-forward' }] } }, provider); } catch { smuggledFieldBlocked = true; }
+assert(smuggledFieldBlocked, 'V2 HTTP runtime must reject unexpected top-level packet fields.');
+
 console.log('PASS ai-v2-http-minimized-context-forwarding');
 console.log('PASS ai-v2-http-provider-traceability');
 console.log('PASS ai-v2-http-raw-body-rejected');
 console.log('PASS ai-v2-http-minimization-contract');
-console.log('AI Review v2 web runtime verification passed: 4/4');
+console.log('PASS ai-v2-http-unexpected-field-rejected');
+console.log('AI Review v2 web runtime verification passed: 5/5');

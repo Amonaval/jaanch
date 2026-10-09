@@ -2,209 +2,146 @@
 
 **Jaanch** is a deterministic, evidence-aware personal health assessment and prevention product.
 
-It captures health context, asks adaptive follow-ups, separates known facts from inference and uncertainty, recommends the smallest useful next evidence, reassesses when eligible measured data arrives, applies deterministic safety/applicability gates, produces a consumer Health Map, supports reviewed report-evidence ingestion, stores longitudinal check-ins, supports bounded clinical interpretation, versioned profile portability, a secure-persistence architecture, and now an optional live AI second-pass review on the web.
+It captures health context, separates known facts from inference and uncertainty, recommends the smallest useful next evidence, reassesses when eligible measured data arrives, applies deterministic safety/applicability gates, produces a consumer Health Map, supports reviewed report evidence, longitudinal check-ins, bounded clinical interpretation, profile portability and a versioned persistence architecture.
 
-The deterministic engine remains authoritative. AI is optional, explicit-consent, privacy-minimized, schema-constrained, and cannot silently override urgent, safety, applicability or evidence-eligibility rules.
+An optional web AI second pass exists, but the deterministic engine remains authoritative.
 
 > **Prototype warning**
 >
-> Jaanch is a development prototype, not a medical device, diagnosis service, or replacement for a clinician. Current clinical rules, investigations, applicability policies and recommendations remain `prototype` unless explicitly stated otherwise. Current web/mobile persistence is local application storage and is **not application-layer encrypted medical-record storage**. Prefer synthetic/demo data while evaluating the product.
+> Jaanch is a development prototype, not a medical device, diagnosis service or replacement for a clinician. Current clinical rules remain `prototype` unless explicitly promoted by qualified review. Current local web/mobile storage is not application-layer encrypted medical-record storage. Prefer synthetic/demo data while evaluating.
 
 ---
 
-## Current product state
+## Current state
 
 Engineering implemented:
 - M01–M09.1 deterministic foundation;
-- M10 AI harness/privacy/evaluation runtime;
-- M13–M13.5 longitudinal, product-quality, clinical/profile and persistence architecture;
-- **M10.1 — Live AI Review + Web UX**.
+- M10 AI harness/privacy/runtime;
+- M10.1 live web AI review;
+- **M11 AI Review v2 / deeper contextual utility**;
+- M13–M13.5 longitudinal/product-quality/report/clinical/profile/persistence architecture.
 
 Current milestone:
 
-> **AI-review web alpha candidate — deterministic product + persistence architecture implemented; live real-model utility gate and owner trust/privacy gates remain open.**
+> **Context-aware AI-review web alpha candidate — owner trust/privacy/real-model utility gates remain open.**
 
-A live model has **not** been declared useful merely because the integration exists. M11 remains conditional on hands-on evaluation.
+M11 was implemented because the owner explicitly chose to proceed before the M10.1 live real-model gate was completed. Therefore implementation does **not** mean AI utility is proven.
 
 ---
 
-## What works today
+## Core product loop
 
 ```text
-Block-based health intake
+Capture health context
       ↓
-Adaptive follow-ups
+Adaptive deterministic assessment
       ↓
-Deterministic assessment + evidence graph
+Evidence graph + findings + missing evidence
       ↓
 Safety / applicability gates
       ↓
 Consumer Health Map
-      ├─ What matters now
-      ├─ What you can do
-      ├─ What evidence supports
-      ├─ What is still uncertain
-      └─ What changed since last check-in
       ↓
-Manual result entry OR reviewed report import
+Manual evidence OR reviewed report import
       ↓
-Measured-evidence eligibility
-      ├─ HbA1c / B12 normalized lab path
-      ├─ bounded BP / lipids / Hb / ferritin / TSH path
-      └─ unsupported markers remain recorded/unassessed
+Eligibility / freshness / provenance gates
       ↓
-Safety-gated action plan
+Reassessment + safety-gated actions
       ↓
 Save immutable check-in
       ↓
-Versioned persistence envelope
+Versioned local persistence
       ↓
-Optional explicit-consent AI Review
-      ├─ minimized evidence packet
-      ├─ server-only model credentials
-      ├─ structured output
-      └─ local safety/invariant validation before display
+Optional explicit-consent AI second pass
       ↓
-Repeat and compare
+Repeat / compare
 ```
 
-### Clinical depth
+### Current bounded clinical interpretation
 
-Current bounded interpreted domains:
-1. Blood pressure / cardiovascular context.
-2. Lipids / cardiovascular-risk context.
-3. Anaemia / iron-status evidence.
-4. Thyroid evidence.
+Prototype modules:
+1. blood pressure / cardiovascular context;
+2. lipids / cardiovascular-risk context;
+3. anaemia / iron-status evidence;
+4. thyroid evidence.
 
-Important boundaries:
-- one measurement is not automatically a diagnosis;
-- no autonomous prescription-medication changes;
-- no therapeutic iron/thyroid/lipid regimen generation;
-- no PREVENT/ASCVD calculator yet;
-- no pregnancy-specific BP/lipid/iron/thyroid modules;
-- Vitamin D and fasting/random glucose remain captured but unassessed in the current expansion;
-- all new rules remain `prototype` until qualified review changes maturity.
-
-### Report evidence capture
-
-Web/mobile include **Import lab report**.
-
-- PDF/image/text attachment preserves source provenance;
-- pasted report text/OCR output creates deterministic candidates;
-- extraction alone changes nothing;
-- candidates are editable and require explicit review;
-- unit/date are never guessed;
-- reviewed candidates apply in one reassessed immutable check-in.
-
-Raw PDF/image bytes are **not yet claimed to be trustworthy OCR-parsed automatically**.
-
-### Profile import/export + mocks
-
-Protocol: `JAANCH-PROFILE-1.0`.
-
-The **Profiles & mocks** surface supports:
-- profile JSON import through the current deterministic engine;
-- latest-profile/history export;
-- five built-in synthetic profiles;
-- web JSON download and mobile JSON document sharing/import.
-
-Fixtures:
-
-```text
-examples/mock-profiles/
-  low-risk-adult.json
-  cardiometabolic-lipids.json
-  vegetarian-b12-iron.json
-  thyroid-signal.json
-  severe-triglycerides.json
-```
-
-Profile JSON is portability/testing infrastructure. It is **not** account identity and does not imply cloud-sync consent.
-
-### Persistence architecture
-
-Protocols:
-
-```text
-JAANCH-PERSISTENCE-1.0
-JAANCH-DELETION-1.0
-JAANCH-DATA-EXPORT-1.0
-```
-
-Current runtime truth:
-- web uses browser `localStorage`;
-- mobile uses AsyncStorage;
-- those stores are explicitly classified by Jaanch as `application_storage_unencrypted`;
-- cloud sync is OFF;
-- no auth provider or remote database is connected.
-
-A future remote adapter is blocked unless authenticated ownership, explicit cloud-sync consent, TLS and server-side encryption-at-rest requirements are satisfied.
+Boundaries:
+- one measurement does not automatically become a diagnosis;
+- no autonomous prescription changes;
+- no therapeutic iron/thyroid/lipid/high-dose supplement regimens;
+- missing unit/date/source is not guessed;
+- pregnancy-specific interpretation is not claimed for these adult modules;
+- Vitamin D and fasting/random glucose remain captured/unassessed in the current expansion.
 
 ---
 
-# M10.1 — Live AI Review on web
+# AI Review v2 — M11
 
-The web navigation now contains **AI Review**.
-
-AI review works only from a saved deterministic check-in.
-
-Flow:
+Versioned contracts:
 
 ```text
-saved check-in
-   ↓
-internal HAP
-   ↓
-user explicitly consents
-   ↓
-browser creates minimized JAANCH-AI-REVIEW-1.0
-   ↓
-user presses Run AI review
-   ↓
-POST /api/ai-review
-   ↓
-server-only OpenAI Responses provider
-   ↓
-strict structured output
-   ↓
-Jaanch schema + safety validation
-   ↓
-show advisory output only when valid
+Packet:  JAANCH-AI-REVIEW-2.0
+Output:  AI-ASSESSMENT-2.0
+Harness: 2.0
 ```
 
-### Privacy properties
+The v1 M10/M10.1 contracts remain in the repo for traceability.
 
-Before sending anything:
-- consent must be selected;
-- raw questionnaire answers are omitted from the external packet;
-- stale/ineligible lab records are omitted;
-- the UI shows how many evidence facts, missing items and eligible labs will be shared;
-- the API key stays server-side;
-- consent is not persisted.
+## What v2 sends after explicit consent
 
-The minimized packet **still contains sensitive health evidence**. This is not described as anonymous data.
+Current deterministic review packet plus a bounded context capsule:
+- age band, not exact age;
+- condition and concern codes;
+- medication categories, not names/doses;
+- supplement categories, not names/doses;
+- structured family-history codes;
+- reproductive-context code when present;
+- bounded activity fields.
 
-The existing provider sends OpenAI Responses requests with `store: false` and strict JSON-schema output.
+It does **not** send:
+- raw questionnaire answer map;
+- free-text notes;
+- custom free-text history/concerns;
+- medication names/doses/frequency;
+- supplement names/doses/frequency;
+- raw previous snapshot;
+- full older history.
 
-### What AI can show
+When at least two saved check-ins exist, v2 can additionally send deterministic deltas from the latest two check-ins only:
+- finding changes;
+- eligible normalized lab changes;
+- eligible BP/lipid/Hb/ferritin/TSH measurement changes;
+- recommendation changes;
+- evidence-completeness delta.
 
-A validated review can provide:
-- a concise explanation;
-- red flags preserved from deterministic safety state;
-- possible missing considerations;
-- disagreements with specific deterministic findings;
-- domain-level explanation;
-- missing evidence;
-- advisory actions;
+These are observations, not causal conclusions.
+
+## What v2 can return
+
+- whether AI made a **material addition**;
+- concise base explanation;
+- longitudinal synthesis;
+- prioritized evidence gaps grounded in supplied IDs;
+- traceable evidence/trend/engine contradictions;
+- short clinician-conversation brief;
 - treatment-gating reasons.
 
-AI output is never merged into deterministic findings/recommendations.
+Important invariants:
+- no invented trend when no previous comparison exists;
+- unknown evidence/finding IDs invalidate the output;
+- if `materialAddition=false`, v2 cannot still emit contradictions or prioritized gaps;
+- M10 base safety validation remains nested inside M11 validation;
+- invalid output is hidden rather than partially displayed.
 
-### Development server boundary
+## Web endpoint
 
-The current live endpoint is mounted by `apps/web/vite.config.ts` for Vite development/preview. That keeps provider credentials on the server side during local web testing.
+```text
+POST /api/ai-review-v2
+```
 
-A future production deployment needs a real server/serverless endpoint using the same runtime contract. A static-only deployment cannot safely host live AI.
+The old `/api/ai-review` remains for v1 traceability.
+
+Current endpoints are mounted through Vite development/preview middleware. This is **not** a production authenticated health-data API.
 
 ---
 
@@ -235,13 +172,11 @@ npm run verify
 npm run web
 ```
 
-Vite normally prints a URL similar to `http://localhost:5173`.
-
 ---
 
-# Enable live AI review locally
+# Enable live AI locally
 
-Copy the example config:
+Copy config:
 
 ```bash
 cp .env.example .env.local
@@ -261,7 +196,7 @@ OPENAI_API_KEY=<your OpenAI API key>
 JAANCH_AI_MODEL=gpt-6-sol
 ```
 
-`.env.local` is gitignored. Do not rename the API key variable with a `VITE_` prefix.
+`.env.local` is gitignored. Never rename the provider key using a `VITE_` prefix.
 
 Then:
 
@@ -269,96 +204,109 @@ Then:
 npm run web
 ```
 
-In Jaanch:
-1. run/import an assessment;
+In the browser:
+1. complete or import an assessment;
 2. save a check-in;
-3. choose **AI Review**;
-4. select one-run consent;
-5. inspect the minimized packet counts;
-6. choose **Run AI review**.
+3. open **AI Review**;
+4. explicitly consent;
+5. inspect what will be shared/omitted;
+6. run contextual AI review.
 
-If live AI is disabled or credentials/model are missing, the deterministic product continues to work and AI Review reports a provider configuration error.
+Provider credentials remain server-side.
 
 ---
 
-# Five-mock live AI utility gate
+# AI live gates
 
-Once `.env.local` is configured:
+M10.1 v1:
 
 ```bash
 npm run ai:gate
 ```
 
-This runs the same live provider across all five mock profiles and reports:
-- model/provider;
+M11 v2:
+
+```bash
+npm run ai:gate:v2
+```
+
+The v2 command runs all five synthetic profiles and reports:
+- provider/model;
 - validation status;
-- priority;
-- disagreements;
-- missing considerations;
-- incremental signal count;
+- highest priority;
+- `materialAddition`;
+- evidence-gap count;
+- contradiction count;
+- clinician-question count;
+- aggregate signal count;
 - provider/validation errors.
 
-A larger novelty count is **not automatically better**. Low-risk profiles should not acquire invented problems, and a zero-novelty answer may be correct when deterministic Jaanch already covers the material evidence.
+A larger signal count is not automatically better. Low-risk profiles should often stay quiet.
 
-M11 is not unlocked until the live outputs are manually judged useful and safe.
+Longitudinal utility must be judged using genuine multi-check-in history; single-snapshot mocks cannot prove it.
 
 ---
 
 # Verification
 
-From repo root:
-
 ```bash
 npm run verify
 ```
 
-The non-live verification covers:
-- deterministic engine and safety/applicability;
-- report candidate/confirmation/provenance boundaries;
-- narrow BP/lipid/iron/thyroid scenarios;
-- missing-unit/date rejection;
-- profile import/export and all mocks;
-- persistence envelope/migration/ownership/consent/delete/export boundaries;
-- AI packet minimization;
-- stale-lab omission;
+Important AI checks include:
+- explicit consent;
+- current packet minimization;
+- stale/ineligible lab omission;
 - urgent downgrade rejection;
-- unsupported-domain AI self-care rejection;
+- unsupported-domain self-care rejection;
 - treatment-advice gating;
-- strict OpenAI structured request + `store:false`;
-- M10.1 packet-only web runtime forwarding;
-- M10.1 server consent/raw-body rejection.
+- strict OpenAI structured output + `store:false`;
+- v2 omission of free text and medication/supplement names;
+- v2 structured-category retention;
+- raw prior snapshot omission;
+- longitudinal delta construction;
+- no invented trend without a previous check-in;
+- traceable-ID enforcement;
+- `materialAddition=false` quietness;
+- raw-body/minimization/unexpected-field HTTP rejection.
 
-Individual suites:
-
-```bash
-npm run verify:core
-npm run verify:ai-runtime
-```
-
-No GitHub CI status should be assumed to exist or pass; local verification remains important.
+No GitHub CI status should be assumed. Run local verification.
 
 ---
 
-# Recommended owner test
+# Profiles & mocks
 
-1. Run all five deterministic mocks first.
-2. Confirm report/profile/manual evidence semantics remain trustworthy.
-3. Confirm persistence migration/local-only wording is understandable.
-4. Configure live AI.
-5. Run the low-risk mock and ensure AI stays appropriately quiet.
-6. Run cardiometabolic, B12/iron, thyroid and severe-TG scenarios.
-7. Check whether AI adds real explanation/missing-context value rather than merely paraphrasing.
-8. Check that it does not diagnose, prescribe, downgrade red flags or bypass applicability.
-9. Run `npm run ai:gate` and inspect all five outputs together.
-10. Decide **M11 GO / MODIFY / DEFER** based on product usefulness, not novelty count alone.
+Protocol: `JAANCH-PROFILE-1.0`.
 
-Any owner-discovered trust, evidence, privacy or AI-safety defect outranks roadmap expansion.
+Fixtures:
+
+```text
+examples/mock-profiles/
+  low-risk-adult.json
+  cardiometabolic-lipids.json
+  vegetarian-b12-iron.json
+  thyroid-signal.json
+  severe-triglycerides.json
+```
+
+Profile JSON is portability/testing infrastructure, not cloud identity or cloud-sync consent.
+
+---
+
+# Persistence
+
+Current runtime:
+- web: browser `localStorage`;
+- mobile: AsyncStorage;
+- current stores are classified `application_storage_unencrypted`;
+- cloud sync OFF;
+- no live auth provider or remote database.
+
+Future remote persistence requires authenticated ownership, explicit cloud consent, TLS and server encryption according to M13.5.
 
 ---
 
 # Mobile
-
-Mobile remains deterministic/profile/report focused in M10.1; live AI UX is web-only for now.
 
 ```bash
 npm install
@@ -374,51 +322,57 @@ cd apps/mobile
 npx expo start --go --tunnel
 ```
 
-Android package: `com.amonaval.jaanch`.
-Bundle identifier: `com.amonaval.jaanch`.
+M11 live AI UX is currently web-only.
 
 ---
 
-# Repository layout
+# Repository highlights
 
 ```text
-apps/
-  web/
-    src/AIReviewScreen.tsx
-    vite.config.ts
-  mobile/
-
-packages/
-  core/
-    src/aiReview.ts
-    src/aiReviewRuntime.ts
-    src/persistence.ts
-  ai-runtime/
-    src/openaiResponsesProvider.ts
-    src/httpHandler.ts
-    src/liveUtilityGate.ts
-    src/verifyWeb.ts
-
-docs/
-  missions/
-  product/
-  ai-harness/
+packages/core/src/aiReview.ts                 # M10 v1 contract
+packages/core/src/aiReviewRuntime.ts          # M10.1 v1 packet runtime
+packages/core/src/aiReviewV2.ts               # M11 contextual/longitudinal contract
+packages/ai-runtime/src/openaiResponsesProvider.ts
+packages/ai-runtime/src/openaiContextReviewProvider.ts
+packages/ai-runtime/src/httpHandler.ts
+packages/ai-runtime/src/httpHandlerV2.ts
+apps/web/src/AIReviewScreen.tsx
+docs/ai-harness/HEALTH_ASSESSMENT_HARNESS.md
+docs/ai-harness/HEALTH_ASSESSMENT_HARNESS_V2.md
 ```
 
 ---
 
-# Next decision
+# Recommended owner test now
 
-1. Fix any M13.1–M13.5 or M10.1 owner-discovered defect.
-2. Run the M10.1 web review + `npm run ai:gate` with a real configured model.
-3. If AI demonstrates defensible incremental value: **M11 — AI Review v2 / deeper contextual utility — High**.
-4. If AI does not add enough value: keep it optional/deferred and move to Strategic Review 3 without forcing M11.
-5. Then M15A pilot safety/privacy/release work; M14 ChatGPT/MCP later; M15B production/store hardening last.
+1. `npm run verify`.
+2. Run all five deterministic mocks.
+3. Configure live AI.
+4. Run AI Review v2 for all five mocks.
+5. Run `npm run ai:gate:v2`.
+6. Confirm low-risk stays appropriately quiet.
+7. Confirm high-signal profiles prioritize rather than explode into generic recommendations.
+8. Confirm no medication/dose changes.
+9. Create/use a genuine second check-in and inspect longitudinal synthesis.
+10. Confirm AI distinguishes new evidence from actual health change.
+11. Decide whether AI is genuinely worth keeping.
+
+Any trust/evidence/privacy/AI-safety defect takes priority over new roadmap work.
+
+---
+
+# Next planned mission
+
+**Strategic Review 3 — High effort.**
+
+Evaluate whole-product usefulness and reduce the pilot roadmap before adding more AI or infrastructure.
+
+Do not automatically start M11.1/M12 AI expansion just because M11 exists.
 
 ---
 
 ## Product principle
 
-> **Jaanch organizes what is known, what is uncertain, what evidence matters next, what changed over time, and what safe action follows — with every conclusion traceable. AI may review that structure, but it does not replace it.**
+> **Jaanch organizes what is known, what is uncertain, what evidence matters next, what changed over time, and what safe action follows — with every conclusion traceable. AI may review that structure, but it never replaces it.**
 
 For a fresh development session, start with `HANDOVER_NEXT_SESSION.md`.
