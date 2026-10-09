@@ -2,6 +2,7 @@ import type { Answers, AssessmentResult } from './types';
 import { visibleQuestions } from './planner';
 import { executeRules } from './ruleRegistry';
 import { assessmentRules } from './rules';
+import { m134AssessmentRules } from './m134Rules';
 import { buildTestPlan } from './testPriority';
 import { investigationCatalog } from './testRegistry';
 import { buildSafetyGate } from './safety';
@@ -10,16 +11,18 @@ import { normalizeAnswers, removeBareLabAnswers } from './answerNormalization';
 import { recommendationGovernanceArtifacts } from './recommendations';
 import { applicabilityPolicies } from './applicability';
 
+const allAssessmentRules=[...assessmentRules,...m134AssessmentRules];
+
 function assessInternal(answers: Answers, trustedLabAnswerIds: string[]): AssessmentResult {
   const labGuarded = removeBareLabAnswers(answers, trustedLabAnswerIds);
   const normalized = normalizeAnswers(labGuarded);
   const normalizedAnswers = normalized.answers;
   const visible = visibleQuestions(normalizedAnswers);
   const answered = visible.filter((q) => normalizedAnswers[q.id] !== undefined && normalizedAnswers[q.id] !== '').length;
-  const execution = executeRules(assessmentRules, normalizedAnswers);
+  const execution = executeRules(allAssessmentRules, normalizedAnswers);
   const testPlan = buildTestPlan(execution.evidenceGraph, execution.findings, execution.redFlags, normalizedAnswers);
   const safetyGate = buildSafetyGate(normalizedAnswers, execution.redFlags);
-  const clinicalGovernance = buildClinicalGovernanceReport(assessmentRules, investigationCatalog, recommendationGovernanceArtifacts, applicabilityPolicies);
+  const clinicalGovernance = buildClinicalGovernanceReport(allAssessmentRules, investigationCatalog, recommendationGovernanceArtifacts, applicabilityPolicies);
 
   if (clinicalGovernance.registryErrors.length || clinicalGovernance.unresolvedSourceIds.length) {
     throw new Error(`Clinical governance invalid: ${[

@@ -1,4 +1,5 @@
 import type { Answers, LabRecord } from './types';
+import { isClinicallyInterpretedMeasurement, materializeClinicalMeasurementAnswers } from './clinicalMeasurements';
 
 export type CapturedFactState = 'structured' | 'user_reported_unstructured' | 'recorded_unassessed' | 'needs_clarification';
 export type MeasurementSystem = 'metric' | 'imperial';
@@ -148,14 +149,14 @@ export const recordedMeasurementCatalog: CatalogOption[] = [
   { value:'vitamin_d_25oh', label:'Vitamin D (25-OH)', hint:'Common unit: ng/mL' },
   { value:'fasting_glucose', label:'Fasting glucose', hint:'Common unit: mg/dL' },
   { value:'random_glucose', label:'Random glucose', hint:'Common unit: mg/dL' },
-  { value:'total_cholesterol', label:'Total cholesterol', hint:'Common unit: mg/dL' },
-  { value:'ldl', label:'LDL cholesterol', hint:'Common unit: mg/dL' },
-  { value:'hdl', label:'HDL cholesterol', hint:'Common unit: mg/dL' },
-  { value:'triglycerides', label:'Triglycerides', hint:'Common unit: mg/dL' },
-  { value:'hemoglobin', label:'Hemoglobin', hint:'Common unit: g/dL' },
-  { value:'ferritin', label:'Ferritin', hint:'Common unit: ng/mL' },
-  { value:'tsh', label:'TSH', hint:'Common unit: mIU/L' },
-  { value:'blood_pressure', label:'Blood pressure', hint:'Example: 120/80 mmHg' },
+  { value:'total_cholesterol', label:'Total cholesterol', hint:'M13.4 interprets recent confirmed mg/dL values only.' },
+  { value:'ldl', label:'LDL cholesterol', hint:'M13.4 interprets recent confirmed mg/dL values only.' },
+  { value:'hdl', label:'HDL cholesterol', hint:'M13.4 interprets recent confirmed mg/dL values only.' },
+  { value:'triglycerides', label:'Triglycerides', hint:'M13.4 interprets recent confirmed mg/dL values only.' },
+  { value:'hemoglobin', label:'Hemoglobin', hint:'M13.4 interprets recent confirmed g/dL values only.' },
+  { value:'ferritin', label:'Ferritin', hint:'M13.4 interprets recent confirmed ng/mL or equivalent values only.' },
+  { value:'tsh', label:'TSH', hint:'M13.4 interprets recent confirmed mIU/L or equivalent values only.' },
+  { value:'blood_pressure', label:'Blood pressure', hint:'M13.4 interprets recent confirmed values such as 120/80 mmHg.' },
   { value:'other', label:'Other test / measurement' },
 ];
 
@@ -217,7 +218,7 @@ export function materializeAssessmentAnswers(input: Answers, context: Assessment
   if (context.familyHistory.includes('diabetes')) answers.familyDiabetes = true;
   else if (context.familyHistory.includes('none')) answers.familyDiabetes = false;
 
-  return answers;
+  return materializeClinicalMeasurementAnswers(answers, context.recordedMeasurements);
 }
 
 export function createNamedHealthEntry(input: { name:string; category?:string; purpose?:string; dose?:string; frequency?:string }, prefix='entry'): NamedHealthEntry {
@@ -254,7 +255,7 @@ export function capturedContextSummary(context: AssessmentCaptureContext): Captu
   context.supplements.forEach((item)=>items.push({id:item.id,title:`Supplement: ${item.name}`,detail:item.purpose || item.category || 'Recorded supplement',state:item.state}));
   context.customConcerns.forEach((value,index)=>items.push({id:`concern-${index}`,title:'Other current concern',detail:value,state:'user_reported_unstructured'}));
   context.customFamilyHistory.forEach((value,index)=>items.push({id:`family-${index}`,title:'Other family history',detail:value,state:'user_reported_unstructured'}));
-  context.recordedMeasurements.forEach((item)=>items.push({id:item.id,title:item.label,detail:`${item.value}${item.unit ? ` ${item.unit}` : ''}${item.collectedAt ? ` · ${item.collectedAt}` : ''}`,state:item.state}));
+  context.recordedMeasurements.forEach((item)=>{ if(!isClinicallyInterpretedMeasurement(item)) items.push({id:item.id,title:item.label,detail:`${item.value}${item.unit ? ` ${item.unit}` : ''}${item.collectedAt ? ` · ${item.collectedAt}` : ''}`,state:item.state}); });
   if (context.concernDetails?.trim()) items.push({id:'concern-details',title:'Additional symptom details',detail:context.concernDetails.trim(),state:'user_reported_unstructured'});
   if (context.additionalContext?.trim()) items.push({id:'additional-context',title:'Additional health context',detail:context.additionalContext.trim(),state:'user_reported_unstructured'});
   return items;

@@ -1,6 +1,7 @@
 import type { RecommendationPlan } from './recommendations';
 import type { AssessmentCaptureContext } from './intake';
 import type { Answers, AssessmentResult, LabMarkerId, NormalizedLabRecord, SafetyDisposition } from './types';
+import { sanitizeInternalClinicalEvidence } from './clinicalMeasurements';
 
 export const LONGITUDINAL_HISTORY_PROTOCOL = 'JAANCH-HISTORY-1.0' as const;
 export const ASSESSMENT_SNAPSHOT_PROTOCOL = 'JAANCH-SNAPSHOT-1.0' as const;
@@ -95,7 +96,7 @@ export function createAssessmentSnapshot(input:{
     protocol:ASSESSMENT_SNAPSHOT_PROTOCOL,
     id,
     capturedAt,
-    answers:clone(input.answers),
+    answers:clone(sanitizeInternalClinicalEvidence(input.answers)),
     ...(input.capturedContext ? { capturedContext:clone(input.capturedContext) } : {}),
     labs:clone(input.labs ?? []),
     assessment:clone(input.assessment),

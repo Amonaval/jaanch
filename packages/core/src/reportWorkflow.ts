@@ -1,5 +1,5 @@
 import { buildRecommendationPlan } from './recommendations';
-import { emptyAssessmentCaptureContext } from './intake';
+import { emptyAssessmentCaptureContext, materializeAssessmentAnswers } from './intake';
 import { addSnapshot, createAssessmentSnapshot, type AssessmentSnapshot, type LongitudinalHistory } from './longitudinal';
 import { reassessWithLabs } from './labs';
 import type { LabRecord, NormalizedLabRecord } from './types';
@@ -42,12 +42,14 @@ export function reassessSnapshotWithConfirmedReportEvidence(input: {
     if (confirmed.recorded) recordedUnassessedCount += 1;
   }
 
-  const reassessment = reassessWithLabs(input.baseline.answers, labs, capturedAt);
+  const capturedContext = { ...baseContext, recordedMeasurements };
+  const effectiveAnswers = materializeAssessmentAnswers(input.baseline.answers, capturedContext);
+  const reassessment = reassessWithLabs(effectiveAnswers, labs, capturedAt);
   const assessment = reassessment.after;
-  const recommendationPlan = buildRecommendationPlan(input.baseline.answers, assessment);
+  const recommendationPlan = buildRecommendationPlan(effectiveAnswers, assessment);
   const snapshot = createAssessmentSnapshot({
-    answers: input.baseline.answers,
-    capturedContext: { ...baseContext, recordedMeasurements },
+    answers: effectiveAnswers,
+    capturedContext,
     labs: reassessment.normalizedLabs,
     assessment,
     recommendationPlan,

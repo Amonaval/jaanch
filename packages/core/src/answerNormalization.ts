@@ -1,4 +1,5 @@
 import type { Answers, InputValidationIssue, InputValidationReport } from './types';
+import { hasMaterializedClinicalEvidence, inheritMaterializedClinicalEvidence, sanitizeInternalClinicalEvidence } from './clinicalMeasurements';
 
 const EXCLUSIVE_NONE_FIELDS = ['diagnosedConditions', 'currentConcerns'] as const;
 
@@ -43,9 +44,11 @@ export function normalizeAnswers(input: Answers): { answers: Answers; report: In
 
 export function removeBareLabAnswers(input: Answers, trustedAnswerIds: string[] = []): Answers {
   const trusted = new Set(trustedAnswerIds);
-  const answers: Answers = { ...input };
+  const materialized = hasMaterializedClinicalEvidence(input);
+  const base = materialized ? input : sanitizeInternalClinicalEvidence(input);
+  const answers: Answers = { ...base };
   for (const answerId of ['hba1c', 'b12']) {
     if (!trusted.has(answerId)) delete answers[answerId];
   }
-  return answers;
+  return materialized ? inheritMaterializedClinicalEvidence(input, answers) : answers;
 }

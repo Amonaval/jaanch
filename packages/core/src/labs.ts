@@ -1,4 +1,5 @@
 import { assess, assessWithCanonicalLabEvidence } from './engine';
+import { inheritMaterializedClinicalEvidence } from './clinicalMeasurements';
 import type {
   Answers,
   AssessmentResult,
@@ -82,7 +83,7 @@ export function latestEligibleLabs(records: NormalizedLabRecord[]) {
 
 export function applyLabRecordsToAnswers(answers: Answers, normalized: NormalizedLabRecord[]): { answers: Answers; applied: NormalizedLabRecord[]; trustedAnswerIds: string[] } {
   const applied = latestEligibleLabs(normalized);
-  const next: Answers = { ...answers };
+  const next: Answers = inheritMaterializedClinicalEvidence(answers, { ...answers });
   const trustedAnswerIds: string[] = [];
   for (const record of applied) {
     const definition = markerById.get(record.markerId);

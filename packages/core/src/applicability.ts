@@ -36,6 +36,22 @@ export const applicabilityPolicies: ApplicabilityPolicy[] = [
     sourceIds: ['CDC-HEART-ATTACK-2024'],
     description: 'Concerning chest-pain escalation remains available across configured populations; it is not a diagnosis.',
   },
+  {
+    id:'APPL-BP-ADULT-NONPREG',maturity:'prototype',provenance:'clinical_source',sourceIds:['ESC-BP-2024'],minAge:18,excludedReproductiveContexts:['pregnant','unsure'],requireKnownFemaleReproductiveContext:true,
+    description:'M13.4 office blood-pressure classification is adult-only and excludes pregnancy-specific hypertensive-disorder interpretation.',
+  },
+  {
+    id:'APPL-LIPID-ADULT-NONPREG',maturity:'prototype',provenance:'clinical_source',sourceIds:['AHA-ACC-DYSLIPIDEMIA-2026'],minAge:18,excludedReproductiveContexts:['pregnant','unsure'],requireKnownFemaleReproductiveContext:true,
+    description:'M13.4 lipid interpretation is limited to adult nonpregnant risk context and does not implement pediatric or pregnancy-specific lipid management.',
+  },
+  {
+    id:'APPL-IRON-ADULT-NONPREG-18-65',maturity:'prototype',provenance:'clinical_source',sourceIds:['WHO-ANAEMIA-2024','WHO-FERRITIN-2020'],minAge:18,maxAge:65,excludedReproductiveContexts:['pregnant','unsure'],requireKnownFemaleReproductiveContext:true,
+    description:'M13.4 haemoglobin/ferritin interpretation uses the WHO adult 15–65 nonpregnant thresholds and is intentionally bounded to ages 18–65.',
+  },
+  {
+    id:'APPL-THYROID-ADULT-NONPREG',maturity:'prototype',provenance:'clinical_source',sourceIds:['NICE-THYROID-NG145'],minAge:18,excludedReproductiveContexts:['pregnant','trying','unsure'],requireKnownFemaleReproductiveContext:true,
+    description:'M13.4 thyroid interpretation is adult and nonpregnant; pregnancy-specific thyroid thresholds and treatment are outside scope.',
+  },
 ];
 
 const policyById = new Map(applicabilityPolicies.map((policy) => [policy.id, policy]));

@@ -1,5 +1,6 @@
 import type { ApplicabilityPolicy, ClinicalGovernanceReport, ClinicalSource, InvestigationDefinition } from './types';
 import { validateApplicabilityPolicies } from './applicability';
+import { m134ClinicalSources } from './m134ClinicalSources';
 
 export const clinicalSourceRegistry: ClinicalSource[] = [
   {
@@ -45,6 +46,7 @@ export const clinicalSourceRegistry: ClinicalSource[] = [
   {
     id: 'CDC-HEART-ATTACK-2024', title: 'About Heart Attack Symptoms, Risk, and Recovery', issuingBody: 'U.S. Centers for Disease Control and Prevention', url: 'https://www.cdc.gov/heart-disease/about/heart-attack.html', publicationDate: '2024-10-24', evidenceType: 'public_health_guidance', population: 'General public with possible heart-attack symptoms.', applicabilityNotes: ['Supports urgent escalation for concerning chest discomfort with symptoms such as shortness of breath, faintness/sweating, or radiating discomfort.','Jaanch red-flag logic is intentionally conservative and does not diagnose myocardial infarction.'], sourceStatus: 'current', reviewStatus: 'captured', lastVerifiedOn: '2026-10-09',
   },
+  ...m134ClinicalSources,
 ];
 
 export function validateClinicalSourceRegistry(sources = clinicalSourceRegistry): string[] {

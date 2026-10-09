@@ -43,6 +43,21 @@ export const investigationCatalog: InvestigationDefinition[] = [
     sourceIds: ['NIH-ODS-B12-HP'],
     applicabilityPolicyId: 'APPL-B12-ADULT',
   },
+  {
+    id:'MEASURE-BP',title:'Recent blood-pressure measurement',kind:'measurement',description:'A recent correctly measured blood-pressure reading can resolve missing current BP evidence when hypertension history/treatment context exists.',resolvesEvidenceIds:['cv.bp.missing.current'],utility:90,maturity:'prototype',sourceIds:['ESC-BP-2024'],applicabilityPolicyId:'APPL-BP-ADULT-NONPREG',
+  },
+  {
+    id:'LAB-LIPID-PANEL',title:'Lipid panel',kind:'lab',description:'A current lipid panel can replace uncertainty when lipid-disorder or lipid-lowering-treatment context exists.',resolvesEvidenceIds:['cv.lipid.missing.panel'],utility:85,maturity:'prototype',sourceIds:['AHA-ACC-DYSLIPIDEMIA-2026'],applicabilityPolicyId:'APPL-LIPID-ADULT-NONPREG',
+  },
+  {
+    id:'LAB-HEMOGLOBIN',title:'Hemoglobin',kind:'lab',description:'Measured haemoglobin can clarify whether depleted iron stores are accompanied by anaemia.',resolvesEvidenceIds:['nut.iron.missing.hemoglobin'],utility:90,maturity:'prototype',sourceIds:['WHO-ANAEMIA-2024'],applicabilityPolicyId:'APPL-IRON-ADULT-NONPREG-18-65',
+  },
+  {
+    id:'LAB-FERRITIN',title:'Ferritin',kind:'lab',description:'Measured ferritin can clarify depleted iron-store status when haemoglobin is low or iron/anaemia context is present.',resolvesEvidenceIds:['nut.iron.missing.ferritin'],utility:90,maturity:'prototype',sourceIds:['WHO-FERRITIN-2020'],applicabilityPolicyId:'APPL-IRON-ADULT-NONPREG-18-65',
+  },
+  {
+    id:'LAB-TSH',title:'TSH',kind:'lab',description:'TSH is the current structured thyroid marker used to reduce thyroid-evidence uncertainty in this adult prototype.',resolvesEvidenceIds:['met.thyroid.missing.tsh'],utility:85,maturity:'prototype',sourceIds:['NICE-THYROID-NG145'],applicabilityPolicyId:'APPL-THYROID-ADULT-NONPREG',
+  },
 ];
 
 export function validateInvestigationCatalog(catalog: InvestigationDefinition[]): string[] {

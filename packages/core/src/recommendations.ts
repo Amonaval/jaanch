@@ -1,6 +1,7 @@
 import { validateClinicalSourceIds } from './clinicalSources';
 import { evaluateApplicability } from './applicability';
 import { normalizeAnswers } from './answerNormalization';
+import { m134RecommendationCandidates, m134RecommendationGovernanceArtifacts } from './m134Recommendations';
 import type { Answers, AssessmentResult, Domain, SafetyActionClass, SafetyDisposition } from './types';
 
 export type RecommendationPriority = 'high' | 'medium' | 'low';
@@ -53,6 +54,7 @@ export const recommendationGovernanceArtifacts: RecommendationGovernanceArtifact
   { id:'REC-B12-CLINICIAN-001', maturity:'prototype', sourceIds:['NIH-ODS-B12-HP'], applicabilityPolicyId:'APPL-B12-ADULT' },
   { id:'REC-SLEEP-ROUTINE-001', maturity:'prototype', sourceIds:['AASM-SLEEP-DURATION-2015'], applicabilityPolicyId:'APPL-SLEEP-ADULT' },
   { id:'REC-SLEEP-REVIEW-001', maturity:'prototype', sourceIds:['AASM-OSA-DIAGNOSTIC-2017'], applicabilityPolicyId:'APPL-SLEEP-ADULT' },
+  ...m134RecommendationGovernanceArtifacts,
 ];
 
 const dispositionRank: Record<SafetyDisposition, number> = { allowed: 0, caution: 1, clinician_review: 2, blocked: 3 };
@@ -99,6 +101,7 @@ function candidatesFor(answers: Answers, result: AssessmentResult): Candidate[] 
 
   if (sleep?.status === 'investigate' || answers.snoring === true) candidates.push({ id:'REC-SLEEP-REVIEW-001', domain:'sleep', title:'Consider clinician-led sleep-disorder evaluation', actionClass:'monitoring', priority:'high', baseDisposition:'clinician_review', rationale:'Loud snoring, unrefreshing sleep or a high sleep-screening signal should not be converted into an app diagnosis.', steps:['Discuss persistent symptoms with a clinician.','Use formal diagnostic testing only when clinically indicated after appropriate evaluation.'], relatedFindingIds:sleep?[sleep.id]:[], sourceIds:['AASM-OSA-DIAGNOSTIC-2017'], maturity:'prototype', applicabilityPolicyId:'APPL-SLEEP-ADULT' });
 
+  candidates.push(...m134RecommendationCandidates(answers,result) as Candidate[]);
   return candidates;
 }
 
