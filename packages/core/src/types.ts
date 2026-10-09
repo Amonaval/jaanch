@@ -48,6 +48,7 @@ export type ApplicabilityPolicy = {
   description: string;
   minAge?: number;
   maxAge?: number;
+  allowedSexValues?: string[];
   excludedReproductiveContexts?: string[];
   excludedDiagnosedConditions?: string[];
   requireKnownFemaleReproductiveContext?: boolean;
@@ -255,7 +256,16 @@ export type RuleTraceSummary = {
   applicabilityReasons: string[];
 };
 
-export type LabMarkerId = 'hba1c' | 'vitamin_b12';
+export type LabMarkerId =
+  | 'hba1c'
+  | 'vitamin_b12'
+  | 'fasting_glucose'
+  | 'total_cholesterol'
+  | 'ldl'
+  | 'hdl'
+  | 'triglycerides'
+  | 'hemoglobin'
+  | 'ferritin';
 export type LabSource = 'manual' | 'report' | 'import';
 export type LabVerification = 'user_confirmed' | 'unverified';
 export type LabFreshness = 'recent' | 'aging' | 'stale' | 'future_invalid';
