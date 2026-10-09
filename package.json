@@ -5,10 +5,12 @@
   "engines": {
     "node": ">=22.13.0"
   },
+  "packageManager": "npm@10.9.4",
   "workspaces": ["apps/*", "packages/*"],
   "scripts": {
     "web": "npm --workspace @jaanch/web run dev",
     "mobile": "npm --workspace @jaanch/mobile run start",
+    "mobile:dev": "npm --workspace @jaanch/mobile run start:dev",
     "mobile:fix": "cd apps/mobile && npx expo install --fix",
     "doctor:mobile": "cd apps/mobile && npx expo-doctor",
     "verify:core": "npm --workspace @jaanch/core run verify",
