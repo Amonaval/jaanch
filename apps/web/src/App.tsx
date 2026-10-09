@@ -3,11 +3,11 @@ import {
   addSnapshot,
   assess,
   buildConsumerResultViewModel,
+  buildHealthIntelligenceBrief,
   buildHealthMapViewModel,
   buildLabReassessmentViewModel,
   buildLongitudinalViewModel,
   buildRecommendationPlan,
-  buildRecommendationViewModel,
   capturedContextSummary,
   cmToFeetInches,
   cmToInches,
@@ -18,6 +18,7 @@ import {
   createHap,
   createNamedHealthEntry,
   createRecordedMeasurement,
+  createSmartRecheckDraft,
   currentAssessmentBlock,
   decodeLongitudinalHistory,
   emptyAssessmentCaptureContext,
@@ -48,6 +49,7 @@ import {
   type LongitudinalHistory,
   type Question,
 } from '@jaanch/core';
+import { HealthBriefPanel } from './HealthBriefPanel';
 
 const HISTORY_KEY = 'jaanch.history.v1';
 const interpretedMeasurements = [
@@ -66,6 +68,7 @@ export default function App() {
   const [context, setContext] = useState<AssessmentCaptureContext>(() => emptyAssessmentCaptureContext());
   const [labRecords, setLabRecords] = useState<LabRecord[]>([]);
   const [done, setDone] = useState(false);
+  const [recheckMode, setRecheckMode] = useState(false);
   const [savedMessage, setSavedMessage] = useState('');
   const [longitudinalHistory, setLongitudinalHistory] = useState<LongitudinalHistory>(() =>
     typeof window === 'undefined' ? emptyLongitudinalHistory() : decodeLongitudinalHistory(window.localStorage.getItem(HISTORY_KEY)),
@@ -100,11 +103,13 @@ export default function App() {
   const healthMap = useMemo(() => buildHealthMapViewModel(result), [result]);
   const labView = useMemo(() => reassessment ? buildLabReassessmentViewModel(reassessment) : undefined, [reassessment]);
   const recommendationPlan = useMemo(() => buildRecommendationPlan(effectiveAnswers, result), [effectiveAnswers, result]);
-  const recommendationView = useMemo(() => buildRecommendationViewModel(recommendationPlan), [recommendationPlan]);
   const longitudinalView = useMemo(() => buildLongitudinalViewModel(longitudinalHistory), [longitudinalHistory]);
   const contextSummary = useMemo(() => capturedContextSummary(context), [context]);
   const currentPreview = useMemo(() => createAssessmentSnapshot({ answers: effectiveAnswers, capturedContext: context, labs: reassessment?.normalizedLabs ?? [], assessment: result, recommendationPlan, id: 'current-preview' }), [effectiveAnswers, context, reassessment?.normalizedLabs, result, recommendationPlan]);
   const consumerResult = useMemo(() => buildConsumerResultViewModel({ result, recommendationPlan, currentSnapshot: currentPreview, history: longitudinalHistory, recordedContextCount: contextSummary.length }), [result, recommendationPlan, currentPreview, longitudinalHistory, contextSummary.length]);
+  const healthBrief = useMemo(() => buildHealthIntelligenceBrief(result, recommendationPlan), [result, recommendationPlan]);
+  const latestSaved = longitudinalHistory.snapshots[0];
+  const recheckBaseline = useMemo(() => latestSaved ? createSmartRecheckDraft(latestSaved) : undefined, [latestSaved]);
 
   const setAnswer = (id: string, value: AnswerValue) => setAnswers(current => ({ ...current, [id]: value }));
   const clearAnswer = (id: string) => setAnswers(current => {
@@ -201,16 +206,29 @@ export default function App() {
     if (next.complete) setDone(true);
   };
   const goBack = () => setNav(state => goBackBlock(state, blockPlan));
-  const jump = (id: AssessmentBlockId) => { setDone(false); setNav(state => jumpToBlock(state, blockPlan, id)); };
+  const jump = (id: AssessmentBlockId) => { setRecheckMode(false); setDone(false); setNav(state => jumpToBlock(state, blockPlan, id)); };
   const saveCheckIn = () => {
     const snapshot = createAssessmentSnapshot({ answers: effectiveAnswers, capturedContext: context, labs: reassessment?.normalizedLabs ?? [], assessment: result, recommendationPlan });
     setLongitudinalHistory(history => addSnapshot(history, snapshot));
     setSavedMessage(`Saved ${new Date(snapshot.capturedAt).toLocaleString()}`);
   };
-  const startNewCheckIn = () => {
+  const startFreshAssessment = () => {
     const clean = emptyAssessmentCaptureContext();
-    setAnswers({}); setContext(clean); setLabRecords([]); setDone(false); setNav(createBlockNavigation(getAssessmentBlockPlan({}, clean))); setSavedMessage('');
+    setAnswers({}); setContext(clean); setLabRecords([]); setDone(false); setRecheckMode(false); setNav(createBlockNavigation(getAssessmentBlockPlan({}, clean))); setSavedMessage('');
   };
+  const startSmartRecheck = () => {
+    const latest = longitudinalHistory.snapshots[0];
+    if (!latest) return startFreshAssessment();
+    const draft = createSmartRecheckDraft(latest);
+    setAnswers(draft.answers);
+    setContext(draft.capturedContext);
+    setLabRecords(draft.labs);
+    setDone(false);
+    setRecheckMode(true);
+    setNav(createBlockNavigation(getAssessmentBlockPlan(draft.answers, draft.capturedContext)));
+    setSavedMessage('');
+  };
+  const previewRecheck = () => { setRecheckMode(false); setDone(true); setSavedMessage(''); };
   const clearHistory = () => {
     if (window.confirm('Clear all locally saved Jaanch check-ins on this browser?')) setLongitudinalHistory(emptyLongitudinalHistory());
   };
@@ -302,37 +320,46 @@ export default function App() {
   const renderAdaptive = () => <>{block?.questionIds.map(id => questions.find(question => question.id === id)).filter((question): question is Question => Boolean(question)).map(renderQuestion)}</>;
   const renderBlock = () => block?.id === 'about' ? renderAbout() : block?.id === 'history' ? renderHistory() : block?.id === 'current' ? renderCurrent() : block?.id === 'lifestyle' ? renderLifestyle() : block?.id === 'tests' ? renderTests() : renderAdaptive();
 
+  if (recheckMode && latestSaved && recheckBaseline) return <main className="app-shell recheck-shell">
+    <header className="app-header"><div><span className="eyebrow">Smart recheck</span><h1>What changed since {new Date(latestSaved.capturedAt).toLocaleDateString()}?</h1><p>Your stable profile, diagnoses, medicines, supplements, family history and saved evidence are already loaded. Update only what changed.</p></div><button type="button" className="secondary" onClick={() => { setRecheckMode(false); jump('about'); }}>Full review</button></header>
+    <section className="recheck-stable">
+      <div><b>{recheckBaseline.stableSummary.diagnosedConditionCount}</b><span>diagnosed conditions retained</span></div>
+      <div><b>{recheckBaseline.stableSummary.medicationCount}</b><span>medicines retained</span></div>
+      <div><b>{recheckBaseline.stableSummary.supplementCount}</b><span>supplements retained</span></div>
+      <div><b>{recheckBaseline.stableSummary.recordedMeasurementCount}</b><span>saved measurements/labs retained</span></div>
+    </section>
+    <section className="assessment-card">
+      <span className="eyebrow">Likely-to-change facts</span><h2>Update only what is different</h2><p className="section-intro">If history, medicines or tests changed, use the focused buttons below. Otherwise this routine recheck can stay short.</p>
+      <div className="field-grid two"><div className="field"><label>Weight</label><div className="input-unit"><input type="number" value={typeof answers.weightKg==='number'?answers.weightKg:''} onChange={event=>setOptionalNumber('weightKg',event.target.value)} /><span>kg</span></div></div><div className="field"><label>Waist</label><div className="input-unit"><input type="number" value={typeof answers.waistCm==='number'?answers.waistCm:''} onChange={event=>setOptionalNumber('waistCm',event.target.value)} /><span>cm</span></div></div></div>
+      <div className="field"><label>Current concerns</label><div className="chip-row">{concernCatalog.map(option=>choice('currentConcerns',option.value,option.label,true))}</div></div>
+      <div className="field-grid three"><div className="field"><label>Sleep hours</label><input type="number" min="2" max="14" step="0.5" value={typeof answers.sleepHours==='number'?answers.sleepHours:''} onChange={event=>setOptionalNumber('sleepHours',event.target.value)} /></div><div className="field"><label>Walking days/week</label><input type="number" min="0" max="7" value={context.activity.walkingDaysPerWeek??''} onChange={event=>updateActivityNumber('walkingDaysPerWeek',event.target.value)} /></div><div className="field"><label>Walking minutes/day</label><input type="number" min="0" value={context.activity.walkingMinutesPerDay??''} onChange={event=>updateActivityNumber('walkingMinutesPerDay',event.target.value)} /></div></div>
+      <div className="quick-review-actions"><button type="button" className="secondary" onClick={()=>jump('history')}>History / medicines changed</button><button type="button" className="secondary" onClick={()=>jump('tests')}>New tests / measurements</button><button type="button" className="secondary" onClick={()=>jump('lifestyle')}>More lifestyle changes</button></div>
+      <div className="actions recheck-actions"><button type="button" className="primary" onClick={previewRecheck}>Preview what changed →</button><button type="button" className="text-button" onClick={startFreshAssessment}>Start completely fresh instead</button></div>
+    </section>
+  </main>;
+
   if (done) return <main className="app-shell results-shell">
-    <header className="result-hero"><div><span className="eyebrow">{consumerResult.hero.eyebrow}</span><h1>{consumerResult.hero.headline}</h1><p>{consumerResult.hero.summary}</p></div><button type="button" className="secondary" onClick={() => jump('about')}>Review / edit my information</button></header>
+    <HealthBriefPanel brief={healthBrief} changes={consumerResult.changes}/>
     {consumerResult.hero.status === 'urgent' && healthMap.urgentMessages.map(message => <div className="urgent" key={message}><b>Urgent</b><span>{message}</span></div>)}
-    <div className="context-grid">
-      <article className="context-card"><b>{consumerResult.stats.evidenceCompleteness}%</b><span>Evidence available — not a health score</span></article>
-      <article className="context-card"><b>{consumerResult.stats.interpretedAreas}</b><span>Areas with an interpreted signal</span></article>
-      <article className="context-card"><b>{consumerResult.stats.uncertaintyCount}</b><span>Open evidence gaps / next checks</span></article>
-      <article className="context-card"><b>{consumerResult.stats.recordedContextCount}</b><span>Captured context facts retained</span></article>
-    </div>
-    <div className="notice"><b>Best next step</b><span>{consumerResult.hero.nextBestAction}</span><small>{consumerResult.hero.evidenceDetail}</small></div>
-    <div className="result-grid">
-      <section className="panel"><span className="eyebrow">What matters now</span><h2>Priorities</h2>{consumerResult.mattersNow.length ? consumerResult.mattersNow.map(item => <article className="action" key={item.id}><b>{item.title}</b><span>{item.meta}</span><p>{item.detail}</p></article>) : <p>No high-priority item from the evidence Jaanch can currently interpret.</p>}</section>
-      <section className="panel"><span className="eyebrow">What you can do</span><h2>Action plan</h2>{recommendationView.blockedReason ? <p>{recommendationView.blockedReason}</p> : consumerResult.actions.length ? consumerResult.actions.map(item => <article className="action" key={item.id}><b>{item.title}</b><span>{item.priorityLabel} · {item.dispositionLabel}</span><p>{item.why}</p>{item.steps.length > 0 && <ol>{item.steps.map(step => <li key={step}>{step}</li>)}</ol>}</article>) : <p>No new action recommendation from the current interpreted evidence.</p>}</section>
-    </div>
-    <div className="result-grid">
-      <section className="panel"><span className="eyebrow">What the evidence supports</span><h2>Current signals</h2>{consumerResult.supported.length ? consumerResult.supported.map(item => <article className="finding" key={item.id}><b>{item.title}</b><span>{item.meta}</span><p>{item.detail}</p></article>) : <p>No interpreted finding is currently strong enough to summarize here.</p>}</section>
-      <section className="panel"><span className="eyebrow">What is still uncertain</span><h2>Evidence gaps</h2>{consumerResult.uncertainty.length ? consumerResult.uncertainty.map(item => <article className="finding" key={item.id}><b>{item.title}</b><span>{item.meta}</span><p>{item.detail}</p></article>) : <p>No mapped evidence gap currently needs prioritization.</p>}</section>
-    </div>
-    {consumerResult.changes && <section className="panel"><span className="eyebrow">{consumerResult.changes.title}</span><h2>{consumerResult.changes.headline}</h2><p>{consumerResult.changes.evidenceDetail}</p>{[...consumerResult.changes.items, ...consumerResult.changes.labChanges].map(item => <article className="action" key={item.id}><b>{item.title}</b><span>{item.direction}</span><p>{item.detail}</p></article>)}</section>}
-    {contextSummary.length > 0 && <section className="panel"><span className="eyebrow">Captured context</span><h2>Raw facts retained for traceability</h2><p className="hint">Some captured facts may feed bounded deterministic rules after eligibility checks; others remain recorded-only context. Jaanch keeps the raw record visible either way.</p><div className="context-grid">{contextSummary.map(item => <article className="context-card" key={item.id}><b>{item.title}</b><span>{item.detail}</span></article>)}</div></section>}
-    {labView && <section className="panel"><span className="eyebrow">Measured evidence</span><h2>Lab reassessment</h2><p>{labView.appliedLabel}</p>{labView.changes.map(item => <p key={item.id}><b>{item.title}</b> — {item.detail}</p>)}</section>}
-    <section className="panel"><h2>Save this check-in</h2><p>Save the current Health Map locally so the next assessment can show meaningful changes rather than only another snapshot.</p><div className="actions"><button type="button" className="primary" onClick={saveCheckIn}>Save check-in</button><button type="button" className="secondary" onClick={startNewCheckIn}>Start new check-in</button></div>{savedMessage && <p className="success">{savedMessage}</p>}</section>
-    {longitudinalView.snapshotCount > 0 && <section className="panel"><h2>{longitudinalView.title}</h2><p>{longitudinalView.snapshotCount} locally saved check-in{longitudinalView.snapshotCount === 1 ? '' : 's'}.</p><details><summary>Saved check-ins</summary><ol>{longitudinalHistory.snapshots.map(snapshot => <li key={snapshot.id}>{new Date(snapshot.capturedAt).toLocaleString()} · {snapshot.assessment.findings.length} finding(s){snapshot.capturedContext?.customConditions.length ? ` · ${snapshot.capturedContext.customConditions.length} custom condition(s)` : ''}</li>)}</ol><button type="button" className="danger-link" onClick={clearHistory}>Clear local history</button></details></section>}
-    <details className="technical"><summary>Clinical evidence, safety & governance details</summary><p>{healthMap.governance.label}</p>{healthMap.findings.map(finding => <div key={finding.id}><b>{finding.domainLabel}: {finding.title}</b><p>{finding.statusLabel} · {finding.urgencyLabel} · {finding.confidenceLabel} · {finding.evidenceLevelLabel}</p><p>{finding.summary}</p></div>)}<pre>{JSON.stringify(createHap(effectiveAnswers, result, reassessment?.normalizedLabs, recommendationPlan, context), null, 2)}</pre></details>
+    <section className="panel save-brief"><span className="eyebrow">Make this your new baseline</span><h2>{consumerResult.changes ? 'Review the change summary, then save' : 'Save this check-in'}</h2><p>Saving creates an immutable local check-in so the next recheck can focus on what actually changed.</p><div className="actions"><button type="button" className="primary" onClick={saveCheckIn}>Save check-in</button>{longitudinalHistory.snapshots.length>0&&<button type="button" className="secondary" onClick={startSmartRecheck}>Quick recheck from latest saved</button>}<button type="button" className="secondary" onClick={() => jump('about')}>Review / edit information</button></div>{savedMessage && <p className="success">{savedMessage}</p>}</section>
+    <details className="technical consumer-details"><summary>Evidence & clinical details</summary>
+      <div className="detail-metrics"><div><b>{consumerResult.stats.evidenceCompleteness}%</b><span>evidence completeness — not a health score</span></div><div><b>{consumerResult.stats.interpretedAreas}</b><span>interpreted areas</span></div><div><b>{consumerResult.stats.uncertaintyCount}</b><span>open mapped gaps</span></div></div>
+      <p className="hint">{healthBrief.detailNote}</p>
+      <div className="result-grid"><section><h3>Current supported signals</h3>{consumerResult.supported.length?consumerResult.supported.map(item=><article className="finding" key={item.id}><b>{item.title}</b><span>{item.meta}</span><p>{item.detail}</p></article>):<p>No additional supported signal.</p>}</section><section><h3>Mapped evidence gaps</h3>{consumerResult.uncertainty.length?consumerResult.uncertainty.map(item=><article className="finding" key={item.id}><b>{item.title}</b><span>{item.meta}</span><p>{item.detail}</p></article>):<p>No mapped evidence gap currently needs prioritization.</p>}</section></div>
+      {contextSummary.length > 0 && <><h3>Recorded context</h3><div className="context-grid">{contextSummary.map(item => <article className="context-card" key={item.id}><b>{item.title}</b><span>{item.detail}</span></article>)}</div></>}
+      {labView && <><h3>Measured-evidence reassessment</h3><p>{labView.appliedLabel}</p>{labView.changes.map(item => <p key={item.id}><b>{item.title}</b> — {item.detail}</p>)}</>}
+      <h3>Clinical governance</h3><p>{healthMap.governance.label}</p>{healthMap.findings.map(finding => <div key={finding.id}><b>{finding.domainLabel}: {finding.title}</b><p>{finding.statusLabel} · {finding.urgencyLabel} · {finding.confidenceLabel} · {finding.evidenceLevelLabel}</p><p>{finding.summary}</p></div>)}
+      <details><summary>Technical HAP JSON</summary><pre>{JSON.stringify(createHap(effectiveAnswers, result, reassessment?.normalizedLabs, recommendationPlan, context), null, 2)}</pre></details>
+    </details>
+    {longitudinalView.snapshotCount > 0 && <details className="technical"><summary>Saved check-ins ({longitudinalView.snapshotCount})</summary><ol>{longitudinalHistory.snapshots.map(snapshot => <li key={snapshot.id}>{new Date(snapshot.capturedAt).toLocaleString()} · {snapshot.assessment.findings.length} finding(s){snapshot.capturedContext?.customConditions.length ? ` · ${snapshot.capturedContext.customConditions.length} custom condition(s)` : ''}</li>)}</ol><div className="actions"><button type="button" className="secondary" onClick={startSmartRecheck}>Start quick recheck</button><button type="button" className="danger-link" onClick={clearHistory}>Clear local history</button></div></details>}
   </main>;
 
   return <main className="app-shell">
-    <header className="app-header"><div><span className="eyebrow">Personal health assessment</span><h1>Jaanch</h1><p>Capture the important facts first. Jaanch separates what it can assess from what it simply records for context.</p></div>{longitudinalView.snapshotCount > 0 && <span className="history-badge">{longitudinalView.snapshotCount} saved check-in{longitudinalView.snapshotCount === 1 ? '' : 's'}</span>}</header>
+    <header className="app-header"><div><span className="eyebrow">Personal health intelligence</span><h1>Jaanch</h1><p>Build a trustworthy baseline once. After that, Jaanch should focus on what changed and what actually matters next.</p></div>{longitudinalView.snapshotCount > 0 && <span className="history-badge">{longitudinalView.snapshotCount} saved check-in{longitudinalView.snapshotCount === 1 ? '' : 's'}</span>}</header>
+    {latestSaved&&<section className="recheck-invite"><div><span className="eyebrow">Welcome back</span><h2>Do a quick recheck instead of starting over</h2><p>Last saved {new Date(latestSaved.capturedAt).toLocaleString()}. Stable profile facts are already available.</p></div><button type="button" className="primary" onClick={startSmartRecheck}>Start quick recheck →</button></section>}
     <nav className="stepper" aria-label="Assessment sections">{blockPlan.blocks.map((item, index) => <button type="button" key={item.id} className={classNames('step', item.id === nav.currentBlockId && 'active', item.kind === 'safety' && 'safety')} aria-current={item.id === nav.currentBlockId ? 'step' : undefined} onClick={() => jump(item.id)}><span>{index + 1}</span>{item.shortTitle}</button>)}</nav>
     {nav.invalidatedBlockIds.length > 0 && <div className="notice"><b>Assessment path updated</b><span>An earlier edit changed which follow-up sections are relevant. Your retained answers were not silently deleted.</span></div>}
     <section className={classNames('assessment-card', block?.kind === 'safety' && 'safety-card')}><span className="eyebrow">{block?.kind === 'primary' ? 'Core section' : block?.kind === 'safety' ? 'Safety follow-up' : 'Adaptive section'}</span><h2>{block?.title}</h2><p className="section-intro">{block?.description}</p>{renderBlock()}</section>
-    <nav className="bottom-nav"><button type="button" className="secondary" disabled={!nav.backStack.length} onClick={goBack}>← Back</button><span>{Math.max(1, blockPlan.blocks.findIndex(item => item.id === nav.currentBlockId) + 1)} of {blockPlan.blocks.length} sections</span><button type="button" className="primary" onClick={goNext}>{blockPlan.blocks[blockPlan.blocks.length - 1]?.id === nav.currentBlockId ? 'See Health Map' : 'Continue →'}</button></nav>
+    <nav className="bottom-nav"><button type="button" className="secondary" disabled={!nav.backStack.length} onClick={goBack}>← Back</button><span>{Math.max(1, blockPlan.blocks.findIndex(item => item.id === nav.currentBlockId) + 1)} of {blockPlan.blocks.length} sections</span><button type="button" className="primary" onClick={goNext}>{blockPlan.blocks[blockPlan.blocks.length - 1]?.id === nav.currentBlockId ? 'See my Health Brief' : 'Continue →'}</button></nav>
   </main>;
 }

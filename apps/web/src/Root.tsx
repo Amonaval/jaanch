@@ -9,7 +9,10 @@ export default function Root(){
  const [appRevision,setAppRevision]=useState(0);
  const applied=()=>setAppRevision(value=>value+1);
  return <>
-  <div style={{display:mode==='assessment'?'block':'none'}}><div style={{maxWidth:1120,margin:'16px auto 0',padding:'0 20px',display:'flex',gap:10,flexWrap:'wrap'}}><button type="button" className="secondary" onClick={()=>setMode('report')}>Import lab report</button><button type="button" className="secondary" onClick={()=>setMode('profiles')}>Profiles & mocks</button><button type="button" className="secondary" onClick={()=>setMode('ai')}>AI Review</button></div><App key={appRevision}/></div>
+  <div style={{display:mode==='assessment'?'block':'none'}}>
+   <div className="consumer-nav"><button type="button" className="secondary" onClick={()=>setMode('report')}>Import lab report</button><details className="advanced-tools"><summary>Advanced / experimental</summary><div><button type="button" className="secondary" onClick={()=>setMode('ai')}>AI second opinion</button><button type="button" className="secondary" onClick={()=>setMode('profiles')}>Profiles & test mocks</button></div></details></div>
+   <App key={appRevision}/>
+  </div>
   <div style={{display:mode==='report'?'block':'none'}}><ReportImportScreen onApplied={applied} onBack={()=>setMode('assessment')}/></div>
   <div style={{display:mode==='profiles'?'block':'none'}}><ProfileLabScreen onApplied={applied} onBack={()=>setMode('assessment')}/></div>
   {mode==='ai'&&<AIReviewScreen onBack={()=>setMode('assessment')}/>} 

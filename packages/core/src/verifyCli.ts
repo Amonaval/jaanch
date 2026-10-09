@@ -9,6 +9,7 @@ import { assertLongitudinalVerification } from './verificationLongitudinal';
 import { assertClinicalExpansionVerification } from './verificationClinicalExpansion';
 import { assertProfileVerification } from './verificationProfiles';
 import { assertPersistenceVerification } from './verificationPersistence';
+import { assertConsumerValueVerification } from './verificationConsumerValue';
 
 const core = assertCoreVerification();
 const intake = assertIntakeVerification();
@@ -21,6 +22,7 @@ const recommendations = assertRecommendationVerification();
 const longitudinal = assertLongitudinalVerification();
 const ai = assertAIReviewVerification();
 const aiV2 = assertAIReviewV2Verification();
-const all = [...core, ...intake, ...evidenceCapture, ...clinicalExpansion, ...profiles, ...persistence, ...presentation, ...recommendations, ...longitudinal, ...ai, ...aiV2];
+const consumerValue = assertConsumerValueVerification();
+const all = [...core, ...intake, ...evidenceCapture, ...clinicalExpansion, ...profiles, ...persistence, ...presentation, ...recommendations, ...longitudinal, ...ai, ...aiV2, ...consumerValue];
 for (const result of all) console.log('PASS ' + result.id);
 console.log('Verification passed: ' + all.length + '/' + all.length);
