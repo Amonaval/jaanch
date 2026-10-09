@@ -14,12 +14,20 @@ export type RecommendationCard = {
   safetyReasons: string[];
 };
 
+export type SuppressedRecommendationCard = {
+  id: string;
+  title: string;
+  statusLabel: string;
+  reasons: string[];
+};
+
 export type RecommendationViewModel = {
   title: string;
   blockedReason?: string;
   top: RecommendationCard[];
   additional: RecommendationCard[];
   blocked: RecommendationCard[];
+  suppressed: SuppressedRecommendationCard[];
   disclaimer: string;
 };
 
@@ -53,5 +61,11 @@ export function buildRecommendationViewModel(plan: RecommendationPlan): Recommen
   const top = plan.recommendations.filter((item) => topIds.has(item.id)).map(card);
   const additional = plan.recommendations.filter((item) => !topIds.has(item.id) && item.disposition !== 'blocked').map(card);
   const blocked = plan.recommendations.filter((item) => item.disposition === 'blocked').map(card);
-  return { title: 'Your action plan', blockedReason: plan.blockedReason, top, additional, blocked, disclaimer: plan.disclaimer };
+  const suppressed = plan.suppressed.map((item) => ({
+    id: item.id,
+    title: item.title,
+    statusLabel: item.status === 'clinician_review' ? 'Needs clinician review/context' : 'Unsupported context',
+    reasons: item.reasons,
+  }));
+  return { title: 'Your action plan', blockedReason: plan.blockedReason, top, additional, blocked, suppressed, disclaimer: plan.disclaimer };
 }

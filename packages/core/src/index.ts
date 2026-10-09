@@ -3,6 +3,7 @@ export * from './questions';
 export * from './planner';
 export * from './answerNormalization';
 export * from './applicability';
+export * from './applicabilityView';
 export * from './evidenceGraph';
 export * from './clinicalSources';
 export * from './safety';
