@@ -3,7 +3,7 @@ import { buildRecommendationPlan } from './recommendations';
 import { emptyAssessmentCaptureContext, materializeAssessmentAnswers, type AssessmentCaptureContext } from './intake';
 import { reassessWithLabs } from './labs';
 import { createAssessmentSnapshot, emptyLongitudinalHistory, type AssessmentSnapshot, type LongitudinalHistory } from './longitudinal';
-import { sanitizeInternalClinicalEvidence } from './clinicalMeasurements';
+import { materializeClinicalMeasurementAnswers, sanitizeInternalClinicalEvidence } from './clinicalMeasurements';
 import type { Answers, LabRecord, NormalizedLabRecord } from './types';
 
 export const JAANCH_PROFILE_PROTOCOL='JAANCH-PROFILE-1.0' as const;
@@ -98,7 +98,8 @@ export function encodeProfileBundle(bundle:JaanchProfileBundle){return JSON.stri
 
 export function runProfileBundle(input:JaanchProfileBundle,capturedAt=new Date().toISOString()):ProfileRunResult{
   const bundle=normalizeBundle(input);
-  const effectiveAnswers=materializeAssessmentAnswers(bundle.draft.answers,bundle.draft.capturedContext);
+  const materialized=materializeAssessmentAnswers(bundle.draft.answers,bundle.draft.capturedContext);
+  const effectiveAnswers=materializeClinicalMeasurementAnswers(materialized,bundle.draft.capturedContext.recordedMeasurements,capturedAt);
   const reassessment=bundle.draft.labs.length?reassessWithLabs(effectiveAnswers,bundle.draft.labs,capturedAt):undefined;
   const result=reassessment?.after??assess(effectiveAnswers);
   const recommendationPlan=buildRecommendationPlan(effectiveAnswers,result);

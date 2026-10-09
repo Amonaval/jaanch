@@ -2,6 +2,7 @@ import { buildRecommendationPlan } from './recommendations';
 import { emptyAssessmentCaptureContext, materializeAssessmentAnswers } from './intake';
 import { addSnapshot, createAssessmentSnapshot, type AssessmentSnapshot, type LongitudinalHistory } from './longitudinal';
 import { reassessWithLabs } from './labs';
+import { materializeClinicalMeasurementAnswers } from './clinicalMeasurements';
 import type { LabRecord, NormalizedLabRecord } from './types';
 import { mergeConfirmedReportEvidence, type ConfirmedReportEvidence } from './reportEvidence';
 
@@ -43,7 +44,8 @@ export function reassessSnapshotWithConfirmedReportEvidence(input: {
   }
 
   const capturedContext = { ...baseContext, recordedMeasurements };
-  const effectiveAnswers = materializeAssessmentAnswers(input.baseline.answers, capturedContext);
+  const materialized = materializeAssessmentAnswers(input.baseline.answers, capturedContext);
+  const effectiveAnswers = materializeClinicalMeasurementAnswers(materialized, recordedMeasurements, capturedAt);
   const reassessment = reassessWithLabs(effectiveAnswers, labs, capturedAt);
   const assessment = reassessment.after;
   const recommendationPlan = buildRecommendationPlan(effectiveAnswers, assessment);
