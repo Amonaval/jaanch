@@ -1,155 +1,204 @@
 # Jaanch Roadmap
 
-## Current state
+## Strategic Review 3 decision
 
-Engineering is implemented through **M11 — AI Review v2 / Deeper Contextual Utility**, while the deterministic product-quality and privacy gates from M13.1–M13.5 remain open.
+**CONTINUE WITH MAJOR CHANGES.**
+
+The core trust/evidence architecture is worth keeping, but Jaanch is not yet compelling enough for pilot hardening or further feature expansion.
+
+SR3 found a material gap between engineering maturity and consumer value:
+
+- safety/evidence integrity is strong;
+- the visible experience is too laborious;
+- results are too card-heavy and weakly synthesized;
+- repeat use is too expensive because new check-ins reset the profile;
+- report-first use is cumbersome;
+- AI sophistication is ahead of proven AI usefulness.
+
+Full review: `docs/reviews/SR3_CONSUMER_VALUE_WOW_FACTOR.md`.
 
 Current milestone:
 
-> **Context-aware AI-review web alpha candidate — deterministic Jaanch remains authoritative; owner trust/privacy/real-model utility gates remain open.**
-
-AI integration existing in code is not evidence that AI is useful.
+> **Trustworthy alpha foundation — consumer-value reset required before pilot work.**
 
 ---
 
-## Completed / engineering-implemented
+## Phase 1 — M13.6 Consumer Value Reset — NEXT
 
-### M01–M09.1 — Deterministic foundation
-Adaptive intake, rule/evidence model, safety, applicability, investigations, recommendations and verification.
-
-### M10 — AI Harness Runtime + Privacy/Evaluation
-- explicit consent;
-- privacy-minimized v1 packet;
-- strict structured output;
-- safety invariant validation;
-- server-only provider adapter;
-- utility gate concept.
-
-### M10.1 — Live AI Review + Web UX
-- same-origin server endpoint;
-- server-only provider credentials;
-- browser review UX;
-- five-mock live gate command;
-- real-model utility still not declared passed.
-
-### M11 — AI Review v2 / Deeper Contextual Utility
-Status: **ENGINEERING IMPLEMENTED — OWNER / REAL-MODEL UTILITY REVIEW REQUIRED**  
-Effort: High
-
-Adds:
-- `JAANCH-AI-REVIEW-2.0` / `AI-ASSESSMENT-2.0` / harness 2.0;
-- coded context capsule without names/free text;
-- latest-two-check-in deterministic change capsule;
-- BP/lipid/Hb/ferritin/TSH longitudinal measurement deltas in addition to normalized lab/finding/recommendation changes;
-- explicit material-addition gate;
-- prioritized evidence gaps with source IDs;
-- traceable contradiction types;
-- clinician conversation brief;
-- no-trend-without-history invariant;
-- unknown-ID rejection;
-- stricter v2 HTTP envelope/minimization validation;
-- `npm run ai:gate:v2`.
-
-Mission: `docs/missions/M11_AI_REVIEW_V2_CONTEXTUAL_UTILITY.md`.
-
-### M13–M13.5 — Product quality / evidence / clinical / persistence
-Implemented engineering includes:
-- longitudinal check-ins;
-- assessment-quality recovery;
-- consumer Health Map;
-- reviewed report evidence capture;
-- bounded BP/lipid/anaemia-iron/thyroid interpretation;
-- five synthetic profiles + import/export;
-- versioned local persistence architecture and future remote-security contract.
-
-Owner gates remain open.
-
----
-
-## Immediate phase — Owner validation + AI utility decision
-
-### Required tests
-1. `npm run verify` locally.
-2. Run all five deterministic mocks.
-3. Verify report/manual/profile evidence semantics.
-4. Configure live AI and test AI Review v2.
-5. Run `npm run ai:gate:v2`.
-6. Low-risk mock should often return `materialAddition=false`.
-7. High-signal mocks should prioritize and explain rather than generate broad generic health advice.
-8. Use a genuine history with at least two saved check-ins to test longitudinal synthesis.
-9. Confirm evidence change is not misrepresented as health improvement/worsening.
-10. Confirm treatment/urgent/applicability boundaries are preserved.
-
-### Gate result
-
-Choose one:
-
-```text
-GO      → AI is materially useful and safe enough to retain as a product layer
-MODIFY  → useful in places, but needs bounded correction before pilot
-DEFER   → AI adds noise/paraphrase; keep it optional and stop expanding it
-```
-
-No further AI mission should be started automatically.
-
----
-
-## Strategic Review 3 — NEXT PLANNED MISSION
+### M13.6 — Health Intelligence Brief + Smart Recheck
 
 Effort: **High**
 
-Evaluate the product as a whole rather than one subsystem:
-- intake completeness;
-- result comprehension;
-- report-evidence trust;
-- narrow clinical usefulness vs overreach;
-- longitudinal value;
-- local persistence/privacy direction;
-- AI v2 incremental value and privacy cost;
-- whether web/mobile roles are still correct;
-- whether current modules are enough for a private pilot;
-- overbuilding vs missing essential value;
-- which roadmap items should be deleted, not merely postponed.
+Mission: `docs/missions/M13.6_CONSUMER_VALUE_RESET_PLAN.md`
 
-Expected output: CONTINUE / CONTINUE WITH CHANGES / PAUSE, plus a sharply reduced pilot plan.
+Build no broad new clinical scope. Use the existing engine better.
+
+Required outcomes:
+
+1. One-screen **Health Intelligence Brief** instead of a long card wall.
+2. Maximum 1–3 health priorities/themes.
+3. Deterministic cross-rule synthesis when multiple findings belong to one priority cluster.
+4. Every priority answers:
+   - what Jaanch sees;
+   - why it matters to this person;
+   - which evidence supports it;
+   - next best action;
+   - what can wait;
+   - what missing evidence could change the view.
+5. Demote evidence-completeness percentage from hero metric.
+6. Move Profiles & mocks / protocol / runtime-debug surfaces out of primary consumer navigation.
+7. **Smart Recheck** starts from latest saved profile rather than blank state.
+8. Stable profile/history/medicine context persists into a recheck.
+9. Time-sensitive/incomplete fields receive attention first.
+10. Preview what changed before saving.
+11. Evidence/provenance remains available in expandable details.
+12. AI v2 stays optional and cannot define the core brief.
+
+### M13.6 value gate
+
+Across all five mocks, a user should understand within 10 seconds:
+
+- top concern;
+- why;
+- next action;
+- next evidence.
+
+Returning-user gate:
+
+> A routine unchanged recheck must be substantially faster than first-time intake and must not require re-entering stable profile facts.
 
 ---
 
-## M15A — Pilot Safety / Privacy / Release Gate
+## Phase 2 — M13.7 Report-First Intelligence
 
-Only after Strategic Review 3.
+Effort: **High**
 
-Required before meaningful external pilot use:
+Target journey:
+
+```text
+Upload report
+   ↓
+structured extraction
+   ↓
+verify only uncertain / safety-critical candidates
+   ↓
+ask minimum missing personal context
+   ↓
+Health Intelligence Brief
+```
+
+Goals:
+- remove the requirement that report-first users manually build a full baseline before seeing value;
+- evaluate trustworthy PDF/image extraction/OCR architecture;
+- preserve provenance, units, dates, confirmation and eligibility gates;
+- use confidence-based review rather than blindly accepting extraction;
+- ask only the personal questions needed to interpret supported evidence.
+
+---
+
+## Phase 3 — Consumer validation
+
+Before M15A, owner testing must answer **yes** to:
+
+1. Would I actually use Jaanch again next month?
+2. Does the first screen tell me something worth the input effort?
+3. Can I explain my top Jaanch insight to another person after closing the app?
+4. Is repeat use easy?
+5. Is report import easier than manually interpreting the report myself?
+6. Does Jaanch prioritize instead of merely list abnormalities?
+7. Are safety boundaries useful rather than just verbose disclaimers?
+
+If not, continue product-value work rather than infrastructure work.
+
+---
+
+## Phase 4 — M15A Pilot Safety / Privacy / Release Gate
+
+**Blocked until consumer-value validation passes.**
+
+When unblocked:
 - qualified clinical review of supported rules;
-- source governance;
 - intended-use/claim review;
-- privacy/consent/retention semantics;
-- threat model and production encryption decisions;
-- authenticated backend only if remote persistence is justified;
+- privacy/consent/retention;
+- threat model and encryption decisions;
+- authenticated backend only if pilot needs it;
 - delete/export behavior;
-- production AI endpoint security if AI is retained;
+- AI production endpoint security only if AI survives value testing;
 - accessibility;
 - telemetry/error policy;
 - reproducible verification/build gate;
 - jurisdiction/regulatory review as appropriate.
 
-Milestone: controlled private-pilot candidate.
+---
+
+## Frozen / conditional work
+
+### Further AI expansion — FROZEN
+M10/M10.1/M11 remain experimental infrastructure. No more AI mission until the core Health Brief is genuinely useful and live-model value is demonstrated.
+
+Likely eventual role, if retained: one compact second-opinion/insight block embedded into the result rather than a parallel product surface.
+
+### Mobile parity — FROZEN
+Do not spend effort matching an experience that is not yet strong on web.
+
+### Cloud/auth/backend — FROZEN
+M13.5 contracts remain useful architecture. Do not connect sensitive remote persistence until product pull justifies cross-device continuity.
+
+### M14 ChatGPT/MCP — FROZEN
+Standalone value must be proven first.
+
+### M12 Rule Studio — FROZEN
+Rule-authoring infrastructure is not a consumer-value blocker.
+
+### Broad clinical-domain expansion — FROZEN
+Current supported domains must become excellent before breadth expansion.
+
+### M15B Production/store hardening — LATER
+Only after pilot readiness.
 
 ---
 
-## Later / conditional
+## What stays from completed work
 
-### Concrete authenticated backend
-Select only when pilot needs cross-device/cloud continuity. Must satisfy M13.5 and remain independent from clinical semantics.
+### KEEP
+- deterministic engine;
+- evidence graph;
+- safety/applicability;
+- unit/date/freshness/verification boundaries;
+- normalized lab + M13.4 measurement paths;
+- report provenance/review contract;
+- source governance;
+- longitudinal snapshot/comparison engine;
+- profile/persistence protocols;
+- AI privacy/safety contracts as optional experimental infrastructure.
 
-### M14 — ChatGPT / MCP integration
-Later, only after standalone Jaanch proves value and schemas stabilize.
+### DEMOTE / HIDE from consumer first layer
+- evidence-completeness percentage;
+- protocol/version names;
+- provider/runtime traces;
+- Profiles & mocks;
+- raw captured-context wall;
+- technical maturity/governance detail.
 
-### M15B — Production / store hardening
-Production builds, Play/TestFlight, crash monitoring, migrations, backup/recovery, store policies/assets, operational runbook.
+These remain available to developers/advanced details but should not define the consumer experience.
 
-### M12 Rule Studio
-Still deferred. Do not build rule-authoring infrastructure before core user value and governance needs justify it.
+---
+
+## Product north stars
+
+### 60-second decision test
+
+> **Does this materially improve what a user understands or can decide within 60 seconds?**
+
+### Memorability test
+
+> **Can the user repeat the key insight to a spouse or clinician after closing Jaanch?**
+
+### Value-density test
+
+> **Does the output justify the amount of information the user had to provide?**
+
+Future work should fail the roadmap gate if it cannot answer these convincingly.
 
 ---
 
@@ -157,29 +206,12 @@ Still deferred. Do not build rule-authoring infrastructure before core user valu
 
 | Checkpoint | State |
 |---|---|
-| M13.1 | assessment trust gate open |
-| M13.2 | result comprehension gate open |
-| M13.3 | evidence-ingestion trust gate open |
-| M13.4 | narrow-clinical/profile trust gate open |
-| M13.5 | persistence/privacy gate open |
-| M10.1 | live AI integration implemented; real-model utility unproven |
-| M11 | contextual/longitudinal AI engineering implemented; utility unproven |
-| Strategic Review 3 | next whole-product decision |
-| M15A | controlled private-pilot gate |
+| M01–M13.5 + M11 | strong technical/trust alpha foundation |
+| SR3 | consumer value judged insufficient; reset required |
+| M13.6 | Health Brief + Smart Recheck value gate |
+| M13.7 | report-first friction/value gate |
+| owner says “I would use this again” | consumer alpha value gate passed |
+| M15A | controlled private-pilot candidate |
 | M15B | production-candidate software, still dependent on clinical/legal/regulatory readiness |
 
----
-
-## Non-negotiable constraints
-- deterministic rules own urgent/safety/applicability/evidence eligibility;
-- AI never becomes the source of truth;
-- raw answers/free text/full prior history are not silently uploaded;
-- no autonomous prescription changes or therapeutic regimens;
-- one measurement is not a diagnosis;
-- missing provenance is not guessed;
-- evidence completeness is not overall health;
-- current local storage is not application-layer encrypted medical-record storage;
-- Vite middleware is not production security infrastructure;
-- AI expansion requires demonstrated value, not enthusiasm for AI.
-
-For a new session, fetch current `main`, read `HANDOVER_NEXT_SESSION.md`, README, STATUS, this roadmap and the latest mission document before writing.
+For a new session, fetch current `main`, read `HANDOVER_NEXT_SESSION.md`, `docs/reviews/SR3_CONSUMER_VALUE_WOW_FACTOR.md`, STATUS and this roadmap before implementation.
