@@ -1,1 +1,13 @@
-{"name":"jaanch","private":true,"version":"0.1.0","workspaces":["apps/*","packages/*"],"scripts":{"web":"npm --workspace @jaanch/web run dev","mobile":"npm --workspace @jaanch/mobile run start","verify:core":"npm --workspace @jaanch/core run verify"}}
+{
+  "name": "jaanch",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": ["apps/*", "packages/*"],
+  "scripts": {
+    "web": "npm --workspace @jaanch/web run dev",
+    "mobile": "npm --workspace @jaanch/mobile run start",
+    "verify:core": "npm --workspace @jaanch/core run verify",
+    "verify:ai-runtime": "npm --workspace @jaanch/ai-runtime run verify",
+    "verify": "npm run verify:core && npm run verify:ai-runtime"
+  }
+}

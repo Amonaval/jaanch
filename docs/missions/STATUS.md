@@ -14,33 +14,39 @@
 - M09 — Recommendation Engine v1: IMPLEMENTED
 - Strategic Review 2: COMPLETE — CONTINUE WITH CHANGES
 - M09.1 — Clinical Applicability & Evidence Integrity Gate: IMPLEMENTED
+- M10 — AI Harness Runtime + Privacy/Evaluation: ENGINEERING IMPLEMENTED
 
-## M09.1 closure
-- Added first-class applicability policies for current metabolic, B12/nutrition, sleep and red-flag logic.
-- Rules are applicability-gated before they can create findings/evidence; unsupported contexts remain traceable instead of running adult logic plus a later warning.
-- Investigations carry applicability policy IDs and are suppressed upstream when the current context is unsupported.
-- Recommendations carry applicability policy IDs in addition to M06 safety disposition.
-- Removed raw HbA1c/B12 questionnaire fields from the adaptive flow.
-- Public `assess()` strips bare lab-number fields; only eligible normalized `LabRecord` evidence can drive lab-informed findings.
-- Core input normalization resolves contradictory `none + positive` selections and records normalization events.
-- React Native and React web enforce exclusive `none` selection in the UI as well.
-- Added shared Applicability & Evidence Integrity presentation semantics across platforms.
-- Clinical governance now inventories rules, investigations, recommendations, applicability policies and product safety policy IDs.
-- Golden scenarios cover pediatric/pregnancy applicability, canonical lab enforcement, stale/unverified/future labs, contradictory answers, kidney safety and governance coverage.
-- Current applicability/rule/investigation/recommendation mappings remain `prototype`; unsupported context means the current Jaanch mapping is not configured for that population, not that clinical evaluation is unnecessary.
+## M10 closure
+- Added privacy-minimized `JAANCH-AI-REVIEW-1.0` packet.
+- External AI packet creation requires explicit opt-in consent.
+- Raw questionnaire answers are not shared; only derived/relevant evidence is projected.
+- Only eligible normalized lab evidence is shared externally; stale/unverified/future/ineligible labs are omitted.
+- Added strict `AI-ASSESSMENT-1.0` JSON Schema plus local validation/invariant enforcement.
+- Deterministic urgent/safety/applicability boundaries cannot be silently relaxed by AI output.
+- Added deterministic AI Utility Gate evaluation primitives and golden fixtures.
+- Added server-only `@jaanch/ai-runtime` OpenAI Responses adapter; mobile/web never own API keys.
+- Live provider is disabled by default and requires explicit enablement/configuration.
+- OpenAI request uses strict JSON-Schema structured output and `store:false` baseline.
+- Canonical Markdown harness is loaded into the provider request and version metadata is retained.
+- Provider errors/invalid output leave the deterministic assessment unchanged.
+- `npm run verify` now includes AI-core and server request-construction checks.
+
+## AI Utility Gate
+Status: **PENDING REAL-MODEL EVALUATION**
+
+The repository/runtime implementation is complete, but no live API credential/model run is available in this session. Do not claim that M11 is approved from canned fixtures alone.
+
+Gate outcome must be one of:
+- `CONTINUE M11` only if a real configured model adds expected review value while preserving safety/applicability/evidence boundaries; or
+- `DEFER M11` if behavior is primarily paraphrase, unsafe, unsupported-context leakage, evidence misuse, or too variable.
 
 ## Current
-M10 — AI Harness Runtime + Privacy/Evaluation: NEXT
+AI Utility Gate live evaluation: NEXT DECISION POINT
 Effort: High
 
-## M10 closure gate
-AI Utility Gate must decide:
-- CONTINUE M11 if AI adds measurable review value while respecting deterministic safety/applicability/evidence boundaries; or
-- DEFER M11 and move M13 Longitudinal Health next if AI is primarily paraphrase or too variable.
-
-## Then
-M11 — AI Review Comparison & Safe Escalation: High, CONDITIONAL
-M13 — Longitudinal Health + Persistence: Medium/High; move ahead if AI utility is weak
+## Conditional next work
+- If gate passes: M11 — AI Review Comparison & Safe Escalation: High
+- If gate does not pass / remains unavailable: M13 — Longitudinal Health + Persistence: Medium/High
 
 ## Active SR2 constraints
 - No adult-oriented rule/test mapping may silently run in an unsupported population.
@@ -51,7 +57,7 @@ M13 — Longitudinal Health + Persistence: Medium/High; move ahead if AI utility
 - AI must not upgrade prototype logic to clinical authority.
 - Live AI data sharing must be opt-in and minimized.
 - Deterministic urgent/safety/applicability restrictions remain authoritative.
-- M11 proceeds only if M10 proves incremental review value.
+- M11 proceeds only if M10 proves incremental review value with a real configured model.
 - Do not introduce a generic overall health score.
 
 ## Execution agreement

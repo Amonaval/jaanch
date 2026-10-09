@@ -32,63 +32,54 @@
 - lab provenance.
 
 ### M09 — Recommendation Engine v1 — COMPLETE
-- lifestyle;
-- diet;
-- exercise;
-- monitoring;
-- clinician-review actions;
+- bounded lifestyle/diet/exercise/monitoring/clinician-review actions;
 - safety-gated therapeutic boundaries.
 
 ## Strategic Review 2 — COMPLETE
 Decision: **CONTINUE WITH CHANGES**.
 
-Key finding: the core product loop is strong, but population applicability and evidence-ingestion integrity must be hardened before live AI review.
+Key finding: population applicability and evidence-ingestion integrity had to be hardened before live AI review.
 
-## Immediate quality gate — M09.1
-### M09.1 — Clinical Applicability & Evidence Integrity Gate — HIGH
-Required scope:
-- first-class population/applicability contract for rules, investigations and recommendations;
-- prevent adult-oriented logic from silently running in unsupported pediatric/pregnancy/special-population contexts;
-- safety/applicability-aware investigation planning;
-- one canonical normalized lab-ingestion path;
-- remove/directly normalize raw `hba1c` / `b12` questionnaire bypasses;
-- answer normalization/contradiction validation (`none` exclusivity, impossible combinations);
-- governance reporting expanded to recommendations and applicability/safety policy;
-- golden scenarios for pediatric, pregnancy, kidney/liver, contradictory inputs and lab-ingestion bypass.
-
-Broad domain expansion remains frozen through M09.1 and the M10 AI Utility Gate.
+## M09.1 — Clinical Applicability & Evidence Integrity Gate — COMPLETE
+- first-class applicability contracts;
+- pre-rule population gating;
+- applicability-aware investigations/recommendations;
+- canonical normalized lab pathway;
+- raw-lab questionnaire bypass removed;
+- contradictory-answer normalization;
+- applicability UX/governance/verification.
 
 ## Phase 3 — Harnessed AI review
-### M10 — AI Harness Runtime + Privacy/Evaluation — HIGH
-Changed by SR2 from a simple runtime mission into a safety/privacy/evaluation mission.
-
-Required scope:
+### M10 — AI Harness Runtime + Privacy/Evaluation — ENGINEERING COMPLETE
+Implemented:
 - canonical Jaanch harness naming/versioning;
-- minimized AI packet derived from HAP rather than indiscriminately sharing all data;
-- explicit evidence eligibility/freshness semantics;
-- explicit prototype/reviewed/approved authority semantics;
-- strict structured-output validation;
-- immutable/separate AI result;
-- explicit opt-in sharing boundary;
-- model/runtime + harness + schema version trace;
-- deterministic fallback on timeout/error/invalid output;
-- fixed-fixture AI usefulness/safety evaluation;
-- live model adapter behind an optional feature flag.
+- privacy-minimized `JAANCH-AI-REVIEW-1.0` packet;
+- explicit external-AI opt-in boundary;
+- eligible-lab-only sharing;
+- strict `AI-ASSESSMENT-1.0` JSON Schema;
+- local post-provider safety/applicability invariant validation;
+- immutable/separate AI review result;
+- provider/model/harness/schema trace;
+- deterministic provider-error/invalid-output fallback;
+- fixed-fixture utility/safety evaluation;
+- server-only OpenAI Responses adapter behind disabled-by-default feature configuration;
+- request baseline uses strict JSON-Schema structured output and `store:false`.
 
-### AI Utility Gate — part of M10 closure
-Continue into M11 only if AI demonstrates incremental review value while preserving deterministic safety.
+### AI Utility Gate — NEXT DECISION POINT
+A real configured model must be evaluated before M11 proceeds.
 
-If AI is primarily paraphrase, invents facts, relaxes safety, treats ineligible evidence as current, or creates unacceptable variability:
+Continue into M11 only if live evaluation demonstrates incremental review value while preserving deterministic safety, applicability and evidence eligibility.
+
+If AI is primarily paraphrase, invents facts, relaxes safety, treats ineligible evidence as current, or is too variable:
 - DEFER M11;
 - MOVE M13 Longitudinal Health next.
 
 ### M11 — AI Review Comparison & Safe Escalation — HIGH, CONDITIONAL
-Renamed/reframed from “Engine vs AI Verdict.”
-
+Proceed only after a defensible `continue_m11` utility-gate result.
 - agreement/disagreement display;
-- missing evidence needed to resolve disagreement;
+- evidence needed to resolve disagreement;
 - safest interim action;
-- deterministic urgent/safety constraints remain authoritative;
+- deterministic urgent/safety/applicability constraints remain authoritative;
 - no silent merged medical verdict;
 - no more-permissive AI override.
 
@@ -102,20 +93,13 @@ Renamed/reframed from “Engine vs AI Verdict.”
 - lab history;
 - action-plan evolution.
 
-Move M13 ahead of M11 if the M10 AI Utility Gate is not convincingly passed.
+Move M13 ahead of M11 if the M10 AI Utility Gate is not convincingly passed or live evaluation remains unavailable.
 
 ### M12 — Rule Studio v1 — DEFERRED
-Rule Studio remains valuable but is not required for first user value. Defer until rule-authoring volume becomes a demonstrated bottleneck.
+Revisit only when rule-authoring volume becomes a demonstrated bottleneck.
 
-## Strategic Review 3 — after longitudinal + whichever AI path survives the utility gate
-Review:
-- end-to-end user value;
-- retention/retest value;
-- AI incremental usefulness if retained;
-- disagreement behavior;
-- privacy/data minimization;
-- pilot readiness;
-- ChatGPT/MCP fit.
+## Strategic Review 3
+Run after longitudinal work plus whichever AI path survives the utility gate. Review end-to-end user value, retention/retest value, AI incremental usefulness, disagreement behavior, privacy/data minimization, pilot readiness and ChatGPT/MCP fit.
 
 ## Phase 5 — Distribution and hardening
 ### M14 — MCP / ChatGPT App
@@ -128,6 +112,7 @@ Review:
 Before public release:
 - qualified clinical-content review/approval workflow;
 - source freshness/review process;
+- reproducible verification/release gate;
 - privacy/consent model;
 - audit trail;
 - accessibility;
@@ -136,8 +121,8 @@ Before public release:
 - release checklist.
 
 ## Deferred breadth
-Until M09.1 + M10 Utility Gate, defer:
-- additional health domains except where required to validate applicability abstractions;
+Until the AI Utility Gate / longitudinal decision:
+- additional health domains except where required to validate abstractions;
 - wearables;
 - lab-provider integrations;
 - clinician portal;
@@ -147,5 +132,5 @@ Until M09.1 + M10 Utility Gate, defer:
 ## Execution cadence
 - Build in 1–2 commits per mission.
 - Execute related missions in bounded batches; retain mission-level verification and status.
-- Medium effort is the default; raise to High for architecture/safety/AI/reconciliation/distribution missions.
+- Medium effort is default; use High for architecture/safety/AI/reconciliation/distribution missions.
 - Strategic reviews may continue, change, defer, merge or drop later work.
