@@ -3,7 +3,10 @@ import { assertEvidenceGraph } from './evidenceGraph';
 import { getAssessmentPlan, SKIPPED_ANSWER } from './planner';
 import { buildTestPlan } from './testPriority';
 import { validateClinicalSourceIds, validateClinicalSourceRegistry } from './clinicalSources';
-import type { Answers, EvidenceGraph, Finding, InvestigationDefinition, SafetyActionClass } from './types';
+import { buildHealthMapViewModel } from './healthMapView';
+import { buildLabReassessmentViewModel } from './labView';
+import { normalizeLabRecords, reassessWithLabs } from './labs';
+import type { Answers, EvidenceGraph, Finding, InvestigationDefinition, LabRecord, SafetyActionClass } from './types';
 
 export type VerificationCaseResult = { id: string; passed: boolean; details?: string };
 
@@ -54,11 +57,13 @@ export function runCoreVerification(): VerificationCaseResult[] {
   results.push(check('healthy-low-signal', low.findings.find((f) => f.id === 'MET-001')?.status === 'monitor', 'Expected low-signal metabolic status to remain monitor.'));
   results.push(check('healthy-safety-default', !low.safetyGate.urgent && low.safetyGate.flags.length === 0 && disposition(low, 'routine_supplement') === 'allowed' && disposition(low, 'medication_change') === 'blocked', 'Expected no configured special-population gate while medication changes remain globally blocked.'));
 
-  const highMetabolic = assess({ ...base, age: 42, weightKg: 86, waistCm: 101, activityDays: 1, familyDiabetes: true });
+  const highMetabolicAnswers: Answers = { ...base, age: 42, weightKg: 86, waistCm: 101, activityDays: 1, familyDiabetes: true };
+  const highMetabolic = assess(highMetabolicAnswers);
   const highMet = highMetabolic.findings.find((f) => f.id === 'MET-001');
   results.push(check('high-metabolic-signal', highMet?.status === 'high_attention' && highMetabolic.testPlan.minimalSetIds.includes('LAB-HBA1C'), 'Expected high metabolic attention and HbA1c in minimal evidence-resolution set.'));
 
-  const b12Missing = assess({ ...base, diet: 'vegetarian', currentConcerns: ['fatigue', 'tingling'] });
+  const b12MissingAnswers: Answers = { ...base, diet: 'vegetarian', currentConcerns: ['fatigue', 'tingling'] };
+  const b12Missing = assess(b12MissingAnswers);
   const b12MissingFinding = b12Missing.findings.find((f) => f.id === 'NUT-001');
   results.push(check('b12-missing-evidence', b12MissingFinding?.missingEvidenceIds.includes('nut.missing.b12') === true && b12Missing.testPlan.minimalSetIds.includes('LAB-B12'), 'Expected missing B12 evidence and B12 investigation selection.'));
 
@@ -112,6 +117,38 @@ export function runCoreVerification(): VerificationCaseResult[] {
 
   results.push(check('clinical-source-registry-valid', validateClinicalSourceRegistry().length === 0 && low.clinicalGovernance.unresolvedSourceIds.length === 0 && low.ruleTrace.every((trace) => trace.sourceIds.length > 0), 'Expected all active rules/investigations to resolve to registered clinical source IDs.'));
   results.push(check('unknown-clinical-source-rejected', validateClinicalSourceIds(['UNKNOWN-SOURCE']).length > 0, 'Expected unknown source IDs to fail governance validation.'));
+
+  const metabolicView = buildHealthMapViewModel(highMetabolic);
+  results.push(check('health-map-priority-order', metabolicView.topPriorities[0]?.kind === 'finding' && metabolicView.investigations.minimal[0]?.priorityLabel === 'High assessment priority', 'Expected shared Health Map semantics to prioritize the finding and use safe investigation wording.'));
+  const urgentView = buildHealthMapViewModel(redFlag);
+  results.push(check('health-map-urgent-order', urgentView.topPriorities[0]?.kind === 'urgent' && urgentView.investigations.blockedReason !== undefined, 'Expected urgent presentation to win ordering and preserve blocked investigation state.'));
+
+  const asOf = '2026-10-09T00:00:00.000Z';
+  const recentB12: LabRecord = { id:'lab-b12-recent', markerId:'vitamin_b12', value:150, unit:'pg/mL', collectedAt:'2026-10-01T00:00:00.000Z', source:'manual', verification:'user_confirmed' };
+  const b12Reassessment = reassessWithLabs(b12MissingAnswers, [recentB12], asOf);
+  const reassessedB12 = b12Reassessment.after.findings.find((f) => f.id === 'NUT-001');
+  const b12LabNode = b12Reassessment.after.evidenceGraph.nodes.find((node) => node.id === 'nut.obs.b12_low');
+  results.push(check('lab-reassessment-applies-recent-confirmed', b12Reassessment.appliedLabRecordIds.includes(recentB12.id) && reassessedB12?.evidenceLevel === 'lab_informed' && reassessedB12.status === 'high_attention' && b12Reassessment.changes.resolvedInvestigationIds.includes('LAB-B12'), 'Expected recent confirmed B12 to change assessment and resolve the B12 investigation.'));
+  results.push(check('lab-provenance-attached', b12LabNode?.provenance.labRecordIds?.includes(recentB12.id) === true && b12LabNode.detail.includes('2026-10-01'), 'Expected lab evidence node to retain source record and collection date.'));
+
+  const staleB12: LabRecord = { ...recentB12, id:'lab-b12-stale', collectedAt:'2024-01-01T00:00:00.000Z' };
+  const staleReassessment = reassessWithLabs(b12MissingAnswers, [staleB12], asOf);
+  results.push(check('lab-stale-not-applied', staleReassessment.normalizedLabs[0]?.freshness === 'stale' && staleReassessment.appliedLabRecordIds.length === 0 && staleReassessment.after.testPlan.recommendations.some((item) => item.id === 'LAB-B12'), 'Expected stale historical lab to remain visible but not resolve current evidence gap.'));
+
+  const unverifiedB12: LabRecord = { ...recentB12, id:'lab-b12-unverified', verification:'unverified' };
+  const unverified = reassessWithLabs(b12MissingAnswers, [unverifiedB12], asOf);
+  results.push(check('lab-unverified-not-applied', !unverified.normalizedLabs[0]?.eligibleForAssessment && unverified.appliedLabRecordIds.length === 0, 'Expected unverified extracted/manual evidence not to affect deterministic findings.'));
+
+  const futureB12: LabRecord = { ...recentB12, id:'lab-b12-future', collectedAt:'2026-11-01T00:00:00.000Z' };
+  const futureNormalized = normalizeLabRecords([futureB12], asOf)[0];
+  results.push(check('lab-future-date-rejected', futureNormalized?.freshness === 'future_invalid' && !futureNormalized.eligibleForAssessment, 'Expected future-dated lab to be rejected from reassessment.'));
+
+  const oldEligibleB12: LabRecord = { ...recentB12, id:'lab-b12-old-eligible', value:350, collectedAt:'2026-06-01T00:00:00.000Z' };
+  const newestWins = reassessWithLabs(b12MissingAnswers, [oldEligibleB12, recentB12], asOf);
+  results.push(check('lab-newest-eligible-wins', newestWins.appliedLabRecordIds.length === 1 && newestWins.appliedLabRecordIds[0] === recentB12.id, 'Expected newest eligible record per marker to drive reassessment.'));
+
+  const labView = buildLabReassessmentViewModel(b12Reassessment);
+  results.push(check('lab-view-shared-semantics', labView.appliedCount === 1 && labView.records[0]?.freshnessLabel === 'Recent' && labView.changes.some((change) => change.id === 'resolved-test:LAB-B12'), 'Expected shared lab view model to expose freshness and before/after changes consistently.'));
 
   const deterministicInput = { ...base, age: 42, weightKg: 86, waistCm: 101, activityDays: 1, familyDiabetes: true };
   results.push(check('deterministic-repeatability', stableResult(deterministicInput) === stableResult(deterministicInput), 'Expected identical inputs to produce identical deterministic core outputs.'));
