@@ -1,6 +1,7 @@
 import type { Answers, Domain, EvidenceEdge, EvidenceNode, Finding } from './types';
 import { assertEvidenceGraph, emptyEvidenceGraph, enrichEvidenceProvenance, mergeEvidenceGraph } from './evidenceGraph';
 import { validateClinicalSourceIds } from './clinicalSources';
+import { applicabilityPolicy, evaluateApplicability } from './applicability';
 
 export type RuleKind = 'finding' | 'red_flag';
 export type RuleMaturity = 'prototype' | 'reviewed' | 'approved';
@@ -23,6 +24,7 @@ export type AssessmentRule = {
   enabled: boolean;
   maturity: RuleMaturity;
   sourceIds: string[];
+  applicabilityPolicyId: string;
   evaluate: (answers: Answers) => RuleOutput;
 };
 
@@ -36,6 +38,9 @@ export type RuleTrace = {
   evidenceQuestionIds: string[];
   evidenceNodeIds: string[];
   sourceIds: string[];
+  applicabilityPolicyId: string;
+  applicabilityStatus: 'applicable' | 'unsupported_context' | 'clinician_review';
+  applicabilityReasons: string[];
 };
 
 export function validateRuleRegistry(rules: AssessmentRule[]): string[] {
@@ -48,6 +53,7 @@ export function validateRuleRegistry(rules: AssessmentRule[]): string[] {
     if (keys.has(key)) errors.push(`${key}: duplicate rule version.`);
     keys.add(key);
     for (const sourceError of validateClinicalSourceIds(rule.sourceIds)) errors.push(`${key}: ${sourceError}`);
+    if (!applicabilityPolicy(rule.applicabilityPolicyId)) errors.push(`${key}: unknown applicability policy ${rule.applicabilityPolicyId}.`);
   }
   return errors;
 }
@@ -62,6 +68,25 @@ export function executeRules(rules: AssessmentRule[], answers: Answers) {
   let evidenceGraph = emptyEvidenceGraph();
 
   for (const rule of rules.filter((item) => item.enabled)) {
+    const applicability = evaluateApplicability(rule.applicabilityPolicyId, answers);
+    if (!applicability.applicable) {
+      trace.push({
+        id: rule.id,
+        version: rule.version,
+        domain: rule.domain,
+        kind: rule.kind,
+        maturity: rule.maturity,
+        matched: false,
+        evidenceQuestionIds: [],
+        evidenceNodeIds: [],
+        sourceIds: rule.sourceIds,
+        applicabilityPolicyId: rule.applicabilityPolicyId,
+        applicabilityStatus: applicability.status,
+        applicabilityReasons: applicability.reasons,
+      });
+      continue;
+    }
+
     const output = rule.evaluate(answers);
     const nodes = enrichEvidenceProvenance(output.evidenceNodes ?? [], rule.id, rule.version);
     const edges = output.evidenceEdges ?? [];
@@ -77,6 +102,9 @@ export function executeRules(rules: AssessmentRule[], answers: Answers) {
       evidenceQuestionIds: output.evidenceQuestionIds ?? [],
       evidenceNodeIds: nodes.map((node) => node.id),
       sourceIds: rule.sourceIds,
+      applicabilityPolicyId: rule.applicabilityPolicyId,
+      applicabilityStatus: applicability.status,
+      applicabilityReasons: applicability.reasons,
     });
     if (output.finding) findings.push({ ...output.finding, ruleId: rule.id, ruleVersion: rule.version });
     if (output.redFlag) redFlags.push(output.redFlag);

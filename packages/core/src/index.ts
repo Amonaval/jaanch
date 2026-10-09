@@ -1,6 +1,8 @@
 export * from './types';
 export * from './questions';
 export * from './planner';
+export * from './answerNormalization';
+export * from './applicability';
 export * from './evidenceGraph';
 export * from './clinicalSources';
 export * from './safety';
@@ -13,7 +15,7 @@ export * from './recommendationView';
 export * from './verification';
 export * from './verificationPresentation';
 export * from './verificationRecommendations';
-export * from './engine';
+export { assess } from './engine';
 export * from './labs';
 export * from './labView';
 export * from './healthMapView';

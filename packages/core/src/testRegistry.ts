@@ -1,5 +1,6 @@
 import type { InvestigationDefinition } from './types';
 import { validateClinicalSourceIds } from './clinicalSources';
+import { applicabilityPolicy } from './applicability';
 
 /**
  * Prototype investigation catalog.
@@ -11,33 +12,36 @@ export const investigationCatalog: InvestigationDefinition[] = [
     id: 'LAB-HBA1C',
     title: 'HbA1c',
     kind: 'lab',
-    description: 'A glycemic marker that can reduce uncertainty in the current metabolic screening finding.',
+    description: 'A glycemic marker that can reduce uncertainty in the current adult nonpregnant metabolic screening finding.',
     resolvesEvidenceIds: ['met.missing.glycemic_marker'],
     alternativeGroup: 'glycemic-screening',
     utility: 90,
     maturity: 'prototype',
     sourceIds: ['ADA-2026-DIAGNOSIS'],
+    applicabilityPolicyId: 'APPL-METABOLIC-ADULT-NONPREG',
   },
   {
     id: 'LAB-FASTING-GLUCOSE',
     title: 'Fasting glucose',
     kind: 'lab',
-    description: 'An alternative glycemic marker for the same current metabolic evidence gap.',
+    description: 'An alternative glycemic marker for the same current adult nonpregnant metabolic evidence gap.',
     resolvesEvidenceIds: ['met.missing.glycemic_marker'],
     alternativeGroup: 'glycemic-screening',
     utility: 75,
     maturity: 'prototype',
     sourceIds: ['ADA-2026-DIAGNOSIS'],
+    applicabilityPolicyId: 'APPL-METABOLIC-ADULT-NONPREG',
   },
   {
     id: 'LAB-B12',
     title: 'Vitamin B12',
     kind: 'lab',
-    description: 'A measured B12 value can reduce the current nutrition/B12 evidence gap.',
+    description: 'A measured B12 value can reduce the current adult nutrition/B12 evidence gap.',
     resolvesEvidenceIds: ['nut.missing.b12'],
     utility: 90,
     maturity: 'prototype',
     sourceIds: ['NIH-ODS-B12-HP'],
+    applicabilityPolicyId: 'APPL-B12-ADULT',
   },
 ];
 
@@ -51,6 +55,7 @@ export function validateInvestigationCatalog(catalog: InvestigationDefinition[])
     if (!item.resolvesEvidenceIds.length) errors.push(`${item.id}: at least one evidence gap is required.`);
     if (!Number.isFinite(item.utility) || item.utility < 0 || item.utility > 100) errors.push(`${item.id}: utility must be 0–100.`);
     for (const sourceError of validateClinicalSourceIds(item.sourceIds)) errors.push(`${item.id}: ${sourceError}`);
+    if (!applicabilityPolicy(item.applicabilityPolicyId)) errors.push(`${item.id}: unknown applicability policy ${item.applicabilityPolicyId}.`);
   }
   return errors;
 }

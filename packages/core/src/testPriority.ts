@@ -1,5 +1,6 @@
-import type { EvidenceGraph, Finding, InvestigationDefinition, InvestigationPriority, TestPlan, TestRecommendation } from './types';
+import type { Answers, EvidenceGraph, Finding, InvestigationDefinition, InvestigationPriority, TestPlan, TestRecommendation } from './types';
 import { investigationCatalog, validateInvestigationCatalog } from './testRegistry';
+import { evaluateApplicability } from './applicability';
 
 const priorityRank: Record<InvestigationPriority, number> = {
   essential: 0,
@@ -41,6 +42,7 @@ function buildRecommendation(definition: InvestigationDefinition, findings: Find
     selectedForMinimalSet: false,
     maturity: definition.maturity,
     sourceIds: definition.sourceIds,
+    applicabilityPolicyId: definition.applicabilityPolicyId,
   };
 }
 
@@ -72,7 +74,7 @@ function selectMinimalSet(recommendations: TestRecommendation[], definitions: In
   return { selected, uncovered: [...uncovered] };
 }
 
-export function buildTestPlan(graph: EvidenceGraph, findings: Finding[], redFlags: string[], catalog = investigationCatalog): TestPlan {
+export function buildTestPlan(graph: EvidenceGraph, findings: Finding[], redFlags: string[], answers: Answers, catalog = investigationCatalog): TestPlan {
   const validationErrors = validateInvestigationCatalog(catalog);
   if (validationErrors.length) throw new Error(`Invalid investigation catalog: ${validationErrors.join(' | ')}`);
 
@@ -81,16 +83,35 @@ export function buildTestPlan(graph: EvidenceGraph, findings: Finding[], redFlag
       recommendations: [],
       minimalSetIds: [],
       uncoveredEvidenceIds: [],
+      suppressedRecommendations: [],
       blockedReason: 'Urgent red-flag evidence is active; routine screening/test prioritization is suppressed until appropriate medical evaluation.',
     };
   }
 
   const targetEvidenceIds = [...new Set(findings.flatMap((finding) => finding.missingEvidenceIds))];
+  const suppressedRecommendations: TestPlan['suppressedRecommendations'] = [];
   const recommendations = catalog
-    .map((definition) => buildRecommendation(definition, findings, graph))
+    .map((definition) => {
+      const related = definition.resolvesEvidenceIds.some((id) => targetEvidenceIds.includes(id));
+      if (!related) return undefined;
+      const applicability = evaluateApplicability(definition.applicabilityPolicyId, answers);
+      if (!applicability.applicable) {
+        suppressedRecommendations.push({
+          id: definition.id,
+          title: definition.title,
+          applicabilityPolicyId: definition.applicabilityPolicyId,
+          status: applicability.status === 'applicable' ? 'unsupported_context' : applicability.status,
+          reasons: applicability.reasons,
+        });
+        return undefined;
+      }
+      return buildRecommendation(definition, findings, graph);
+    })
     .filter((item): item is TestRecommendation => Boolean(item));
 
-  const { selected, uncovered } = selectMinimalSet(recommendations, catalog, targetEvidenceIds);
+  const resolvableEvidenceIds = [...new Set(recommendations.flatMap((item) => item.resolvesEvidenceIds))];
+  const { selected, uncovered } = selectMinimalSet(recommendations, catalog, resolvableEvidenceIds);
+  const unresolvedByApplicability = targetEvidenceIds.filter((id) => !resolvableEvidenceIds.includes(id));
   const withSelection = recommendations
     .map((item) => ({ ...item, selectedForMinimalSet: selected.has(item.id) }))
     .sort((a, b) => {
@@ -102,6 +123,7 @@ export function buildTestPlan(graph: EvidenceGraph, findings: Finding[], redFlag
   return {
     recommendations: withSelection,
     minimalSetIds: withSelection.filter((item) => item.selectedForMinimalSet).map((item) => item.id),
-    uncoveredEvidenceIds: uncovered,
+    uncoveredEvidenceIds: [...new Set([...uncovered, ...unresolvedByApplicability])],
+    suppressedRecommendations,
   };
 }

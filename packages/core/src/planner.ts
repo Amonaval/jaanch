@@ -1,5 +1,6 @@
 import type { Answers, Condition, Domain, Question } from './types';
 import { questions } from './questions';
+import { normalizeAnswers } from './answerNormalization';
 
 export const SKIPPED_ANSWER = '__skipped__';
 
@@ -44,7 +45,8 @@ export function conditionMatches(condition: Condition, answers: Answers): boolea
   }
 }
 
-export function domainActivations(answers: Answers): DomainActivation[] {
+export function domainActivations(input: Answers): DomainActivation[] {
+  const answers = normalizeAnswers(input).answers;
   const heightM = num(answers, 'heightCm') / 100;
   const weight = num(answers, 'weightKg');
   const bmi = Number.isFinite(heightM) && heightM > 0 && Number.isFinite(weight) ? weight / (heightM * heightM) : Number.NaN;
@@ -52,13 +54,7 @@ export function domainActivations(answers: Answers): DomainActivation[] {
   const sleep = num(answers, 'sleepHours');
 
   const map: Record<Domain, string[]> = {
-    baseline: ['Core assessment context'],
-    metabolic: [],
-    cardiovascular: [],
-    nutrition: [],
-    sleep: [],
-    activity: [],
-    safety: [],
+    baseline: ['Core assessment context'], metabolic: [], cardiovascular: [], nutrition: [], sleep: [], activity: [], safety: [],
   };
 
   if (answers.familyDiabetes === true) map.metabolic.push('First-degree family history of diabetes');
@@ -66,28 +62,19 @@ export function domainActivations(answers: Answers): DomainActivation[] {
   if (diagnosed(answers, 'diabetes') || diagnosed(answers, 'prediabetes')) map.metabolic.push('Existing glucose-related diagnosis');
   if (Number.isFinite(bmi) && bmi >= 25) map.metabolic.push('BMI screening threshold reached');
   if (Number.isFinite(waist) && waist >= 90) map.metabolic.push('Waist screening threshold reached');
-
   if (answers.smoking === true) map.cardiovascular.push('Current tobacco exposure');
   if (diagnosed(answers, 'hypertension') || diagnosed(answers, 'heart')) map.cardiovascular.push('Existing cardiovascular diagnosis');
   if (has(answers, 'currentConcerns', 'chestPain')) map.cardiovascular.push('Chest pain or pressure reported');
-
   if (answers.diet === 'vegetarian' || answers.diet === 'vegan') map.nutrition.push('Plant-based diet pattern');
   if (has(answers, 'currentConcerns', 'fatigue') || has(answers, 'currentConcerns', 'tingling')) map.nutrition.push('Symptoms relevant to nutritional screening');
-  if (answers.recentLabs === true) map.nutrition.push('Recent laboratory evidence available');
-
+  if (answers.recentLabs === true) map.nutrition.push('Recent laboratory evidence available for separate normalized entry');
   if (Number.isFinite(sleep) && sleep < 7) map.sleep.push('Short sleep duration');
   if (has(answers, 'currentConcerns', 'sleep')) map.sleep.push('Sleep concern reported');
-
   const activityDays = num(answers, 'activityDays');
   if (Number.isFinite(activityDays) && activityDays < 5) map.activity.push('Activity below general screening target');
-
   if (has(answers, 'currentConcerns', 'chestPain')) map.safety.push('Chest pain requires red-flag clarification');
 
-  return (Object.keys(map) as Domain[]).map((domain) => ({
-    domain,
-    active: domain === 'baseline' || map[domain].length > 0,
-    reasons: map[domain],
-  }));
+  return (Object.keys(map) as Domain[]).map((domain) => ({ domain, active: domain === 'baseline' || map[domain].length > 0, reasons: map[domain] }));
 }
 
 function questionWhy(question: Question, activations: DomainActivation[]): string[] {
@@ -99,14 +86,16 @@ function questionWhy(question: Question, activations: DomainActivation[]): strin
 }
 
 export function isQuestionEligible(question: Question, answers: Answers, activations = domainActivations(answers)): boolean {
-  const dependenciesMatch = !question.showWhen?.length || question.showWhen.every((condition) => conditionMatches(condition, answers));
+  const normalized = normalizeAnswers(answers).answers;
+  const dependenciesMatch = !question.showWhen?.length || question.showWhen.every((condition) => conditionMatches(condition, normalized));
   if (question.master) return dependenciesMatch;
   const domain = activations.find((item) => item.domain === question.domain);
   if (!domain?.active) return false;
   return dependenciesMatch;
 }
 
-export function getAssessmentPlan(answers: Answers): AssessmentPlan {
+export function getAssessmentPlan(input: Answers): AssessmentPlan {
+  const answers = normalizeAnswers(input).answers;
   const activations = domainActivations(answers);
   const planned = questions
     .filter((question) => isQuestionEligible(question, answers, activations))
@@ -116,28 +105,14 @@ export function getAssessmentPlan(answers: Answers): AssessmentPlan {
       const answered = value !== undefined && value !== '';
       const masterBoost = question.master ? -1000 : 0;
       const safetyBoost = question.domain === 'safety' ? -500 : 0;
-      return {
-        question,
-        rank: masterBoost + safetyBoost + question.priority,
-        answered,
-        skipped,
-        whyAsked: questionWhy(question, activations),
-      } satisfies PlannedQuestion;
+      return { question, rank: masterBoost + safetyBoost + question.priority, answered, skipped, whyAsked: questionWhy(question, activations) } satisfies PlannedQuestion;
     })
     .sort((a, b) => a.rank - b.rank || a.question.id.localeCompare(b.question.id));
 
   const nextQuestion = planned.find((item) => !item.answered);
   const answered = planned.filter((item) => item.answered).length;
   const skipped = planned.filter((item) => item.skipped).length;
-  return {
-    activeDomains: activations,
-    questions: planned,
-    nextQuestion,
-    answered,
-    skipped,
-    remaining: planned.length - answered,
-    complete: !nextQuestion,
-  };
+  return { activeDomains: activations, questions: planned, nextQuestion, answered, skipped, remaining: planned.length - answered, complete: !nextQuestion };
 }
 
 export const visibleQuestions = (answers: Answers) => getAssessmentPlan(answers).questions.map((item) => item.question);

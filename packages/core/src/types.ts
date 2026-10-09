@@ -27,6 +27,39 @@ export type Question = {
 export type AnswerValue = string | number | boolean | string[];
 export type Answers = Record<string, AnswerValue>;
 
+export type InputValidationIssue = {
+  id: string;
+  field: string;
+  severity: 'normalized' | 'warning' | 'invalid';
+  message: string;
+};
+
+export type InputValidationReport = {
+  normalized: boolean;
+  issues: InputValidationIssue[];
+};
+
+export type ApplicabilityStatus = 'applicable' | 'unsupported_context' | 'clinician_review';
+export type ApplicabilityPolicy = {
+  id: string;
+  maturity: 'prototype' | 'reviewed' | 'approved';
+  provenance: 'product_policy' | 'clinical_source';
+  sourceIds: string[];
+  description: string;
+  minAge?: number;
+  maxAge?: number;
+  excludedReproductiveContexts?: string[];
+  excludedDiagnosedConditions?: string[];
+  requireKnownFemaleReproductiveContext?: boolean;
+};
+
+export type ApplicabilityDecision = {
+  policyId: string;
+  status: ApplicabilityStatus;
+  applicable: boolean;
+  reasons: string[];
+};
+
 export type EvidenceNodeKind = 'observed' | 'derived' | 'missing';
 export type EvidenceSourceType = 'questionnaire' | 'measurement' | 'lab' | 'derived' | 'missing';
 export type EvidenceStrength = 'weak' | 'moderate' | 'strong' | 'decisive';
@@ -101,6 +134,7 @@ export type InvestigationDefinition = {
   utility: number;
   maturity: InvestigationMaturity;
   sourceIds: string[];
+  applicabilityPolicyId: string;
 };
 
 export type TestRecommendation = {
@@ -115,12 +149,22 @@ export type TestRecommendation = {
   selectedForMinimalSet: boolean;
   maturity: InvestigationMaturity;
   sourceIds: string[];
+  applicabilityPolicyId: string;
+};
+
+export type SuppressedInvestigation = {
+  id: string;
+  title: string;
+  applicabilityPolicyId: string;
+  status: Exclude<ApplicabilityStatus, 'applicable'>;
+  reasons: string[];
 };
 
 export type TestPlan = {
   recommendations: TestRecommendation[];
   minimalSetIds: string[];
   uncoveredEvidenceIds: string[];
+  suppressedRecommendations: SuppressedInvestigation[];
   blockedReason?: string;
 };
 
@@ -153,6 +197,13 @@ export type ClinicalGovernanceReport = {
   prototypeInvestigationIds: string[];
   reviewedInvestigationIds: string[];
   approvedInvestigationIds: string[];
+  prototypeRecommendationIds: string[];
+  reviewedRecommendationIds: string[];
+  approvedRecommendationIds: string[];
+  prototypeApplicabilityPolicyIds: string[];
+  reviewedApplicabilityPolicyIds: string[];
+  approvedApplicabilityPolicyIds: string[];
+  productPolicyIds: string[];
 };
 
 export type SafetyActionClass =
@@ -199,6 +250,9 @@ export type RuleTraceSummary = {
   evidenceQuestionIds: string[];
   evidenceNodeIds: string[];
   sourceIds: string[];
+  applicabilityPolicyId: string;
+  applicabilityStatus: ApplicabilityStatus;
+  applicabilityReasons: string[];
 };
 
 export type LabMarkerId = 'hba1c' | 'vitamin_b12';
@@ -258,6 +312,7 @@ export type AssessmentResult = {
   testPlan: TestPlan;
   safetyGate: SafetyGate;
   clinicalGovernance: ClinicalGovernanceReport;
+  inputValidation: InputValidationReport;
   evidenceCompleteness: number;
   answered: number;
   available: number;

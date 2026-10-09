@@ -1,4 +1,4 @@
-import { assess } from './engine';
+import { assess, assessWithCanonicalLabEvidence } from './engine';
 import type {
   Answers,
   AssessmentResult,
@@ -21,33 +21,9 @@ export type LabMarkerDefinition = {
   usableDays: number;
 };
 
-/**
- * Freshness windows are Jaanch product semantics for reassessment recency.
- * They are not diagnostic validity periods and do not replace clinician judgment.
- */
 export const labMarkerCatalog: LabMarkerDefinition[] = [
-  {
-    id: 'hba1c',
-    label: 'HbA1c',
-    answerId: 'hba1c',
-    canonicalUnit: '%',
-    acceptedUnits: ['%', 'percent'],
-    min: 3,
-    max: 20,
-    recentDays: 180,
-    usableDays: 365,
-  },
-  {
-    id: 'vitamin_b12',
-    label: 'Vitamin B12',
-    answerId: 'b12',
-    canonicalUnit: 'pg/mL',
-    acceptedUnits: ['pg/mL', 'pg/ml'],
-    min: 50,
-    max: 2500,
-    recentDays: 180,
-    usableDays: 365,
-  },
+  { id:'hba1c', label:'HbA1c', answerId:'hba1c', canonicalUnit:'%', acceptedUnits:['%','percent'], min:3, max:20, recentDays:180, usableDays:365 },
+  { id:'vitamin_b12', label:'Vitamin B12', answerId:'b12', canonicalUnit:'pg/mL', acceptedUnits:['pg/mL','pg/ml'], min:50, max:2500, recentDays:180, usableDays:365 },
 ];
 
 const DAY_MS = 86_400_000;
@@ -59,9 +35,7 @@ function asDate(value: string) {
 }
 
 function normalizeUnit(definition: LabMarkerDefinition, unit: string) {
-  return definition.acceptedUnits.find((candidate) => candidate.toLowerCase() === unit.trim().toLowerCase())
-    ? definition.canonicalUnit
-    : undefined;
+  return definition.acceptedUnits.find((candidate) => candidate.toLowerCase() === unit.trim().toLowerCase()) ? definition.canonicalUnit : undefined;
 }
 
 export function normalizeLabRecords(records: LabRecord[], asOf = new Date().toISOString()): NormalizedLabRecord[] {
@@ -78,10 +52,7 @@ export function normalizeLabRecords(records: LabRecord[], asOf = new Date().toIS
     if (!Number.isFinite(record.value)) issues.push('Lab value must be a finite number.');
     if (!collected) issues.push('Collection date/time is invalid.');
     if (!normalizedUnit) issues.push(`Unsupported unit for ${record.markerId}: ${record.unit}`);
-
-    if (definition && Number.isFinite(record.value) && (record.value < definition.min || record.value > definition.max)) {
-      issues.push(`Value ${record.value} is outside the configured plausible range ${definition.min}–${definition.max} ${definition.canonicalUnit}.`);
-    }
+    if (definition && Number.isFinite(record.value) && (record.value < definition.min || record.value > definition.max)) issues.push(`Value ${record.value} is outside the configured plausible range ${definition.min}–${definition.max} ${definition.canonicalUnit}.`);
 
     if (collected) {
       ageDays = Math.floor((asOfDate.getTime() - collected.getTime()) / DAY_MS);
@@ -94,27 +65,9 @@ export function normalizeLabRecords(records: LabRecord[], asOf = new Date().toIS
     if (freshness === 'future_invalid') issues.push('Collection date is in the future relative to reassessment time.');
     if (record.verification !== 'user_confirmed') issues.push('Lab value is not user-confirmed.');
 
-    const eligibleForAssessment = Boolean(
-      definition
-      && normalizedUnit
-      && collected
-      && Number.isFinite(record.value)
-      && record.value >= definition.min
-      && record.value <= definition.max
-      && record.verification === 'user_confirmed'
-      && freshness !== 'stale'
-      && freshness !== 'future_invalid',
-    );
+    const eligibleForAssessment = Boolean(definition && normalizedUnit && collected && Number.isFinite(record.value) && record.value >= definition.min && record.value <= definition.max && record.verification === 'user_confirmed' && freshness !== 'stale' && freshness !== 'future_invalid');
 
-    return {
-      ...record,
-      canonicalUnit: definition?.canonicalUnit ?? record.unit,
-      normalizedValue: record.value,
-      ageDays,
-      freshness,
-      eligibleForAssessment,
-      issues,
-    };
+    return { ...record, canonicalUnit: definition?.canonicalUnit ?? record.unit, normalizedValue: record.value, ageDays, freshness, eligibleForAssessment, issues };
   });
 }
 
@@ -127,15 +80,19 @@ export function latestEligibleLabs(records: NormalizedLabRecord[]) {
   return [...selected.values()];
 }
 
-export function applyLabRecordsToAnswers(answers: Answers, normalized: NormalizedLabRecord[]): { answers: Answers; applied: NormalizedLabRecord[] } {
+export function applyLabRecordsToAnswers(answers: Answers, normalized: NormalizedLabRecord[]): { answers: Answers; applied: NormalizedLabRecord[]; trustedAnswerIds: string[] } {
   const applied = latestEligibleLabs(normalized);
   const next: Answers = { ...answers };
+  const trustedAnswerIds: string[] = [];
   for (const record of applied) {
     const definition = markerById.get(record.markerId);
-    if (definition) next[definition.answerId] = record.normalizedValue;
+    if (definition) {
+      next[definition.answerId] = record.normalizedValue;
+      trustedAnswerIds.push(definition.answerId);
+    }
   }
   if (applied.length) next.recentLabs = true;
-  return { answers: next, applied };
+  return { answers: next, applied, trustedAnswerIds };
 }
 
 function attachLabProvenance(result: AssessmentResult, applied: NormalizedLabRecord[]): AssessmentResult {
@@ -154,11 +111,7 @@ function attachLabProvenance(result: AssessmentResult, applied: NormalizedLabRec
         const record = node.provenance.questionIds.map((id) => byAnswerId.get(id)).find(Boolean);
         if (!record) return node;
         const freshnessLabel = record.freshness === 'recent' ? 'recent' : 'aging';
-        return {
-          ...node,
-          detail: `${node.detail} Collected ${record.collectedAt.slice(0, 10)} · ${freshnessLabel} · ${record.source}.`,
-          provenance: { ...node.provenance, labRecordIds: [record.id] },
-        };
+        return { ...node, detail: `${node.detail} Collected ${record.collectedAt.slice(0, 10)} · ${freshnessLabel} · ${record.source}.`, provenance: { ...node.provenance, labRecordIds: [record.id] } };
       }),
     },
   };
@@ -169,21 +122,8 @@ function compareAssessmentResults(before: AssessmentResult, after: AssessmentRes
   const findingChanges = after.findings.flatMap((finding) => {
     const previous = beforeById.get(finding.id);
     if (!previous) return [];
-    if (
-      previous.status === finding.status
-      && previous.evidenceLevel === finding.evidenceLevel
-      && previous.urgency === finding.urgency
-    ) return [];
-    return [{
-      findingId: finding.id,
-      title: finding.title,
-      beforeStatus: previous.status,
-      afterStatus: finding.status,
-      beforeEvidenceLevel: previous.evidenceLevel,
-      afterEvidenceLevel: finding.evidenceLevel,
-      beforeUrgency: previous.urgency,
-      afterUrgency: finding.urgency,
-    }];
+    if (previous.status === finding.status && previous.evidenceLevel === finding.evidenceLevel && previous.urgency === finding.urgency) return [];
+    return [{ findingId:finding.id, title:finding.title, beforeStatus:previous.status, afterStatus:finding.status, beforeEvidenceLevel:previous.evidenceLevel, afterEvidenceLevel:finding.evidenceLevel, beforeUrgency:previous.urgency, afterUrgency:finding.urgency }];
   });
 
   const beforeTests = new Set(before.testPlan.recommendations.map((item) => item.id));
@@ -203,15 +143,8 @@ export function reassessWithLabs(answers: Answers, records: LabRecord[], asOf = 
   const before = assess(answers);
   const normalizedLabs = normalizeLabRecords(records, asOf);
   const appliedResult = applyLabRecordsToAnswers(answers, normalizedLabs);
-  const after = attachLabProvenance(assess(appliedResult.answers), appliedResult.applied);
-  return {
-    asOf,
-    before,
-    after,
-    normalizedLabs,
-    appliedLabRecordIds: appliedResult.applied.map((record) => record.id),
-    changes: compareAssessmentResults(before, after),
-  };
+  const after = attachLabProvenance(assessWithCanonicalLabEvidence(appliedResult.answers, appliedResult.trustedAnswerIds), appliedResult.applied);
+  return { asOf, before, after, normalizedLabs, appliedLabRecordIds: appliedResult.applied.map((record) => record.id), changes: compareAssessmentResults(before, after) };
 }
 
 export function labMarkerDefinition(markerId: LabMarkerId) {
