@@ -16,6 +16,7 @@ export * from './testPriority';
 export * from './recommendations';
 export * from './recommendationView';
 export * from './longitudinal';
+export * from './resultView';
 export * from './aiReview';
 export * from './verification';
 export * from './verificationIntake';

@@ -122,13 +122,29 @@ function changeSummary(previous:AssessmentSnapshot,current:AssessmentSnapshot):C
     ? 'Evidence completeness is unchanged.'
     : `Evidence completeness ${comparison.evidenceCompletenessDelta>0?'improved':'decreased'} by ${delta} percentage point${delta===1?'':'s'}.`;
   return {
-    title:'Since your last saved check-in',
+    title:'Compared with your previous saved check-in',
     headline:meaningful?`${meaningful} meaningful change${meaningful===1?'':'s'} detected`:'No meaningful assessment change detected',
     evidenceDelta:comparison.evidenceCompletenessDelta,
     evidenceDetail,
     items:items.slice(0,5),
     labChanges:labChanges.slice(0,4),
   };
+}
+
+function snapshotEquivalent(a:AssessmentSnapshot,b:AssessmentSnapshot):boolean {
+  const fingerprint=(snapshot:AssessmentSnapshot)=>JSON.stringify({
+    answers:snapshot.answers,
+    labs:snapshot.labs.map(item=>({markerId:item.markerId,normalizedValue:item.normalizedValue,canonicalUnit:item.canonicalUnit,eligibleForAssessment:item.eligibleForAssessment})),
+    findings:snapshot.assessment.findings.map(item=>({id:item.id,status:item.status,urgency:item.urgency,confidence:item.confidence,evidenceLevel:item.evidenceLevel})),
+    recommendations:snapshot.recommendationPlan.recommendations.map(item=>({id:item.id,disposition:item.disposition,priority:item.priority})),
+  });
+  return fingerprint(a)===fingerprint(b);
+}
+
+function comparisonBaseline(history:LongitudinalHistory|undefined,current:AssessmentSnapshot|undefined):AssessmentSnapshot|undefined {
+  if(!history?.snapshots.length||!current) return undefined;
+  const [latest,previous]=history.snapshots;
+  return latest&&snapshotEquivalent(latest,current)?previous:latest;
 }
 
 export function buildConsumerResultViewModel(input:{
@@ -143,13 +159,15 @@ export function buildConsumerResultViewModel(input:{
   const status=resultStatus(input.result,healthMap);
   const hero=heroFor(status);
 
-  const mattersNow:ConsumerResultItem[]=healthMap.topPriorities.map(item=>({
-    id:item.id,
-    title:item.title,
-    detail:item.detail,
-    tone:item.tone,
-    meta:item.kind==='investigation'?'Evidence gap':item.kind==='finding'?'Screening signal':item.kind==='urgent'?'Urgent':'Safety context',
-  })).slice(0,4);
+  const mattersNow:ConsumerResultItem[]=healthMap.topPriorities
+    .filter(item=>item.kind!=='investigation')
+    .map(item=>({
+      id:item.id,
+      title:item.title,
+      detail:item.detail,
+      tone:item.tone,
+      meta:item.kind==='finding'?'Screening signal':item.kind==='urgent'?'Urgent':'Safety context',
+    })).slice(0,4);
 
   const actions:ConsumerActionItem[]=recommendations.top
     .filter(item=>item.dispositionLabel!=='Blocked')
@@ -198,8 +216,8 @@ export function buildConsumerResultViewModel(input:{
       ?? uncertaintyFromTests[0]?.title
       ?? 'Keep your information current and repeat the assessment when meaningful evidence changes.';
 
-  const latest=input.history?.snapshots[0];
-  const changes=latest&&input.currentSnapshot&&latest.id!==input.currentSnapshot.id?changeSummary(latest,input.currentSnapshot):undefined;
+  const baseline=comparisonBaseline(input.history,input.currentSnapshot);
+  const changes=baseline&&input.currentSnapshot?changeSummary(baseline,input.currentSnapshot):undefined;
   const interpretedAreas=healthMap.findings.filter(item=>item.statusLabel!=='Insufficient data').length;
 
   return {

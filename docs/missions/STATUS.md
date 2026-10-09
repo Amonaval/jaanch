@@ -39,11 +39,35 @@ Implemented:
 - broader markers are retained as `recorded_unassessed` context rather than silently interpreted;
 - internal HAP can retain richer captured context; external AI minimization policy remains separate;
 - longitudinal snapshots retain custom/manual capture context;
-- materially redesigned web/mobile assessment surfaces and clearer result hierarchy;
-- new intake/navigation verification suite added to core verification.
+- materially redesigned web/mobile assessment surfaces;
+- intake/navigation verification suite added to core verification.
 
-## Trust-gate scenarios to retest manually
-1. healthy adult;
+## M13.2 — Result Quality + Health Map Consumer UX v3
+Status: **ENGINEERING IMPLEMENTED — OWNER RESULT-UX RETEST REQUIRED**
+Effort: **High**
+
+Implemented:
+- new shared `buildConsumerResultViewModel` for web/mobile result semantics;
+- four bounded hero states: urgent / attention / needs evidence / quiet;
+- explicit warning that evidence completeness is not an overall health score;
+- one best-next-step summary at the top of the Health Map;
+- result hierarchy: What matters now → What you can do → What evidence supports → What remains uncertain;
+- concrete recommendation steps surfaced instead of rationale-only cards;
+- supported evidence separated from uncertainty rather than flattened into one finding list;
+- current unsaved result compared with latest saved check-in;
+- change summary includes finding direction, eligible lab changes and evidence-completeness delta;
+- recorded-but-uninterpreted facts remain visible without becoming unsupported conclusions;
+- technical governance/HAP demoted behind details on web;
+- mobile and web consume the same shared result narrative;
+- presentation regression suite expanded for result semantics and longitudinal change narrative.
+
+## Combined owner retest gate
+M13.1/M13.2 are not product-validated until hands-on use confirms both:
+1. **Jaanch captured the material facts I expected it to know.**
+2. **Without opening technical details, I can tell what matters, what to do, what is unknown, and what changed.**
+
+Recommended scenarios:
+1. healthy/low-risk adult;
 2. vegetarian with known low B12 + low Vitamin D;
 3. cholesterol medicine + blood-pressure medicine;
 4. daily walker with little formal exercise;
@@ -52,32 +76,34 @@ Implemented:
 7. Back → Forward after adaptive follow-up exists;
 8. edit an earlier section so the adaptive plan changes;
 9. urgent chest-pain path;
-10. repeat check-in preserving manual/custom facts.
-
-M13.1 is not considered product-validated until the owner reruns these scenarios and confirms that material health context is captured faithfully.
+10. repeat check-in preserving manual/custom facts;
+11. repeat check-in with meaningful activity/measurement/lab change;
+12. repeat check-in with no meaningful change;
+13. compare web/mobile result meaning and ordering.
 
 ## Current product milestone
-**Credible-assessment alpha candidate — awaiting owner retest.**
+**Consumer-result alpha candidate — awaiting owner retest.**
 
-The previous M13 build should be considered an engineering prototype. M13.1 addresses the known intake/navigation shortcomings but still requires hands-on validation.
+The M13 build remains an engineering prototype. M13.1 repaired intake/navigation trust problems; M13.2 repairs result comprehension and action hierarchy.
 
 ## Next work after retest
-1. Fix any M13.1 trust-gate defects found in hands-on use.
-2. **M13.2 — Result Quality + Health Map Consumer UX v3** — High.
-3. **M13.3 — Clinical Evidence Capture v2 / Report UX** — High.
-4. **M13.4 — Narrow Clinical Interpretation Expansion** — High, only after M13.1/M13.2 pass.
-5. **M13.5 — Profile + Secure Persistence Architecture v1** — High.
-6. Resume **M10 live AI Utility Gate** only after intake/result quality is representative.
-7. **M11** remains conditional on M10 proving incremental value.
-8. Strategic Review 3.
-9. M15A Pilot Safety / Privacy / Release Gate.
-10. M14 MCP / ChatGPT App later; M15B production/store hardening last.
+1. Fix any M13.1/M13.2 defects found in hands-on use.
+2. **M13.3 — Clinical Evidence Capture v2 / Report UX** — High.
+3. **M13.4 — Narrow Clinical Interpretation Expansion** — High, only after M13.1/M13.2 pass.
+4. **M13.5 — Profile + Secure Persistence Architecture v1** — High.
+5. Resume **M10 live AI Utility Gate** only after intake/result quality is representative.
+6. **M11** remains conditional on M10 proving incremental value.
+7. Strategic Review 3.
+8. M15A Pilot Safety / Privacy / Release Gate.
+9. M14 MCP / ChatGPT App later; M15B production/store hardening last.
 
 ## Active constraints
 - Assessment quality is release-blocking.
+- Result comprehension is release-blocking.
 - Capture breadth does not authorize interpretation breadth.
 - Manual/unassessed facts must not become diagnoses automatically.
-- AI must not compensate for poor intake.
+- Evidence completeness must never be represented as overall health.
+- AI must not compensate for poor intake or confusing deterministic results.
 - Deterministic urgent/safety/applicability rules remain authoritative.
 - Cloud persistence remains behind intake/result stabilization.
 - No generic overall health score.
@@ -85,5 +111,4 @@ The previous M13 build should be considered an engineering prototype. M13.1 addr
 ## Execution agreement
 - Repository: `Amonaval/jaanch`
 - Normal mission commit budget: 1–2 commits.
-- M13.1 corrective mission explicitly allowed 3–4 commits.
-- High effort for assessment quality, safety, applicability, AI, persistence, clinical expansion and release gates.
+- High effort for assessment quality, result quality, safety, applicability, AI, persistence, clinical expansion and release gates.
