@@ -1,0 +1,16 @@
+{
+  "protocol": "JAANCH-PROFILE-1.0",
+  "id": "mock-low-risk-adult",
+  "label": "Mock 1 — Low-risk adult",
+  "description": "A generally low-risk 32-year-old adult with regular activity and a recent non-elevated blood-pressure reading.",
+  "exportedAt": "2026-10-09T08:30:00.000Z",
+  "draft": {
+    "answers": {"age":32,"sex":"male","heightCm":175,"weightKg":68,"waistCm":82,"diet":"vegetarian","sleepHours":7.5,"smoking":false,"diagnosedConditions":["none"],"currentConcerns":["none"],"prescriptionMedications":false,"supplementUse":false},
+    "capturedContext": {
+      "unitPreference":"metric","customConditions":[],"medications":[],"supplements":[],"customConcerns":[],"familyHistory":["none"],"customFamilyHistory":[],
+      "activity":{"walkingDaysPerWeek":6,"walkingMinutesPerDay":40,"walkingPace":"brisk","exerciseTypes":["strength"],"exerciseDaysPerWeek":3,"exerciseMinutesPerSession":45,"exerciseIntensity":"moderate"},
+      "recordedMeasurements":[{"id":"mock1-bp","markerId":"blood_pressure","label":"Blood pressure","value":"112/68","unit":"mmHg","collectedAt":"2026-09-15","source":"import","verification":"user_confirmed","state":"recorded_unassessed"}]
+    },
+    "labs": []
+  }
+}

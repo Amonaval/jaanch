@@ -1,0 +1,16 @@
+{
+  "protocol": "JAANCH-PROFILE-1.0",
+  "id": "mock-thyroid-signal",
+  "label": "Mock 4 — Thyroid signal",
+  "description": "Adult woman with thyroid history, fatigue/weight change and markedly elevated TSH requiring confirmation rather than an app diagnosis.",
+  "exportedAt": "2026-10-09T08:30:00.000Z",
+  "draft": {
+    "answers": {"age":42,"sex":"female","reproductiveContext":"none","heightCm":160,"weightKg":64,"waistCm":84,"diet":"mixed","sleepHours":6.5,"smoking":false,"diagnosedConditions":["thyroid"],"currentConcerns":["fatigue","weight_change"],"prescriptionMedications":true,"supplementUse":false},
+    "capturedContext": {
+      "unitPreference":"metric","customConditions":[],"medications":[{"id":"mock4-thyroxine","name":"Thyroid medicine","category":"thyroid","purpose":"thyroid condition","state":"recorded_unassessed"}],"supplements":[],"customConcerns":[],"familyHistory":["thyroid_autoimmune"],"customFamilyHistory":[],
+      "activity":{"walkingDaysPerWeek":4,"walkingMinutesPerDay":30,"walkingPace":"easy","exerciseTypes":["yoga"]},
+      "recordedMeasurements":[{"id":"mock4-tsh","markerId":"tsh","label":"TSH","value":"12.8","unit":"mIU/L","collectedAt":"2026-09-15","source":"import","verification":"user_confirmed","state":"recorded_unassessed"}]
+    },
+    "labs": []
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "protocol": "JAANCH-PROFILE-1.0",
+  "id": "mock-cardiometabolic-lipids",
+  "label": "Mock 2 — Cardiometabolic + lipids",
+  "description": "Adult with central adiposity, family history of diabetes, elevated blood pressure, LDL/TG signal and HbA1c evidence.",
+  "exportedAt": "2026-10-09T08:30:00.000Z",
+  "draft": {
+    "answers": {"age":46,"sex":"male","heightCm":174,"weightKg":88,"waistCm":101,"diet":"mixed","sleepHours":6.2,"smoking":false,"diagnosedConditions":["lipid_disorder"],"currentConcerns":["none"],"prescriptionMedications":false,"supplementUse":false},
+    "capturedContext": {
+      "unitPreference":"metric","customConditions":[],"medications":[],"supplements":[],"customConcerns":[],"familyHistory":["diabetes","premature_cvd"],"customFamilyHistory":[],
+      "activity":{"walkingDaysPerWeek":2,"walkingMinutesPerDay":20,"walkingPace":"easy","exerciseTypes":[]},
+      "recordedMeasurements":[
+        {"id":"mock2-bp","markerId":"blood_pressure","label":"Blood pressure","value":"148/94","unit":"mmHg","collectedAt":"2026-09-15","source":"import","verification":"user_confirmed","state":"recorded_unassessed"},
+        {"id":"mock2-ldl","markerId":"ldl","label":"LDL cholesterol","value":"174","unit":"mg/dL","collectedAt":"2026-09-15","source":"import","verification":"user_confirmed","state":"recorded_unassessed"},
+        {"id":"mock2-hdl","markerId":"hdl","label":"HDL cholesterol","value":"37","unit":"mg/dL","collectedAt":"2026-09-15","source":"import","verification":"user_confirmed","state":"recorded_unassessed"},
+        {"id":"mock2-tg","markerId":"triglycerides","label":"Triglycerides","value":"280","unit":"mg/dL","collectedAt":"2026-09-15","source":"import","verification":"user_confirmed","state":"recorded_unassessed"},
+        {"id":"mock2-total","markerId":"total_cholesterol","label":"Total cholesterol","value":"254","unit":"mg/dL","collectedAt":"2026-09-15","source":"import","verification":"user_confirmed","state":"recorded_unassessed"}
+      ]
+    },
+    "labs": [{"id":"mock2-hba1c","markerId":"hba1c","value":6.1,"unit":"%","collectedAt":"2026-09-15T00:00:00.000Z","source":"import","verification":"user_confirmed"}]
+  }
+}

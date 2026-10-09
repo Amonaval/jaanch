@@ -2,31 +2,25 @@
 
 **Jaanch** is a deterministic, evidence-aware personal health assessment and prevention product.
 
-It captures health context, asks adaptive follow-ups, separates known facts from inference and uncertainty, recommends the smallest useful next evidence, reassesses when eligible lab data arrives, applies deterministic safety/applicability gates, produces a consumer Health Map, supports reviewed report-evidence ingestion, and stores local longitudinal check-ins so meaningful changes can be compared over time.
+It captures health context, asks adaptive follow-ups, separates known facts from inference and uncertainty, recommends the smallest useful next evidence, reassesses when eligible measured data arrives, applies deterministic safety/applicability gates, produces a consumer Health Map, supports reviewed report-evidence ingestion, stores local longitudinal check-ins, and now supports a small set of source-governed clinical interpretation modules plus versioned local profile portability.
 
-The deterministic engine remains authoritative. AI is optional, opt-in, privacy-minimized, schema-constrained, and must never silently override urgent, safety, applicability, or evidence-eligibility rules.
+The deterministic engine remains authoritative. AI is optional, opt-in, privacy-minimized, schema-constrained, and must never silently override urgent, safety, applicability or evidence-eligibility rules.
 
 > **Prototype warning**
 >
-> Jaanch is a development prototype, not a medical device, diagnosis service, or replacement for a clinician. Current clinical rules, investigations, applicability policies and recommendations remain `prototype` unless explicitly stated otherwise. Local history storage is prototype storage and is not encrypted medical-record storage. Prefer demo/test data while evaluating the product.
+> Jaanch is a development prototype, not a medical device, diagnosis service, or replacement for a clinician. Current clinical rules, investigations, applicability policies and recommendations remain `prototype` unless explicitly stated otherwise. Local history/profile storage is not encrypted medical-record storage. Prefer synthetic/demo data while evaluating the product.
 
 ---
 
 ## Current product state
 
-The repository is engineering-implemented through **M13.3 — Clinical Evidence Capture v2 / Report UX**.
+The repository is engineering-implemented through **M13.4 — Narrow Clinical Interpretation Expansion**.
 
 Current milestone:
 
-> **Evidence-ingestion alpha candidate — awaiting owner trust/result/report retest.**
+> **Narrow-clinical-expansion alpha candidate — awaiting owner trust/result/report/clinical/profile retest.**
 
-Three hands-on owner gates remain open:
-
-1. **Assessment trust:** Jaanch captured the material facts I expected it to know.
-2. **Result comprehension:** without opening technical details, I can tell what matters, what to do, what is unknown, and what changed.
-3. **Evidence-ingestion trust:** report import makes evidence capture easier without silently accepting extracted values or over-interpreting unsupported markers.
-
-Any trust, comprehension, or evidence-integrity defect found during hands-on testing takes priority over roadmap expansion.
+Hands-on gates remain open for assessment trust, result comprehension, report-ingestion trust, narrow-clinical interpretation trust, and profile import/export reliability. Any trust/evidence defect found in hands-on testing takes priority over roadmap expansion.
 
 ---
 
@@ -48,15 +42,15 @@ Consumer Health Map
       ├─ What is still uncertain
       └─ What changed since last check-in
       ↓
-Smallest useful next evidence
-      ↓
 Manual result entry OR reviewed report import
       ├─ extraction creates candidates only
       ├─ user reviews value / unit / date / reference range
       └─ explicit confirmation before promotion
       ↓
-Eligible HbA1c / B12 lab reassessment
-Unsupported markers → recorded/unassessed context
+Measured-evidence eligibility
+      ├─ HbA1c / B12 normalized lab path
+      ├─ bounded M13.4 BP / lipids / Hb / ferritin / TSH path
+      └─ unsupported markers remain recorded/unassessed
       ↓
 Safety-gated action plan
       ↓
@@ -68,56 +62,75 @@ Repeat and compare
 ### Intake and result capabilities
 
 - five primary blocks: About you, History, Current health, Lifestyle, Tests;
-- adaptive/safety follow-up blocks;
-- stable Back/Forward navigation separated from dynamic eligibility;
-- metric/imperial height, weight and waist entry;
-- broader diagnoses, concerns and family history plus manual/Other capture;
-- named medicines with category/purpose and named supplements;
-- walking, steps, pace, exercise type, frequency, duration and intensity;
-- broad known-result capture including Vitamin D, glucose, lipids, hemoglobin, ferritin, TSH, blood pressure and manual Other;
-- unsupported markers preserved as **recorded, not yet assessed** rather than silently interpreted;
-- shared consumer result semantics across web/mobile: What matters → What to do → What evidence supports → What remains uncertain → What changed;
-- evidence completeness is explicitly **not an overall health score**.
+- adaptive/safety follow-ups;
+- stable Back/Forward navigation;
+- metric/imperial body measurements;
+- broader diagnoses/concerns/family history + manual Other paths;
+- named medicines/supplements;
+- walking, steps, pace and structured exercise detail;
+- broad known-result capture;
+- consumer result hierarchy shared across web/mobile;
+- evidence completeness explicitly **not an overall health score**.
 
-### M13.3 report-evidence capture
+### Report evidence capture
 
-Web and mobile now include a dedicated **Import lab report** surface.
+Web/mobile include **Import lab report**.
 
-Implemented boundaries:
+- PDF/image/text attachment preserves source provenance;
+- current alpha uses pasted report text/OCR output for deterministic candidate extraction;
+- extraction alone changes nothing;
+- candidates are editable and require explicit review;
+- unit/date are never guessed;
+- exact duplicates are replaced, newer distinct results remain in history;
+- reviewed candidates are applied in one reassessed immutable check-in based on the latest saved baseline.
 
-- attach PDF/image/text to retain report-level source provenance;
-- paste report text or OCR output for deterministic candidate extraction;
-- extraction produces **candidates only** and changes no clinical result by itself;
-- candidate marker/value/unit/date/reference range/confidence/issues are visible and editable;
-- user explicitly reviews and confirms each candidate;
-- missing unit or report date is **not inferred/defaulted**;
-- supported HbA1c/B12 still pass through existing unit/date/verification/freshness/plausibility gates;
-- Vitamin D, lipids, glucose, BP, thyroid, ferritin and other unsupported markers remain `recorded_unassessed`;
-- exact duplicates are replaced rather than double-counted;
-- newer distinct values remain in history and existing latest-result semantics choose the newest eligible evidence;
-- reviewed candidates are applied together to the latest **saved** check-in, creating one reassessed immutable snapshot;
-- report provenance is retained through normalized evidence.
+Raw PDF/image bytes are **not yet claimed to be trustworthy OCR-parsed automatically**.
 
-### Important M13.3 alpha limitation
+### M13.4 interpreted clinical depth
 
-Jaanch does **not** yet claim trustworthy OCR/PDF parsing directly from raw document bytes. Selecting a file preserves source provenance; the user currently pastes report text/OCR output.
+M13.4 deliberately adds only four bounded domains:
 
-The shared core exposes a provider-neutral extraction contract so a future document/OCR provider can create candidates without being allowed to bypass user review or deterministic clinical eligibility gates.
+1. **Blood pressure / cardiovascular context** — 2024 ESC sourced prototype.
+2. **Lipids / cardiovascular-risk context** — 2026 ACC/AHA dyslipidemia sourced prototype.
+3. **Anaemia / iron-status evidence** — WHO haemoglobin + ferritin sourced prototype.
+4. **Thyroid evidence** — NICE NG145 sourced prototype.
 
-### Current interpreted clinical depth
+These modules require user-confirmed values with supported units, valid collection dates, freshness and applicable population context. One measurement is not converted into a diagnosis.
 
-Intentionally narrow:
+Important boundaries:
+- no autonomous prescription-medication changes;
+- no therapeutic iron/thyroid/lipid regimen generation;
+- no PREVENT/ASCVD calculator yet;
+- no pregnancy-specific BP/lipid/iron/thyroid interpretation;
+- Vitamin D and fasting/random glucose remain captured but unassessed in M13.4;
+- all new rules remain `prototype` until qualified clinical review changes maturity.
 
-- metabolic screening prototype;
-- vitamin B12 / nutrition prototype;
-- sleep screening prototype;
-- concerning chest-pain urgent escalation;
-- HbA1c and vitamin B12 normalized lab reassessment;
-- pregnancy/pediatric/kidney/liver/frailty/polypharmacy/allergy safety/applicability gates;
-- deterministic investigation prioritization;
-- deterministic recommendation engine.
+### Profile import/export + mocks
 
-**Capture breadth does not authorize interpretation breadth.**
+A new **Profiles & mocks** surface is available on web and mobile.
+
+Protocol: `JAANCH-PROFILE-1.0`.
+
+Capabilities:
+- import a profile JSON file and rerun it through the **current** deterministic engine;
+- export the latest saved runnable profile/history;
+- web downloads `.jaanch-profile.json`;
+- mobile imports JSON through the document picker and exports via the native share sheet;
+- internal derived M13.4 evidence is stripped on import/export and rebuilt only from eligible captured evidence;
+- five built-in synthetic profiles can be run instantly.
+
+Repo fixtures:
+
+```text
+examples/mock-profiles/
+  low-risk-adult.json
+  cardiometabolic-lipids.json
+  vegetarian-b12-iron.json
+  thyroid-signal.json
+  severe-triglycerides.json
+```
+
+Profile JSON is local portability/testing infrastructure. It is **not** account identity, encrypted cloud storage or cross-device sync; those remain M13.5.
 
 ---
 
@@ -129,7 +142,7 @@ apps/
   web/                 React + Vite — browser companion
 
 packages/
-  core/                deterministic health engine + shared presentation models
+  core/                deterministic engine + shared presentation/domain models
   ai-runtime/          optional server-only OpenAI review adapter
 
 docs/
@@ -138,18 +151,23 @@ docs/
   reviews/             strategic reviews
   ai-harness/          constrained AI review policy
 
+examples/mock-profiles/ importable synthetic profiles
 HANDOVER_NEXT_SESSION.md
-                        canonical prompt/state for a fresh work session
 ```
 
-Key M13.3 modules:
+Key M13.4 modules:
 
 ```text
-packages/core/src/reportEvidence.ts
-packages/core/src/reportWorkflow.ts
-packages/core/src/verificationEvidenceCapture.ts
-apps/web/src/ReportImportScreen.tsx
-apps/mobile/ReportImportScreen.tsx
+packages/core/src/clinicalMeasurements.ts
+packages/core/src/m134Rules.ts
+packages/core/src/m134Recommendations.ts
+packages/core/src/m134ClinicalSources.ts
+packages/core/src/profileBundle.ts
+packages/core/src/mockProfiles.ts
+packages/core/src/verificationClinicalExpansion.ts
+packages/core/src/verificationProfiles.ts
+apps/web/src/ProfileLabScreen.tsx
+apps/mobile/ProfileLabScreen.tsx
 ```
 
 ---
@@ -164,15 +182,7 @@ apps/mobile/ReportImportScreen.tsx
 - Node.js **22.13+**
 - npm 10+ recommended
 
-Check:
-
-```bash
-node -v
-npm -v
-git --version
-```
-
-## Fresh clone
+Fresh clone:
 
 ```bash
 git clone https://github.com/Amonaval/jaanch.git
@@ -182,9 +192,7 @@ npm run verify
 npm run web
 ```
 
-Vite normally prints a URL similar to `http://localhost:5173`.
-
-## Existing checkout
+Existing checkout:
 
 ```bash
 git pull
@@ -193,7 +201,7 @@ npm run verify
 npm run web
 ```
 
-`npm install` is important after M13.3 because mobile now uses `expo-document-picker`.
+Vite normally prints a URL similar to `http://localhost:5173`.
 
 ---
 
@@ -205,24 +213,15 @@ From repo root:
 npm run verify
 ```
 
-This runs non-live checks for:
-
-- adaptive/block planner behavior;
-- intake/navigation regressions;
-- rule execution and evidence graph invariants;
-- investigation prioritization;
-- safety and applicability gates;
-- canonical lab handling;
-- recommendations and consumer Health Map semantics;
-- longitudinal snapshot/comparison logic;
-- M13.3 report candidate extraction/normalization;
-- explicit report-confirmation boundaries;
-- missing-unit/date behavior;
-- report provenance retention;
-- duplicate/latest-result semantics;
-- mixed supported/unassessed batch reassessment;
-- AI packet/schema/safety contracts;
-- server AI request construction without making a live model call.
+The non-live verification now covers the existing core plus:
+- M13.3 report candidate/confirmation/provenance boundaries;
+- M13.4 BP/lipid/iron/thyroid interpretation scenarios;
+- missing-unit/date rejection;
+- pregnancy/applicability suppression;
+- direct internal-evidence forgery rejection;
+- persistence sanitization of derived clinical fields;
+- profile protocol roundtrip/import/export;
+- execution of all built-in mock profiles.
 
 Individual suites:
 
@@ -231,40 +230,37 @@ npm run verify:core
 npm run verify:ai-runtime
 ```
 
-There is currently **no repository CI status check attached to `main`**, so local verification is important. Do not treat absence of CI as a pass.
+No GitHub CI status should be assumed to exist or pass; local verification remains important.
 
 ---
 
-# Owner retest: what to test now
+# Recommended owner retest
 
-### M13.1 assessment trust
+### 1. Run the five mock profiles
 
-Use a realistic complete profile and verify diagnoses/concerns, named medicines, supplements, walking/activity, family history, manual Other paths and known tests are represented correctly. Stress Back/Forward and edits that change adaptive eligibility. Trigger the urgent chest-pain path once.
+Open **Profiles & mocks** and run each scenario. Confirm the result hierarchy is understandable and the new clinical findings do not overstate certainty.
 
-### M13.2 result comprehension
+### 2. Import/export roundtrip
 
-Without opening technical details, answer:
+Export one saved/mock profile, re-import it, and confirm it reruns through the current engine with equivalent material evidence rather than trusting stored conclusions.
 
-- What matters?
-- What can I do?
-- What is known?
-- What is uncertain?
-- What evidence should I gather next?
-- What changed from the previous distinct check-in?
+### 3. Evidence-integrity stress
 
-### M13.3 evidence-ingestion trust
+- remove a unit or date and confirm M13.4 interpretation is blocked;
+- import/report-enter the same BP/lipid/iron/TSH evidence and compare semantics;
+- confirm Vitamin D/glucose remain recorded/unassessed.
 
-1. Complete an assessment and **save a check-in**.
-2. Open **Import lab report** and attach a PDF/image.
-3. Paste report text containing HbA1c or B12 plus an unsupported marker such as Vitamin D or triglycerides.
-4. Intentionally edit one extracted value, unit or date before review.
-5. Confirm that extraction alone changes nothing.
-6. Confirm reviewed HbA1c/B12 only enter the supported pathway after explicit review and normal eligibility checks.
-7. Confirm Vitamin D/lipids remain clearly recorded/unassessed.
-8. Try a supported marker with its unit or date missing; Jaanch should not invent either.
-9. Re-import an exact duplicate and verify it is not double-counted.
-10. Import a newer distinct value and verify longitudinal/latest-result behavior.
-11. Compare web/mobile meaning and ordering.
+### 4. Clinical boundaries
+
+- BP `148/94` → elevated measurement / confirm-recheck context, **not diagnosed hypertension**;
+- TG `1050 mg/dL` → clinician review, **no medication change**;
+- nonpregnant woman Hb `10.7 g/dL` + ferritin `8 ng/mL` → cause-oriented clinician review, **no automatic iron dose**;
+- TSH `12.8 mIU/L` → confirmation/FT4 context, **not a thyroid diagnosis**;
+- pregnancy → configured adult M13.4 modules suppress where applicable.
+
+### 5. Re-run M13.1–M13.3 trust scenarios
+
+Assessment navigation, result comprehension and report-import trust remain release-blocking even though M13.4 engineering is implemented.
 
 ---
 
@@ -276,8 +272,6 @@ npm run mobile:fix
 npm run doctor:mobile
 npm run mobile
 ```
-
-`npm run mobile` starts Expo in Expo Go mode.
 
 If LAN discovery fails:
 
@@ -293,8 +287,6 @@ cd apps/mobile
 npx expo start --go --clear
 ```
 
-Use an Expo Go build compatible with SDK 57.
-
 Development client:
 
 ```bash
@@ -304,7 +296,7 @@ npx eas-cli@latest build --platform android --profile development
 npm run mobile:dev
 ```
 
-Standalone Android preview/APK:
+Standalone preview:
 
 ```bash
 cd apps/mobile
@@ -312,13 +304,13 @@ npx eas-cli@latest login
 npx eas-cli@latest build --platform android --profile preview
 ```
 
-Current Android package: `com.amonaval.jaanch`.
+Android package: `com.amonaval.jaanch`.
 
 ---
 
 # iOS testing
 
-For SDK 57, prefer an EAS development/preview build for a physical iPhone rather than assuming the App Store Expo Go build is compatible.
+Prefer an EAS development/preview build for a physical iPhone:
 
 ```bash
 cd apps/mobile
@@ -331,28 +323,25 @@ or:
 npx eas-cli@latest build --platform ios --profile preview
 ```
 
-Current bundle identifier: `com.amonaval.jaanch`.
+Bundle identifier: `com.amonaval.jaanch`.
 
 ---
 
-# Local persistence and privacy
+# Persistence and privacy
 
 Current prototype persistence:
-
 - web: browser `localStorage`;
-- mobile: `@react-native-async-storage/async-storage`.
+- mobile: AsyncStorage;
+- profile portability: user-controlled JSON file/share payload.
 
-Saved check-ins are immutable versioned snapshots used for longitudinal comparison. Report import intentionally requires a saved baseline and creates a new reassessed snapshot rather than mutating the previous one.
-
-Current limitations:
-
+Limitations:
 - not encrypted clinical-record storage;
-- clearing browser/app data can erase history;
-- no account sync;
-- no backup/restore;
-- no cross-device history.
+- no identity/account;
+- clearing app/browser data can erase local history;
+- no cloud backup/sync;
+- no cross-device continuity.
 
-Secure identity, retention/delete/export controls, encrypted persistence and cross-device continuity belong to **M13.5** and the later pilot release gate.
+**M13.5 — Profile + Secure Persistence Architecture v1** owns identity, consent/retention/delete/export semantics, encryption/storage decisions, migration contracts, backup/sync and cross-device continuity.
 
 ---
 
@@ -360,74 +349,36 @@ Secure identity, retention/delete/export controls, encrypted persistence and cro
 
 AI is **not required** to use Jaanch. The optional server-only runtime lives in `packages/ai-runtime/`.
 
-Never put API keys in `apps/web` or `apps/mobile`.
-
-M10 engineering is implemented, but the **live AI Utility Gate is paused** until intake/result/evidence quality is representative enough to judge AI fairly. M11 remains conditional; AI must prove incremental contradiction/missing-consideration/explanation value rather than paraphrase deterministic output.
+M10 engineering exists, but the live AI Utility Gate remains paused until deterministic intake/result/evidence/clinical quality is representative enough to judge AI fairly. M11 remains conditional.
 
 ---
 
 # Troubleshooting
 
-## `EUNSUPPORTEDPROTOCOL` / `workspace:*`
+Do not restore:
 
-The repo must not restore `@jaanch/core: "workspace:*"`. Consumers use `@jaanch/core: "0.1.0"`, which npm workspaces auto-link.
-
-After pulling latest:
-
-```bash
-npm install
+```text
+@jaanch/core: "workspace:*"
 ```
 
-If stale failed-install state remains, clean once and reinstall.
+Consumers use `@jaanch/core: "0.1.0"`, which npm workspaces auto-link.
 
-Windows PowerShell:
-
-```powershell
-Remove-Item -Recurse -Force node_modules -ErrorAction SilentlyContinue
-Remove-Item -Force package-lock.json -ErrorAction SilentlyContinue
-npm install
-```
-
-macOS/Linux:
-
-```bash
-rm -rf node_modules
-rm -f package-lock.json
-npm install
-```
-
-Only remove the lockfile for recovery from stale/pre-fix generated state.
-
-## Expo dependency mismatch
+If a stale failed-install state remains, clean once and reinstall. For Expo mismatches use:
 
 ```bash
 npm run mobile:fix
 npm run doctor:mobile
 ```
 
-## Expo opens development-client mode instead of Expo Go
-
-Use `npm run mobile`. For an installed development client use `npm run mobile:dev`.
-
 ---
 
-# Next missions
+# Next mission
 
-Canonical sequence: `docs/product/ROADMAP.md`.
+**M13.5 — Profile + Secure Persistence Architecture v1 — High effort.**
 
-Immediate order:
+Before or during M13.5, any owner-discovered M13.1–M13.4 trust/result/evidence defect takes priority.
 
-1. **Owner retest M13.1 + M13.2 + M13.3.** Fix any trust/result/evidence defect first.
-2. **M13.4 — Narrow Clinical Interpretation Expansion — High**, only after the owner gates are credible.
-3. **M13.5 — Profile + Secure Persistence Architecture v1 — High.**
-4. Resume **M10 live AI Utility Gate** only when representative intake/results/evidence exist.
-5. **M11** only if AI proves incremental value.
-6. Strategic Review 3.
-7. M15A Pilot Safety / Privacy / Release Gate.
-8. M14 MCP / ChatGPT App later.
-9. M15B Store / Production Hardening last.
-
-Do **not** redo M13.3 unless hands-on testing exposes a real defect. Do **not** broaden clinical interpretation merely because a report marker can now be captured.
+After M13.5: resume M10 live AI Utility Gate only when representative; M11 only if AI proves incremental value; then Strategic Review 3 and M15A pilot safety/privacy/release gate. M14 ChatGPT/MCP integration remains later; M15B production/store hardening last.
 
 ---
 

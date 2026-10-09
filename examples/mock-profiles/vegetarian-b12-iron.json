@@ -1,0 +1,19 @@
+{
+  "protocol": "JAANCH-PROFILE-1.0",
+  "id": "mock-vegetarian-b12-iron",
+  "label": "Mock 3 — Vegetarian + B12 + iron",
+  "description": "Nonpregnant adult woman with fatigue/tingling, low B12, low haemoglobin and depleted ferritin.",
+  "exportedAt": "2026-10-09T08:30:00.000Z",
+  "draft": {
+    "answers": {"age":38,"sex":"female","reproductiveContext":"none","heightCm":162,"weightKg":58,"waistCm":76,"diet":"vegetarian","sleepHours":7,"smoking":false,"diagnosedConditions":["anemia"],"currentConcerns":["fatigue","tingling","dizziness"],"prescriptionMedications":false,"supplementUse":false},
+    "capturedContext": {
+      "unitPreference":"metric","customConditions":[],"medications":[],"supplements":[],"customConcerns":[],"familyHistory":["none"],"customFamilyHistory":[],
+      "activity":{"walkingDaysPerWeek":5,"walkingMinutesPerDay":35,"walkingPace":"brisk","exerciseTypes":["yoga"],"exerciseDaysPerWeek":2,"exerciseMinutesPerSession":40,"exerciseIntensity":"light"},
+      "recordedMeasurements":[
+        {"id":"mock3-hb","markerId":"hemoglobin","label":"Hemoglobin","value":"10.7","unit":"g/dL","collectedAt":"2026-09-15","source":"import","verification":"user_confirmed","state":"recorded_unassessed"},
+        {"id":"mock3-ferritin","markerId":"ferritin","label":"Ferritin","value":"8","unit":"ng/mL","collectedAt":"2026-09-15","source":"import","verification":"user_confirmed","state":"recorded_unassessed"}
+      ]
+    },
+    "labs": [{"id":"mock3-b12","markerId":"vitamin_b12","value":165,"unit":"pg/mL","collectedAt":"2026-09-15T00:00:00.000Z","source":"import","verification":"user_confirmed"}]
+  }
+}

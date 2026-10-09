@@ -1,6 +1,6 @@
 # Mission Status
 
-## Completed
+## Completed / engineering-implemented
 - M01 — Foundation + Constitution: IMPLEMENTED (prototype scope)
 - M02 — Adaptive Question Planner v1: IMPLEMENTED
 - M03 — Versioned Rule Registry: IMPLEMENTED
@@ -21,36 +21,12 @@
 Status: **ENGINEERING IMPLEMENTED — OWNER TRUST-GATE RETEST REQUIRED**  
 Effort: **High**
 
-Implemented:
-- five primary assessment sections with adaptive/safety follow-ups;
-- stable block Back/Forward navigation and plan-change invalidation;
-- metric/imperial canonical measurements;
-- broader conditions, concerns, family history and manual Other paths;
-- named medicines/supplements;
-- walking plus structured exercise capture;
-- broader known-result capture;
-- HbA1c/B12 remain on the interpreted lab path while unsupported markers stay `recorded_unassessed`;
-- richer longitudinal/HAP context and web/mobile intake UX;
-- intake/navigation verification and post-implementation editing hardening.
-
 Owner gate:
 > **Jaanch captured the material facts I expected it to know.**
 
 ## M13.2 — Result Quality + Health Map Consumer UX v3
 Status: **ENGINEERING IMPLEMENTED — OWNER RESULT-UX RETEST REQUIRED**  
 Effort: **High**
-
-Implemented:
-- shared `buildConsumerResultViewModel` across web/mobile;
-- bounded urgent / attention / needs-evidence / quiet hero semantics;
-- evidence completeness explicitly not represented as overall health;
-- hierarchy: What matters now → What you can do → What evidence supports → What remains uncertain → What changed;
-- concrete recommendation steps;
-- supported evidence separated from uncertainty;
-- recorded-but-uninterpreted facts retained visibly;
-- comparison against the previous distinct saved check-in;
-- meaningful finding/lab/evidence-completeness change summaries;
-- technical governance detail demoted behind consumer meaning.
 
 Owner gate:
 > **Without opening technical details, I can tell what matters, what to do, what is unknown, and what changed.**
@@ -61,91 +37,128 @@ Effort: **High**
 
 Implemented:
 - provider-neutral report candidate/provenance contract;
-- deterministic text/OCR candidate extraction and marker normalization;
-- extraction confidence and parsing/clarification visibility;
-- explicit review/confirmation before evidence promotion;
-- existing HbA1c/B12 unit/date/verification/freshness/plausibility gates remain authoritative;
-- unsupported markers remain `recorded_unassessed` after confirmation;
-- exact duplicate replacement and latest-result semantics;
-- report provenance retained through normalized evidence;
-- batch application of reviewed candidates into one reassessed immutable snapshot based on the latest saved check-in;
-- dedicated web report-import surface with browser PDF/image/text picker;
-- dedicated mobile report-import surface with `expo-document-picker`;
-- editable value/unit/date/reference range before confirmation;
-- deterministic M13.3 verification scenarios.
+- PDF/image/text provenance capture on web/mobile;
+- deterministic pasted-text/OCR candidate extraction;
+- explicit review before evidence promotion;
+- HbA1c/B12 normalized lab eligibility remains authoritative;
+- report unit/date are never guessed;
+- exact duplicate/latest-result semantics;
+- one reassessed immutable snapshot per reviewed report batch.
 
-Alpha limitation:
-- raw PDF/image bytes are **not** automatically OCR-parsed in this mission;
-- attachment preserves source provenance and the user pastes report text/OCR output;
-- a future extraction provider may implement the provider-neutral contract, but cannot bypass confirmation or clinical eligibility gates.
+M13.4 integration update:
+- confirmed BP/lipid/haemoglobin/ferritin/TSH measurements can now feed the **bounded M13.4 interpretation path** only after their verification/unit/date/freshness/applicability gates pass;
+- Vitamin D, fasting/random glucose and unknown markers remain recorded/unassessed.
 
 Mission detail: `docs/missions/M13.3_CLINICAL_EVIDENCE_CAPTURE_V2_REPORT_UX.md`.
 
+## M13.4 — Narrow Clinical Interpretation Expansion
+Status: **ENGINEERING IMPLEMENTED — OWNER CLINICAL/PROFILE RETEST REQUIRED**  
+Effort: **High**
+
+Implemented clinical domains:
+- **blood pressure / cardiovascular context** — `CV-BP-001`, sourced to 2024 ESC;
+- **lipid cardiovascular-risk context** — `CV-LIPID-001`, sourced to 2026 ACC/AHA dyslipidemia guidance;
+- **anaemia / iron-status evidence** — `NUT-IRON-001`, sourced to WHO haemoglobin/ferritin guidance;
+- **thyroid evidence** — `MET-THYROID-001`, sourced to NICE NG145.
+
+Evidence integrity:
+- broader measurements remain stored as captured measurements rather than being blindly added to the old HbA1c/B12 lab engine;
+- eligibility requires user confirmation, supported unit, valid date, freshness and plausible range;
+- private derived evidence is rebuilt only by the trusted capture path;
+- public `assess(...)` strips forged internal M13.4 fields;
+- persisted snapshots/profile exports strip internal derived evidence.
+
+New investigation mappings:
+- `MEASURE-BP`
+- `LAB-LIPID-PANEL`
+- `LAB-HEMOGLOBIN`
+- `LAB-FERRITIN`
+- `LAB-TSH`
+
+New safety-bounded recommendations:
+- `REC-BP-RECHECK-001`
+- `REC-LIPID-RISK-001`
+- `REC-IRON-REVIEW-001`
+- `REC-THYROID-REVIEW-001`
+
+### Profile portability / mocks
+Protocol: `JAANCH-PROFILE-1.0`
+
+Implemented:
+- profile JSON import/export on web/mobile;
+- imported profiles rerun the current deterministic engine;
+- export preserves the runnable draft plus optional local history;
+- web downloads `.jaanch-profile.json`;
+- mobile imports `.json` via document picker and exports through the native share sheet;
+- five built-in mock scenarios plus matching repo fixtures under `examples/mock-profiles/`.
+
+Mocks:
+1. low-risk adult;
+2. cardiometabolic + lipids;
+3. vegetarian + B12 + iron/anaemia;
+4. thyroid signal;
+5. severe triglyceride signal.
+
+Profile portability is **not** secure cloud persistence or identity. M13.5 still owns that architecture.
+
+Mission detail: `docs/missions/M13.4_NARROW_CLINICAL_INTERPRETATION_EXPANSION.md`.
+
 ## Combined owner validation gate
-Jaanch is not product-validated until hands-on use confirms all three:
-1. **Jaanch captured the material facts I expected it to know.**
-2. **Without opening technical details, I can tell what matters, what to do, what is unknown, and what changed.**
-3. **Report import makes evidence capture easier without silently accepting extracted values or over-interpreting unsupported markers.**
+Jaanch is still not product-validated until hands-on use confirms:
+1. assessment captures material facts;
+2. result hierarchy is understandable;
+3. report import is trustworthy;
+4. the new clinical modules do not overstate certainty or prescribe autonomously;
+5. mock/import/export flow is reliable and reruns evidence through the current engine.
 
-Recommended retest scenarios:
-1. healthy/low-risk adult;
-2. vegetarian with known low B12 + recorded low Vitamin D;
-3. cholesterol medicine + blood-pressure medicine;
-4. daily walker with little formal exercise;
-5. unlisted diagnosis + unlisted concern;
-6. metabolic-risk profile with known HbA1c/lipids;
-7. Back → Forward after adaptive follow-up exists;
-8. edit an earlier section so the adaptive plan changes;
-9. urgent chest-pain path;
-10. repeat check-in preserving manual/custom facts;
-11. repeat check-in with meaningful change;
-12. repeat check-in with no meaningful change;
-13. compare web/mobile result meaning and ordering;
-14. attach a report, extract candidates, edit a wrong value/unit/date and confirm only reviewed items;
-15. confirm HbA1c/B12 plus unsupported Vitamin D/lipids and verify only supported evidence can influence deterministic findings;
-16. re-import an exact duplicate and then a newer distinct result;
-17. compare web/mobile report-import semantics.
+Recommended M13.4 retest:
+1. run all five built-in mocks;
+2. export one mock/profile and re-import it;
+3. use missing/incorrect unit or date and confirm interpretation is blocked;
+4. test BP 148/94 and verify “measurement signal / confirm”, not “diagnosed hypertension”;
+5. test TG ≥1000 and verify clinician-review boundary without medication change;
+6. test female nonpregnant Hb 10.7 + ferritin 8 and verify cause-oriented review without autonomous iron dose;
+7. test TSH 12.8 and verify confirmation/FT4 context rather than diagnosis;
+8. test pregnancy and verify adult BP/lipid/iron/thyroid rules suppress where configured;
+9. import the same values through report capture and compare semantics with manual/profile capture;
+10. confirm Vitamin D/glucose still remain recorded/unassessed in M13.4.
 
-Any new trust/comprehension/evidence-integrity defect found in owner testing takes priority over the roadmap.
+Any trust/comprehension/evidence-integrity defect found in owner testing takes priority over the roadmap.
 
 ## Current product milestone
-**Evidence-ingestion alpha candidate — awaiting owner trust/result/report retest.**
+**Narrow-clinical-expansion alpha candidate — awaiting owner trust/result/report/clinical/profile retest.**
 
-Clinical interpretation breadth remains deliberately narrow.
+All new clinical rules and mappings remain `prototype`; source capture does not mean clinical approval.
 
-## Next work after retest
-1. Fix any M13.1/M13.2/M13.3 defects found in hands-on use.
-2. **M13.4 — Narrow Clinical Interpretation Expansion** — High, only after trust gates are credible.
-3. **M13.5 — Profile + Secure Persistence Architecture v1** — High.
-4. Resume **M10 live AI Utility Gate** only after intake/result/evidence quality is representative.
-5. **M11** remains conditional on M10 proving incremental value.
-6. Strategic Review 3.
-7. M15A Pilot Safety / Privacy / Release Gate.
-8. M14 MCP / ChatGPT App later; M15B production/store hardening last.
+## Next work
+1. Fix any owner-discovered M13.1–M13.4 trust/result/evidence defect.
+2. **M13.5 — Profile + Secure Persistence Architecture v1 — High.**
+3. Resume **M10 live AI Utility Gate** only after intake/result/evidence/clinical quality is representative.
+4. M11 remains conditional on M10 proving incremental value.
+5. Strategic Review 3.
+6. M15A Pilot Safety / Privacy / Release Gate.
+7. M14 MCP / ChatGPT App later; M15B production/store hardening last.
 
 ## Active constraints
 - Assessment quality is release-blocking.
 - Result comprehension is release-blocking.
 - Evidence-ingestion trust is release-blocking.
-- Capture breadth does not authorize interpretation breadth.
-- Manual/unassessed facts must not become diagnoses automatically.
-- Report extraction must never equal evidence eligibility.
-- Evidence completeness must never be represented as overall health.
-- AI must not compensate for poor intake or confusing deterministic results.
+- Clinical expansion must stay narrow and source-governed.
+- One measurement does not automatically become a diagnosis.
+- Capturing a fact does not automatically authorize interpretation.
+- Missing provenance must not be guessed.
+- Prescription-medication changes are never autonomously recommended.
+- Therapeutic iron/thyroid/lipid regimens are not autonomously prescribed.
+- Evidence completeness is not overall health.
 - Deterministic urgent/safety/applicability/evidence rules remain authoritative.
-- Cloud persistence remains behind intake/result/evidence stabilization.
-- No generic overall health score.
+- Generic overall health score remains dropped.
 
 ## Session handover
-Canonical new-session prompt/state:
+Canonical new-session state: `HANDOVER_NEXT_SESSION.md`.
 
-```text
-HANDOVER_NEXT_SESSION.md
-```
-
-A new session should verify the current `main` head and read that handover plus `README.md`, this status file and `docs/product/ROADMAP.md` before implementation. When handover text and current mission docs differ, current `main` plus `STATUS.md`/`ROADMAP.md` govern.
+Always verify current `main`, then read README, this status file, roadmap and the latest mission doc before writing.
 
 ## Execution agreement
 - Repository: `Amonaval/jaanch`
 - Normal mission commit budget: 1–2 commits.
-- High effort for assessment quality, result quality, evidence capture, safety, applicability, AI, persistence, clinical expansion and release gates.
+- High effort for assessment/result/evidence/safety/applicability/clinical/persistence/release work.

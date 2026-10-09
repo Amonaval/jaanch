@@ -1,0 +1,21 @@
+{
+  "protocol": "JAANCH-PROFILE-1.0",
+  "id": "mock-severe-triglycerides",
+  "label": "Mock 5 — Severe triglyceride signal",
+  "description": "Adult on lipid-lowering treatment with triglycerides above 1000 mg/dL to exercise the clinician-review boundary.",
+  "exportedAt": "2026-10-09T08:30:00.000Z",
+  "draft": {
+    "answers": {"age":55,"sex":"male","heightCm":171,"weightKg":79,"waistCm":96,"diet":"mixed","sleepHours":6.8,"smoking":false,"diagnosedConditions":["lipid_disorder"],"currentConcerns":["none"],"prescriptionMedications":true,"supplementUse":false},
+    "capturedContext": {
+      "unitPreference":"metric","customConditions":[],"medications":[{"id":"mock5-statin","name":"Atorvastatin","category":"lipid_lowering","purpose":"cholesterol","state":"recorded_unassessed"}],"supplements":[],"customConcerns":[],"familyHistory":["premature_cvd"],"customFamilyHistory":[],
+      "activity":{"walkingDaysPerWeek":5,"walkingMinutesPerDay":30,"walkingPace":"brisk","exerciseTypes":["strength"],"exerciseDaysPerWeek":2,"exerciseMinutesPerSession":40,"exerciseIntensity":"moderate"},
+      "recordedMeasurements":[
+        {"id":"mock5-bp","markerId":"blood_pressure","label":"Blood pressure","value":"138/84","unit":"mmHg","collectedAt":"2026-09-15","source":"import","verification":"user_confirmed","state":"recorded_unassessed"},
+        {"id":"mock5-ldl","markerId":"ldl","label":"LDL cholesterol","value":"132","unit":"mg/dL","collectedAt":"2026-09-15","source":"import","verification":"user_confirmed","state":"recorded_unassessed"},
+        {"id":"mock5-hdl","markerId":"hdl","label":"HDL cholesterol","value":"35","unit":"mg/dL","collectedAt":"2026-09-15","source":"import","verification":"user_confirmed","state":"recorded_unassessed"},
+        {"id":"mock5-tg","markerId":"triglycerides","label":"Triglycerides","value":"1050","unit":"mg/dL","collectedAt":"2026-09-15","source":"import","verification":"user_confirmed","state":"recorded_unassessed"}
+      ]
+    },
+    "labs": []
+  }
+}
