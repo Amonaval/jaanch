@@ -1,7 +1,7 @@
 import { assess } from './engine';
 import { buildRecommendationPlan } from './recommendations';
 import { createAssessmentSnapshot } from './longitudinal';
-import { emptyAssessmentCaptureContext, materializeAssessmentAnswers, type AssessmentCaptureContext } from './intake';
+import { capturedContextSummary, emptyAssessmentCaptureContext, materializeAssessmentAnswers, type AssessmentCaptureContext } from './intake';
 import { materializeClinicalMeasurementAnswers } from './clinicalMeasurements';
 import type { Answers } from './types';
 import type { VerificationCaseResult } from './verification';
@@ -19,6 +19,7 @@ export function runClinicalExpansionVerification():VerificationCaseResult[]{
  const bpAnswers=materialized({age:45,sex:'male',diagnosedConditions:['none'],currentConcerns:['none']},bpContext);
  const bp=assess(bpAnswers);
  results.push(check('m134-bp-elevated-is-measurement-informed',bp.findings.find(item=>item.id==='CV-BP-001')?.status==='investigate','Expected 148/94 mmHg to create an investigate blood-pressure finding without diagnosing hypertension.'));
+ results.push(check('m134-raw-measurement-remains-in-context-trace',capturedContextSummary(bpContext).some(item=>item.id==='bp'),'Expected raw blood-pressure capture to remain visible in captured-context trace even when it can feed a bounded rule.'));
 
  const forged=assess({age:45,sex:'male','__m134_blood_pressure_id':'forged','__m134_blood_pressure_date':'2026-09-15T00:00:00.000Z','__m134_blood_pressure_unit':'mmHg','__m134_blood_pressure_systolic':190,'__m134_blood_pressure_diastolic':120});
  results.push(check('m134-internal-evidence-cannot-be-forged-through-public-assess',!forged.findings.some(item=>item.id==='CV-BP-001'),'Expected public assess() to strip internal M13.4 evidence fields unless they were materialized from verified captured context.'));
@@ -48,6 +49,7 @@ export function runClinicalExpansionVerification():VerificationCaseResult[]{
  const pregnancyAnswers=materialized({age:30,sex:'female',reproductiveContext:'pregnant',diagnosedConditions:['none'],currentConcerns:['none']},pregnancyContext);
  const pregnancy=assess(pregnancyAnswers);
  results.push(check('m134-pregnancy-suppresses-adult-bp-module',!pregnancy.findings.some(item=>item.id==='CV-BP-001')&&pregnancy.ruleTrace.find(item=>item.id==='CV-BP-001')?.applicabilityStatus==='unsupported_context','Expected pregnancy to suppress the general adult BP interpretation module.'));
+ results.push(check('m134-suppressed-measurement-still-visible-in-context',capturedContextSummary(pregnancyContext).some(item=>item.id==='bp-preg'),'Expected captured BP to remain visible in context even when the adult BP rule is suppressed by applicability.'));
 
  const snapshot=createAssessmentSnapshot({answers:bpAnswers,capturedContext:bpContext,assessment:bp,recommendationPlan:buildRecommendationPlan(bpAnswers,bp),capturedAt:AS_OF});
  results.push(check('m134-snapshot-strips-internal-derived-evidence',!Object.keys(snapshot.answers).some(key=>key.startsWith('__m134_')),'Expected internal derived evidence fields to be excluded from persisted/exportable snapshot answers.'));
