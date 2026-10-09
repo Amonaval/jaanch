@@ -1,6 +1,7 @@
 import { validateClinicalSourceIds } from './clinicalSources';
 import { evaluateApplicability } from './applicability';
 import { normalizeAnswers } from './answerNormalization';
+import { clinicalExpansionRecommendationCandidates, clinicalExpansionRecommendationGovernanceArtifacts } from './clinicalExpansionRecommendations';
 import type { Answers, AssessmentResult, Domain, SafetyActionClass, SafetyDisposition } from './types';
 
 export type RecommendationPriority = 'high' | 'medium' | 'low';
@@ -53,6 +54,7 @@ export const recommendationGovernanceArtifacts: RecommendationGovernanceArtifact
   { id:'REC-B12-CLINICIAN-001', maturity:'prototype', sourceIds:['NIH-ODS-B12-HP'], applicabilityPolicyId:'APPL-B12-ADULT' },
   { id:'REC-SLEEP-ROUTINE-001', maturity:'prototype', sourceIds:['AASM-SLEEP-DURATION-2015'], applicabilityPolicyId:'APPL-SLEEP-ADULT' },
   { id:'REC-SLEEP-REVIEW-001', maturity:'prototype', sourceIds:['AASM-OSA-DIAGNOSTIC-2017'], applicabilityPolicyId:'APPL-SLEEP-ADULT' },
+  ...clinicalExpansionRecommendationGovernanceArtifacts,
 ];
 
 const dispositionRank: Record<SafetyDisposition, number> = { allowed: 0, caution: 1, clinician_review: 2, blocked: 3 };
@@ -72,7 +74,7 @@ function hasInvestigation(result: AssessmentResult, ...ids: string[]) {
 }
 
 function candidatesFor(answers: Answers, result: AssessmentResult): Candidate[] {
-  const candidates: Candidate[] = [];
+  const candidates: Candidate[] = [...clinicalExpansionRecommendationCandidates(answers,result)];
   const metabolic = finding(result, 'MET-001');
   const nutrition = finding(result, 'NUT-001');
   const sleep = finding(result, 'SLP-001');

@@ -2,6 +2,7 @@ import type { Answers, AssessmentResult } from './types';
 import { visibleQuestions } from './planner';
 import { executeRules } from './ruleRegistry';
 import { assessmentRules } from './rules';
+import { clinicalExpansionRules } from './clinicalExpansionRules';
 import { buildTestPlan } from './testPriority';
 import { investigationCatalog } from './testRegistry';
 import { buildSafetyGate } from './safety';
@@ -10,16 +11,18 @@ import { normalizeAnswers, removeBareLabAnswers } from './answerNormalization';
 import { recommendationGovernanceArtifacts } from './recommendations';
 import { applicabilityPolicies } from './applicability';
 
+const activeAssessmentRules = [...assessmentRules, ...clinicalExpansionRules];
+
 function assessInternal(answers: Answers, trustedLabAnswerIds: string[]): AssessmentResult {
   const labGuarded = removeBareLabAnswers(answers, trustedLabAnswerIds);
   const normalized = normalizeAnswers(labGuarded);
   const normalizedAnswers = normalized.answers;
   const visible = visibleQuestions(normalizedAnswers);
   const answered = visible.filter((q) => normalizedAnswers[q.id] !== undefined && normalizedAnswers[q.id] !== '').length;
-  const execution = executeRules(assessmentRules, normalizedAnswers);
+  const execution = executeRules(activeAssessmentRules, normalizedAnswers);
   const testPlan = buildTestPlan(execution.evidenceGraph, execution.findings, execution.redFlags, normalizedAnswers);
   const safetyGate = buildSafetyGate(normalizedAnswers, execution.redFlags);
-  const clinicalGovernance = buildClinicalGovernanceReport(assessmentRules, investigationCatalog, recommendationGovernanceArtifacts, applicabilityPolicies);
+  const clinicalGovernance = buildClinicalGovernanceReport(activeAssessmentRules, investigationCatalog, recommendationGovernanceArtifacts, applicabilityPolicies);
 
   if (clinicalGovernance.registryErrors.length || clinicalGovernance.unresolvedSourceIds.length) {
     throw new Error(`Clinical governance invalid: ${[
@@ -43,12 +46,10 @@ function assessInternal(answers: Answers, trustedLabAnswerIds: string[]): Assess
   };
 }
 
-/** Public assessment path: bare lab-number answers are never trusted as current lab evidence. */
 export function assess(answers: Answers): AssessmentResult {
   return assessInternal(answers, []);
 }
 
-/** Internal M08 path used only after LabRecord normalization/verification/freshness eligibility. */
 export function assessWithCanonicalLabEvidence(answers: Answers, trustedLabAnswerIds: string[]): AssessmentResult {
   return assessInternal(answers, trustedLabAnswerIds);
 }

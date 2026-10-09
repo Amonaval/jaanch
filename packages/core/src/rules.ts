@@ -26,10 +26,13 @@ function metabolicRule(a: Answers): RuleOutput {
   const findingId = 'MET-001';
   const age = Number(a.age || 0), h = Number(a.heightCm || 0) / 100, w = Number(a.weightKg || 0), waist = Number(a.waistCm || 0), days = Number(a.activityDays ?? 7);
   const bmi = h ? w / (h * h) : 0;
+  const hba1c = Number(a.hba1c || 0);
+  const fastingGlucose = Number(a.fastingGlucose || 0);
   let score = 0;
   const nodes: EvidenceNode[] = [];
   const edges: EvidenceEdge[] = [];
   const support: string[] = [];
+  const contradict: string[] = [];
   const missing: string[] = [];
 
   if (a.heightCm !== undefined) nodes.push(node('met.obs.height', 'metabolic', 'observed', 'measurement', 'Height', `${a.heightCm} cm`, 'moderate', ['heightCm']));
@@ -41,19 +44,48 @@ function metabolicRule(a: Answers): RuleOutput {
   if (days < 3) { score += 15; const id = 'met.obs.activity'; support.push(id); nodes.push(node(id, 'metabolic', 'observed', 'questionnaire', 'Activity', `${days} active days/week`, 'moderate', ['activityDays'])); edges.push(edge(id, findingId, 'supports', 15)); }
   if (a.familyDiabetes === true) { score += 25; const id = 'met.obs.family_diabetes'; support.push(id); nodes.push(node(id, 'metabolic', 'observed', 'questionnaire', 'Family history', 'Parent/sibling with diabetes', 'strong', ['familyDiabetes'])); edges.push(edge(id, findingId, 'supports', 25)); }
 
-  const hasLab = Number(a.hba1c || 0) > 0;
-  if (!hasLab) { const id = 'met.missing.glycemic_marker'; missing.push(id); nodes.push(node(id, 'metabolic', 'missing', 'missing', 'Glycemic marker', 'HbA1c or fasting glucose is not available through eligible lab evidence.', 'strong', ['hba1c'])); edges.push(edge(id, findingId, 'missing_for')); }
+  const hasA1c = hba1c > 0;
+  const hasFpg = fastingGlucose > 0;
+  const hasLab = hasA1c || hasFpg;
+  const diabetesRange = (hasA1c && hba1c >= 6.5) || (hasFpg && fastingGlucose >= 126);
+  const prediabetesRange = !diabetesRange && ((hasA1c && hba1c >= 5.7) || (hasFpg && fastingGlucose >= 100));
+
+  if (hasA1c) {
+    const id='met.obs.hba1c';
+    nodes.push(node(id,'metabolic','observed','lab','HbA1c',`${hba1c}%`,'decisive',['hba1c']));
+    if (hba1c >= 5.7) { support.push(id); edges.push(edge(id,findingId,'supports',hba1c >= 6.5 ? 95 : 75)); }
+    else { contradict.push(id); edges.push(edge(id,findingId,'contradicts')); }
+  }
+  if (hasFpg) {
+    const id='met.obs.fasting_glucose';
+    nodes.push(node(id,'metabolic','observed','lab','Fasting glucose',`${fastingGlucose} mg/dL`,'decisive',['fastingGlucose']));
+    if (fastingGlucose >= 100) { support.push(id); edges.push(edge(id,findingId,'supports',fastingGlucose >= 126 ? 95 : 75)); }
+    else { contradict.push(id); edges.push(edge(id,findingId,'contradicts')); }
+  }
+
+  if (!hasLab) { const id = 'met.missing.glycemic_marker'; missing.push(id); nodes.push(node(id, 'metabolic', 'missing', 'missing', 'Glycemic marker', 'HbA1c or fasting glucose is not available through eligible lab evidence.', 'strong', ['hba1c','fastingGlucose'])); edges.push(edge(id, findingId, 'missing_for')); }
 
   const evidenceLevel: EvidenceLevel = hasLab ? 'lab_informed' : support.some((id) => id.includes('bmi') || id.includes('waist')) ? 'measurement_informed' : support.length ? 'questionnaire_only' : 'insufficient';
+  let status: Finding['status'] = score >= 60 ? 'high_attention' : score >= 30 ? 'investigate' : 'monitor';
+  let urgency: Finding['urgency'] = score >= 60 ? 'priority' : 'routine';
+  let summary = 'Prototype adult nonpregnant screening signals based on age, body composition, activity and family history; this score is not a diabetes probability.';
+  if (diabetesRange) {
+    score = Math.max(score, 90); status='high_attention'; urgency='clinician_review';
+    summary='An eligible HbA1c or fasting-glucose result is in an ADA diabetes-range threshold. Jaanch does not diagnose diabetes from one app-entered result; in the absence of unequivocal hyperglycemia, confirmatory testing and clinician interpretation are required.';
+  } else if (prediabetesRange) {
+    score = Math.max(score, 70); status='investigate'; urgency='priority';
+    summary='An eligible HbA1c or fasting-glucose result is in an ADA prediabetes/intermediate glycemia range. This is measured risk evidence, not a standalone diagnosis, and should be interpreted with the broader clinical context.';
+  } else if (hasLab) {
+    summary='Eligible HbA1c/fasting-glucose evidence does not cross the narrow ADA prediabetes thresholds used here, while questionnaire/body-measurement risk signals may still warrant longitudinal attention.';
+  }
+
   const finding: Finding = {
-    id: findingId, domain:'metabolic', title:'Metabolic screening risk',
-    status: score >= 60 ? 'high_attention' : score >= 30 ? 'investigate' : 'monitor', urgency: score >= 60 ? 'priority' : 'routine', score: Math.min(score,100),
-    confidence: confidenceFor(score, evidenceLevel), evidenceLevel,
-    summary:'Prototype adult nonpregnant screening signals based on age, body composition, activity and family history; this score is not a diabetes probability.',
-    supportingEvidenceIds: support, contradictingEvidenceIds: [], missingEvidenceIds: missing,
-    actions: hasLab ? ['Interpret eligible measured glucose markers with context.'] : ['Consider diabetes screening to reduce uncertainty.'],
+    id: findingId, domain:'metabolic', title:'Metabolic screening risk', status, urgency, score: Math.min(score,100),
+    confidence: confidenceFor(score, evidenceLevel), evidenceLevel, summary,
+    supportingEvidenceIds: support, contradictingEvidenceIds: contradict, missingEvidenceIds: missing,
+    actions: diabetesRange ? ['Arrange clinician review of the measured glycemic result and confirmation pathway rather than treating this app result as a diagnosis.'] : hasLab ? ['Interpret eligible measured glucose markers with the broader risk context.'] : ['Consider diabetes screening to reduce uncertainty.'],
   };
-  return { matched:true, finding, evidenceNodes:nodes, evidenceEdges:edges, evidenceQuestionIds:['age','heightCm','weightKg','waistCm','activityDays','familyDiabetes','hba1c'] };
+  return { matched:true, finding, evidenceNodes:nodes, evidenceEdges:edges, evidenceQuestionIds:['age','heightCm','weightKg','waistCm','activityDays','familyDiabetes','hba1c','fastingGlucose'] };
 }
 
 function nutritionRule(a: Answers): RuleOutput {
@@ -101,7 +133,7 @@ function sleepRule(a: Answers): RuleOutput {
 }
 
 export const assessmentRules: AssessmentRule[] = [
-  { id:'MET-SCREEN-001', version:'1.3.0', domain:'metabolic', kind:'finding', title:'Metabolic screening risk', enabled:true, maturity:'prototype', sourceIds:['ADA-2026-DIAGNOSIS'], applicabilityPolicyId:'APPL-METABOLIC-ADULT-NONPREG', evaluate:metabolicRule },
+  { id:'MET-SCREEN-001', version:'1.4.0', domain:'metabolic', kind:'finding', title:'Metabolic screening risk', enabled:true, maturity:'prototype', sourceIds:['ADA-2026-DIAGNOSIS'], applicabilityPolicyId:'APPL-METABOLIC-ADULT-NONPREG', evaluate:metabolicRule },
   { id:'NUT-B12-001', version:'1.3.0', domain:'nutrition', kind:'finding', title:'B12 / nutrition screening', enabled:true, maturity:'prototype', sourceIds:['NIH-ODS-B12-HP'], applicabilityPolicyId:'APPL-B12-ADULT', evaluate:nutritionRule },
   { id:'SLP-SCREEN-001', version:'1.3.0', domain:'sleep', kind:'finding', title:'Sleep screening', enabled:true, maturity:'prototype', sourceIds:['AASM-OSA-DIAGNOSTIC-2017'], applicabilityPolicyId:'APPL-SLEEP-ADULT', evaluate:sleepRule },
   {

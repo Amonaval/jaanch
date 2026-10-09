@@ -12,7 +12,7 @@ import type {
 export type LabMarkerDefinition = {
   id: LabMarkerId;
   label: string;
-  answerId: 'hba1c' | 'b12';
+  answerId: string;
   canonicalUnit: string;
   acceptedUnits: string[];
   min: number;
@@ -24,6 +24,13 @@ export type LabMarkerDefinition = {
 export const labMarkerCatalog: LabMarkerDefinition[] = [
   { id:'hba1c', label:'HbA1c', answerId:'hba1c', canonicalUnit:'%', acceptedUnits:['%','percent'], min:3, max:20, recentDays:180, usableDays:365 },
   { id:'vitamin_b12', label:'Vitamin B12', answerId:'b12', canonicalUnit:'pg/mL', acceptedUnits:['pg/mL','pg/ml'], min:50, max:2500, recentDays:180, usableDays:365 },
+  { id:'fasting_glucose', label:'Fasting glucose', answerId:'fastingGlucose', canonicalUnit:'mg/dL', acceptedUnits:['mg/dL','mg/dl'], min:20, max:800, recentDays:180, usableDays:365 },
+  { id:'total_cholesterol', label:'Total cholesterol', answerId:'totalCholesterol', canonicalUnit:'mg/dL', acceptedUnits:['mg/dL','mg/dl'], min:50, max:600, recentDays:180, usableDays:365 },
+  { id:'ldl', label:'LDL cholesterol', answerId:'ldl', canonicalUnit:'mg/dL', acceptedUnits:['mg/dL','mg/dl'], min:10, max:500, recentDays:180, usableDays:365 },
+  { id:'hdl', label:'HDL cholesterol', answerId:'hdl', canonicalUnit:'mg/dL', acceptedUnits:['mg/dL','mg/dl'], min:5, max:200, recentDays:180, usableDays:365 },
+  { id:'triglycerides', label:'Triglycerides', answerId:'triglycerides', canonicalUnit:'mg/dL', acceptedUnits:['mg/dL','mg/dl'], min:20, max:3000, recentDays:180, usableDays:365 },
+  { id:'hemoglobin', label:'Hemoglobin', answerId:'hemoglobin', canonicalUnit:'g/dL', acceptedUnits:['g/dL','g/dl'], min:3, max:25, recentDays:180, usableDays:365 },
+  { id:'ferritin', label:'Ferritin', answerId:'ferritin', canonicalUnit:'ng/mL', acceptedUnits:['ng/mL','ng/ml','µg/L','µg/l','ug/L','ug/l'], min:1, max:5000, recentDays:180, usableDays:365 },
 ];
 
 const DAY_MS = 86_400_000;
@@ -149,4 +156,8 @@ export function reassessWithLabs(answers: Answers, records: LabRecord[], asOf = 
 
 export function labMarkerDefinition(markerId: LabMarkerId) {
   return markerById.get(markerId);
+}
+
+export function isSupportedLabMarker(markerId: string): markerId is LabMarkerId {
+  return markerById.has(markerId as LabMarkerId);
 }
