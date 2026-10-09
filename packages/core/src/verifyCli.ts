@@ -1,5 +1,7 @@
 import { assertCoreVerification } from './verification';
+import { assertPresentationVerification } from './verificationPresentation';
 
-const results = assertCoreVerification();
-for (const result of results) console.log(`PASS ${result.id}`);
-console.log(`Core verification passed: ${results.length}/${results.length}`);
+const core = assertCoreVerification();
+const presentation = assertPresentationVerification();
+for (const result of [...core, ...presentation]) console.log(`PASS ${result.id}`);
+console.log(`Verification passed: ${core.length + presentation.length}/${core.length + presentation.length}`);

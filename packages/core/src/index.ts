@@ -9,5 +9,7 @@ export * from './rules';
 export * from './testRegistry';
 export * from './testPriority';
 export * from './verification';
+export * from './verificationPresentation';
+export * from './healthMapView';
 export * from './engine';
 export * from './hap';
