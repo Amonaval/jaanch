@@ -30,6 +30,28 @@ export const applicabilityPolicies: ApplicabilityPolicy[] = [
     description: 'Current sleep screening and adult sleep-duration guidance are adult-only.',
   },
   {
+    id: 'APPL-LIPID-ADULT-NONPREG',
+    maturity: 'prototype',
+    provenance: 'clinical_source',
+    sourceIds: ['AHA-ACC-DYSLIPIDEMIA-2026'],
+    minAge: 18,
+    excludedReproductiveContexts: ['pregnant', 'trying', 'unsure'],
+    requireKnownFemaleReproductiveContext: true,
+    description: 'Current Jaanch lipid interpretation is limited to nonpregnant adults; pregnancy-specific lipid management is outside this prototype rule.',
+  },
+  {
+    id: 'APPL-IRON-ADULT-NONPREG',
+    maturity: 'prototype',
+    provenance: 'clinical_source',
+    sourceIds: ['WHO-ANEMIA-2024', 'WHO-FERRITIN-2020'],
+    minAge: 18,
+    maxAge: 65,
+    allowedSexValues: ['female','male'],
+    excludedReproductiveContexts: ['pregnant', 'trying', 'unsure'],
+    requireKnownFemaleReproductiveContext: true,
+    description: 'Current anemia/iron interpretation uses WHO adult 15–65 nonpregnant cutoffs and requires male/female sex-at-birth context for the hemoglobin threshold.',
+  },
+  {
     id: 'APPL-RED-FLAG-GENERAL',
     maturity: 'prototype',
     provenance: 'clinical_source',
@@ -59,6 +81,10 @@ export function evaluateApplicability(policyId: string, answers: Answers): Appli
   if (policy.maxAge !== undefined && Number.isFinite(age) && age > policy.maxAge) reasons.push(`Current logic is limited to age ${policy.maxAge} or younger.`);
 
   const sex = String(answers.sex || '');
+  if (policy.allowedSexValues?.length) {
+    if (!sex) return { policyId, status:'clinician_review', applicable:false, reasons:['Sex-at-birth context is required before applying this rule.'] };
+    if (!policy.allowedSexValues.includes(sex)) reasons.push(`Current logic is not configured for sex-at-birth context: ${sex}.`);
+  }
   const reproductive = String(answers.reproductiveContext || '');
   if (policy.requireKnownFemaleReproductiveContext && sex === 'female' && !reproductive) {
     return { policyId, status: 'clinician_review', applicable: false, reasons: ['Pregnancy/reproductive context is required before applying this rule.'] };
@@ -85,6 +111,7 @@ export function validateApplicabilityPolicies(policies = applicabilityPolicies):
     ids.add(policy.id);
     if (!policy.description.trim()) errors.push(`${policy.id}: description is required.`);
     if (policy.minAge !== undefined && policy.maxAge !== undefined && policy.minAge > policy.maxAge) errors.push(`${policy.id}: minAge must not exceed maxAge.`);
+    if (policy.allowedSexValues && !policy.allowedSexValues.length) errors.push(`${policy.id}: allowedSexValues must not be empty when supplied.`);
   }
   return errors;
 }
