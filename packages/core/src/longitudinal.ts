@@ -2,6 +2,7 @@ import type { RecommendationPlan } from './recommendations';
 import type { AssessmentCaptureContext } from './intake';
 import type { Answers, AssessmentResult, LabMarkerId, NormalizedLabRecord, SafetyDisposition } from './types';
 import { sanitizeInternalClinicalEvidence } from './clinicalMeasurements';
+import { decodePersistedHistoryPayload, encodeHistoryPersistenceEnvelope } from './persistence';
 
 export const LONGITUDINAL_HISTORY_PROTOCOL = 'JAANCH-HISTORY-1.0' as const;
 export const ASSESSMENT_SNAPSHOT_PROTOCOL = 'JAANCH-SNAPSHOT-1.0' as const;
@@ -114,16 +115,10 @@ export function removeSnapshot(history:LongitudinalHistory,snapshotId:string):Lo
   return { protocol:LONGITUDINAL_HISTORY_PROTOCOL, snapshots:history.snapshots.filter((snapshot)=>snapshot.id!==snapshotId) };
 }
 
-export function encodeLongitudinalHistory(history:LongitudinalHistory):string { return JSON.stringify(history); }
+export function encodeLongitudinalHistory(history:LongitudinalHistory):string { return encodeHistoryPersistenceEnvelope(history); }
 
 export function decodeLongitudinalHistory(raw:string|null|undefined):LongitudinalHistory {
-  if(!raw) return emptyLongitudinalHistory();
-  try{
-    const parsed=JSON.parse(raw) as Partial<LongitudinalHistory>;
-    if(parsed.protocol!==LONGITUDINAL_HISTORY_PROTOCOL || !Array.isArray(parsed.snapshots)) return emptyLongitudinalHistory();
-    const snapshots=parsed.snapshots.filter((snapshot):snapshot is AssessmentSnapshot=>Boolean(snapshot && snapshot.protocol===ASSESSMENT_SNAPSHOT_PROTOCOL && snapshot.id && snapshot.capturedAt && snapshot.assessment && snapshot.recommendationPlan));
-    return { protocol:LONGITUDINAL_HISTORY_PROTOCOL, snapshots };
-  }catch{return emptyLongitudinalHistory();}
+  return decodePersistedHistoryPayload(raw);
 }
 
 function findingDirection(before:AssessmentSnapshot['assessment']['findings'][number],after:AssessmentSnapshot['assessment']['findings'][number]):FindingTrend['direction'] {
