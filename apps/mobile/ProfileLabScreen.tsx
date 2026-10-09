@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { SafeAreaView, ScrollView, Share, Text, TouchableOpacity, View } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as DocumentPicker from 'expo-document-picker';
+import { File } from 'expo-file-system';
 import {
   addSnapshot,
   decodeLongitudinalHistory,
@@ -42,7 +43,8 @@ export function ProfileLabScreen({onApplied,onBack}:Props){
   try{
    const picked=await DocumentPicker.getDocumentAsync({type:'application/json',copyToCacheDirectory:true,multiple:false});
    if(picked.canceled||!picked.assets?.[0])return;
-   const response=await fetch(picked.assets[0].uri); const bundle=decodeProfileBundle(await response.text());
+   const file=new File(picked.assets[0].uri);
+   const bundle=decodeProfileBundle(await file.text());
    setImported(bundle);setSelectedId('');await run(bundle);
   }catch(error){setMessage(error instanceof Error?error.message:'Could not import profile JSON.');}
  };
