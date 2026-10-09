@@ -5,8 +5,9 @@
   "type": "module",
   "exports": "./src/index.ts",
   "scripts": {
-    "verify": "tsx src/verify.ts && tsx src/verifyWeb.ts",
-    "live:gate": "tsx src/liveUtilityGate.ts"
+    "verify": "tsx src/verify.ts && tsx src/verifyWeb.ts && tsx src/verifyV2.ts",
+    "live:gate": "tsx src/liveUtilityGate.ts",
+    "live:gate:v2": "tsx src/liveUtilityGateV2.ts"
   },
   "dependencies": {
     "@jaanch/core": "0.1.0",

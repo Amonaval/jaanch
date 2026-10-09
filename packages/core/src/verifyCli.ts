@@ -1,4 +1,5 @@
 import { assertAIReviewVerification } from './verificationAI';
+import { assertAIReviewV2Verification } from './verificationAIV2';
 import { assertCoreVerification } from './verification';
 import { assertIntakeVerification } from './verificationIntake';
 import { assertEvidenceCaptureVerification } from './verificationEvidenceCapture';
@@ -19,6 +20,7 @@ const presentation = assertPresentationVerification();
 const recommendations = assertRecommendationVerification();
 const longitudinal = assertLongitudinalVerification();
 const ai = assertAIReviewVerification();
-const all = [...core, ...intake, ...evidenceCapture, ...clinicalExpansion, ...profiles, ...persistence, ...presentation, ...recommendations, ...longitudinal, ...ai];
+const aiV2 = assertAIReviewV2Verification();
+const all = [...core, ...intake, ...evidenceCapture, ...clinicalExpansion, ...profiles, ...persistence, ...presentation, ...recommendations, ...longitudinal, ...ai, ...aiV2];
 for (const result of all) console.log('PASS ' + result.id);
 console.log('Verification passed: ' + all.length + '/' + all.length);
