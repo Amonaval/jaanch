@@ -12,12 +12,11 @@ import {
 } from '@jaanch/core';
 
 const HISTORY_KEY='jaanch.history.v1';
-const today=()=>new Date().toISOString().slice(0,10);
 const asIso=(value:string)=>value?`${value}T00:00:00.000Z`:undefined;
 
 export function ReportImportScreen({onApplied,onBack}:{onApplied:()=>void;onBack:()=>void}){
  const [provenance,setProvenance]=useState<ReportProvenance>();
- const [reportDate,setReportDate]=useState(today);
+ const [reportDate,setReportDate]=useState('');
  const [text,setText]=useState('');
  const [candidates,setCandidates]=useState<ReportEvidenceCandidate[]>([]);
  const [confirmed,setConfirmed]=useState<Record<string,ConfirmedReportEvidence>>({});

@@ -19,12 +19,11 @@ const input={padding:12,borderWidth:1,borderColor:'#cedad3',borderRadius:12,back
 const card={padding:16,borderWidth:1,borderColor:'#dfe8e2',borderRadius:18,backgroundColor:'#fff',gap:10} as const;
 const primary={paddingVertical:12,paddingHorizontal:16,borderRadius:13,backgroundColor:'#176443'} as const;
 const secondary={paddingVertical:12,paddingHorizontal:16,borderRadius:13,borderWidth:1,borderColor:'#cbd8d1',backgroundColor:'#fff'} as const;
-const today=()=>new Date().toISOString().slice(0,10);
 const asIso=(value:string)=>value?`${value}T00:00:00.000Z`:undefined;
 
 export function ReportImportScreen({onApplied,onBack}:{onApplied:()=>void;onBack:()=>void}){
  const [provenance,setProvenance]=useState<ReportProvenance>();
- const [reportDate,setReportDate]=useState(today);
+ const [reportDate,setReportDate]=useState('');
  const [text,setText]=useState('');
  const [candidates,setCandidates]=useState<ReportEvidenceCandidate[]>([]);
  const [confirmed,setConfirmed]=useState<Record<string,ConfirmedReportEvidence>>({});

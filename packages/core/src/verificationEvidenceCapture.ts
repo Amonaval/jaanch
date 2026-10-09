@@ -48,6 +48,12 @@ export function runEvidenceCaptureVerification(): VerificationCaseResult[] {
     results.push(check('report-unsupported-marker-stays-unassessed',Boolean(confirmed.recorded)&&!confirmed.lab&&confirmed.recorded?.state==='recorded_unassessed','Expected captured Vitamin D report evidence to stay recorded/unassessed until a sourced rule exists.'));
   }
 
+  const missingUnitCandidate=extractReportCandidatesFromText({provenance,defaultCollectedAt:'2026-10-01T00:00:00.000Z',text:'HbA1c: 5.9'})[0];
+  if(missingUnitCandidate){
+    const confirmed=confirmReportEvidenceCandidate(missingUnitCandidate);
+    results.push(check('report-missing-unit-is-not-inferred',!missingUnitCandidate.unit&&!confirmed.lab&&confirmed.issues.some(issue=>issue.includes('unit')),'Expected a missing report unit to remain missing and block interpreted-lab confirmation rather than infer a default unit.'));
+  }
+
   if(b12){
     const missingDate={...b12,collectedAt:undefined};
     const confirmed=confirmReportEvidenceCandidate(missingDate);

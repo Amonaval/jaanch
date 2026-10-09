@@ -166,7 +166,7 @@ export function extractReportCandidatesFromText(input: { text: string; provenanc
     const normalized = definition ? { markerId: definition.markerId, label: definition.label, defaultUnit: definition.defaultUnit } : normalizeReportMarker(rawLabel);
     const value = normalizeWhitespace(match[1]);
     const afterValue = line.slice(match.index + match[0].length);
-    const unit = unitPattern.exec(afterValue)?.[1]?.replace(/\s+/g, '') ?? normalized.defaultUnit;
+    const unit = unitPattern.exec(afterValue)?.[1]?.replace(/\s+/g, '');
     const range = rangePattern.exec(line)?.[1]?.trim();
     const confidence = definition ? (unit ? 0.93 : 0.82) : 0.58;
     const key = `${normalized.markerId}|${rawLabel.toLowerCase()}|${value}|${unit ?? ''}|${input.defaultCollectedAt ?? ''}`;
