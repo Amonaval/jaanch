@@ -18,6 +18,7 @@ export * from './recommendationView';
 export * from './longitudinal';
 export * from './aiReview';
 export * from './verification';
+export * from './verificationIntake';
 export * from './verificationPresentation';
 export * from './verificationRecommendations';
 export * from './verificationLongitudinal';

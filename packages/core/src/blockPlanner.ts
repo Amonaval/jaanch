@@ -42,9 +42,11 @@ export function createBlockNavigation(plan:AssessmentBlockPlan):BlockNavigationS
 const isInPlan=(id:AssessmentBlockId,plan:AssessmentBlockPlan)=>plan.blocks.some((b)=>b.id===id);
 export function reconcileBlockNavigation(state:BlockNavigationState,plan:AssessmentBlockPlan):BlockNavigationState{
  const known=new Set(plan.blocks.map((b)=>b.id));
+ const planChanged=state.planRevision!==plan.revision;
  const invalidated=[...new Set([...state.invalidatedBlockIds,...state.backStack.filter((id)=>!known.has(id)),...state.forwardStack.filter((id)=>!known.has(id)),...(known.has(state.currentBlockId)?[]:[state.currentBlockId])])];
- const backStack=state.backStack.filter((id)=>known.has(id)); const forwardStack=state.forwardStack.filter((id)=>known.has(id));
- const currentBlockId=known.has(state.currentBlockId)?state.currentBlockId:forwardStack[0]??backStack[backStack.length-1]??plan.blocks[0]?.id??'about';
+ const backStack=state.backStack.filter((id)=>known.has(id));
+ const forwardStack=planChanged?[]:state.forwardStack.filter((id)=>known.has(id));
+ const currentBlockId=known.has(state.currentBlockId)?state.currentBlockId:backStack[backStack.length-1]??plan.blocks[0]?.id??'about';
  return{currentBlockId,backStack:backStack.filter((id)=>id!==currentBlockId),forwardStack:forwardStack.filter((id)=>id!==currentBlockId),planRevision:plan.revision,invalidatedBlockIds:invalidated};
 }
 export function goBackBlock(state:BlockNavigationState,plan:AssessmentBlockPlan):BlockNavigationState{
