@@ -1,10 +1,11 @@
-import type { Answers, AssessmentResult } from './types';
+import type { Answers, AssessmentResult, NormalizedLabRecord } from './types';
 
 export type HealthAssessmentPacket = {
   protocol: 'HAP-1.0';
   generatedAt: string;
   purpose: 'screening_and_prevention';
   answers: Answers;
+  labEvidence?: NormalizedLabRecord[];
   engineAssessment: AssessmentResult;
   requiredAIOutput: {
     schemaVersion: 'AI-ASSESSMENT-1.0';
@@ -13,12 +14,13 @@ export type HealthAssessmentPacket = {
   };
 };
 
-export function createHap(answers: Answers, result: AssessmentResult): HealthAssessmentPacket {
+export function createHap(answers: Answers, result: AssessmentResult, labEvidence?: NormalizedLabRecord[]): HealthAssessmentPacket {
   return {
     protocol: 'HAP-1.0',
     generatedAt: new Date().toISOString(),
     purpose: 'screening_and_prevention',
     answers,
+    ...(labEvidence?.length ? { labEvidence } : {}),
     engineAssessment: result,
     requiredAIOutput: {
       schemaVersion: 'AI-ASSESSMENT-1.0',

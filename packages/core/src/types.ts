@@ -39,6 +39,7 @@ export type EvidenceProvenance = {
   ruleId?: string;
   ruleVersion?: string;
   derivation?: string;
+  labRecordIds?: string[];
 };
 
 export type EvidenceNode = {
@@ -200,6 +201,57 @@ export type RuleTraceSummary = {
   sourceIds: string[];
 };
 
+export type LabMarkerId = 'hba1c' | 'vitamin_b12';
+export type LabSource = 'manual' | 'report' | 'import';
+export type LabVerification = 'user_confirmed' | 'unverified';
+export type LabFreshness = 'recent' | 'aging' | 'stale' | 'future_invalid';
+
+export type LabReferenceRange = {
+  low?: number;
+  high?: number;
+  unit: string;
+  text?: string;
+};
+
+export type LabRecord = {
+  id: string;
+  markerId: LabMarkerId;
+  value: number;
+  unit: string;
+  collectedAt: string;
+  source: LabSource;
+  verification: LabVerification;
+  sourceLabel?: string;
+  referenceRange?: LabReferenceRange;
+};
+
+export type NormalizedLabRecord = LabRecord & {
+  canonicalUnit: string;
+  normalizedValue: number;
+  ageDays?: number;
+  freshness: LabFreshness;
+  eligibleForAssessment: boolean;
+  issues: string[];
+};
+
+export type LabFindingChange = {
+  findingId: string;
+  title: string;
+  beforeStatus: FindingStatus;
+  afterStatus: FindingStatus;
+  beforeEvidenceLevel: EvidenceLevel;
+  afterEvidenceLevel: EvidenceLevel;
+  beforeUrgency: Urgency;
+  afterUrgency: Urgency;
+};
+
+export type LabReassessmentChanges = {
+  findingChanges: LabFindingChange[];
+  resolvedInvestigationIds: string[];
+  addedInvestigationIds: string[];
+  newlyResolvedEvidenceIds: string[];
+};
+
 export type AssessmentResult = {
   findings: Finding[];
   evidenceGraph: EvidenceGraph;
@@ -211,4 +263,13 @@ export type AssessmentResult = {
   available: number;
   redFlags: string[];
   ruleTrace: RuleTraceSummary[];
+};
+
+export type LabReassessment = {
+  asOf: string;
+  before: AssessmentResult;
+  after: AssessmentResult;
+  normalizedLabs: NormalizedLabRecord[];
+  appliedLabRecordIds: string[];
+  changes: LabReassessmentChanges;
 };
