@@ -19,6 +19,7 @@ export * from './longitudinal';
 export * from './persistence';
 export * from './resultView';
 export * from './aiReview';
+export * from './aiReviewRuntime';
 export * from './verification';
 export * from './verificationIntake';
 export * from './verificationEvidenceCapture';

@@ -15,6 +15,7 @@
     "doctor:mobile": "cd apps/mobile && npx expo-doctor",
     "verify:core": "npm --workspace @jaanch/core run verify",
     "verify:ai-runtime": "npm --workspace @jaanch/ai-runtime run verify",
-    "verify": "npm run verify:core && npm run verify:ai-runtime"
+    "verify": "npm run verify:core && npm run verify:ai-runtime",
+    "ai:gate": "npm --workspace @jaanch/ai-runtime run live:gate"
   }
 }
